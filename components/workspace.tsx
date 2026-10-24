@@ -44,6 +44,7 @@ import {
   type Project,
 } from "@/lib/model";
 import type { WorkspaceStore } from "@/lib/storage";
+import BrandLogo from "./brand-logo";
 
 type View =
   "overview" | "projects" | "events" | "members" | "hours" | "settings";
@@ -579,13 +580,8 @@ export default function Workspace({
         />
       )}
       <aside className={`sidebar ${sidebarOpen ? "is-open" : ""}`}>
-        <a className="brand" href="#overview">
-          <span className="brand-mark">
-            <Earth size={26} strokeWidth={1.7} />
-          </span>
-          <span>
-            shapers<span className="brand-os">OS</span>
-          </span>
+        <a className="brand brand-logo-link" href="#overview">
+          <BrandLogo />
         </a>
         <div className="workspace-label">
           <span className="hub-avatar">S</span>
