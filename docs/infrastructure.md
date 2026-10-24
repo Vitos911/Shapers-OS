@@ -89,7 +89,7 @@ Pregled 24. 10. 2026: projekt `shapers-os` (`prj_WliKT2bUvi1cm9tGtmADvSZXj3jQ`) 
 | Production Branch | `main` |
 | Preview | Push na feature vejo / PR; preveri tudi morebitne branch filtre in pravice obeh razvijalcev v ekipi |
 
-Pri package-manager zaznavi ohrani `packageManager: pnpm@11.25.0`. Če Vercel build image ne upošteva Corepack, uporabi podprto Vercel nastavitev `ENABLE_EXPERIMENTAL_COREPACK=1` in v logu potrdi dejansko verzijo; ne zamenjuj lockfile z npm. Ne potrebuješ VERCEL_TOKEN ali dodatnega deploy workflowa. Obstoječi Actions samo izvaja teste, typecheck, lint in build brez skrivnosti.
+Pri package-manager zaznavi ohrani `packageManager: pnpm@11.25.0`, omogoči Corepack po aktualnih navodilih Vercela in v logu potrdi dejansko verzijo; ne zamenjuj lockfile z npm. Ne potrebuješ VERCEL_TOKEN ali dodatnega deploy workflowa. Obstoječi Actions samo izvaja teste, typecheck, lint in build brez skrivnosti.
 
 Next route handlerji uporabljajo Node.js runtime; OAuth kriptografija in Google servisni JWT se ne smeta preseliti v Edge ali statični export. Persistenca je v Supabase, začasni OAuth/provider podatki v šifriranih piškotkih, brez lokalnega diska v Functions. Seed/provision CLI skript ne zaganjaj kot del builda. `vercel.json` ni potreben za ta App Router projekt in ni uveden zaradi same prisotnosti Vercela.
 
