@@ -1,6 +1,8 @@
 # Osebni Google koledar
 
-Google prijava zdaj zahteva `calendar.events.readonly` poleg `openid email profile`, z offline dostopom in privolitvijo. Po naslednji Google prijavi se glavni (`primary`) koledar samodejno poveže. Obstoječa prijava teh dovoljenj nima za nazaj: v Pregledu ali Sestankih klikni **Poveži Google koledar** in izberi isti račun kot pri prijavi. Google mora pokazati dovoljenje za branje dogodkov; uporabnik ga mora sam odobriti.
+Osnovna Google prijava zahteva samo `openid email profile`. V Pregledu ali Sestankih klikni **Poveži Google koledar** in izberi isti račun kot pri prijavi. Ta ločeni tok pošlje `calendar: true` na `/auth/google` ter zahteva `calendar.events.readonly`, offline dostop in privolitev za glavni (`primary`) koledar. Izbira je vezana na šifrirani PKCE flow; navadna prijava ne zamenja obstoječega koledarskega dovoljenja s profilnim žetonom. Google mora pokazati dovoljenje za branje dogodkov; uporabnik ga mora sam odobriti.
+
+Živi pregled 2026-10-24: produkcijski APP_URL in Supabase Site URL sta usklajena na `https://shapers-os.vercel.app`, produkcijski callback je dovoljen, GOOGLE_CLIENT_ID in skriti GOOGLE_CLIENT_SECRET istega Supabase odjemalca sta nastavljena v Vercel Production. Google je za `vito.bajt@gmail.com` vrnil `403 access_denied`, ker račun ni testni uporabnik. Google Cloud projekt `371443663682` trenutnemu računu zavrne `oauthconfig.testusers.get`, `oauthconfig.verification.get` in `resourcemanager.projects.get`. Lastnik mora v Google Auth Platform → Audience dodati ta račun med Test users ter preveriti Calendar API. To zahteva lastnikov dostop; sama Vercel/Supabase nastavitev omejitve ne odpravi. Živo branje koledarja do takrat ostaja BLOCKED.
 
 ## Nastavitev
 

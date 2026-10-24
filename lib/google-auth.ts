@@ -18,6 +18,7 @@ type Pending = {
   storage: Record<string, string>;
   flow: string;
   next: string;
+  calendar: boolean;
   expires: number;
 };
 type Handoff = {
@@ -219,9 +220,13 @@ export async function startGoogle(
     sameOrigin(request, origin);
     cookieKey(env);
     const body = await jsonBody(request);
-    if (Object.keys(body).some((k) => k !== "next"))
+    if (
+      Object.keys(body).some((k) => k !== "next" && k !== "calendar") ||
+      (body.calendar !== undefined && typeof body.calendar !== "boolean")
+    )
       throw new HttpError(400, "Neveljavna prijavna zahteva.");
     const next = safeNext(body.next === undefined ? "/" : body.next);
+    const calendar = body.calendar === true;
     const { url, key } = config(env);
     const settings = await fetcher(url + "/auth/v1/settings", {
       headers: { apikey: key },
@@ -243,13 +248,18 @@ export async function startGoogle(
       provider: "google",
       options: {
         redirectTo: origin + "/auth/callback?flow=" + flow,
-        scopes:
-          "openid email profile https://www.googleapis.com/auth/calendar.events.readonly",
-        queryParams: {
-          prompt: "consent select_account",
-          access_type: "offline",
-          include_granted_scopes: "true",
-        },
+        // Calendar is a separate, explicit grant. Google's testing restrictions
+        // on sensitive scopes must not block ordinary profile-only sign-in.
+        scopes: calendar
+          ? "openid email profile https://www.googleapis.com/auth/calendar.events.readonly"
+          : "openid email profile",
+        queryParams: calendar
+          ? {
+              prompt: "consent select_account",
+              access_type: "offline",
+              include_granted_scopes: "true",
+            }
+          : { prompt: "select_account" },
       },
     });
     if (result.error || !result.data.url || !storage.verifier())
@@ -274,6 +284,7 @@ export async function startGoogle(
             storage: storage.snapshot(),
             flow,
             next,
+            calendar,
             expires: Date.now() + 600000,
           },
           env,
@@ -341,34 +352,36 @@ export async function googleCallback(
       throw new Error("Unverified user");
     // Keep provider credentials separate from the browser-readable Supabase handoff.
     // Calendar setup must never break an otherwise valid login (e.g. cookie size limit).
-    try {
-      const value =
-        session.provider_token && user.data.user.id
-          ? seal(
-              {
-                userId: user.data.user.id,
-                accessToken: session.provider_token,
-                refreshToken: session.provider_refresh_token || "",
-                accessExpires: Date.now() + 50 * 60000,
-                expires: Date.now() + 28 * 86400000,
-              },
-              env,
-            )
-          : "";
-      result.headers.append(
-        "Set-Cookie",
-        cookie(
-          "shapers-google-calendar",
-          value,
-          origin,
-          value ? 28 * 86400 : 0,
-        ),
-      );
-    } catch {
-      result.headers.append(
-        "Set-Cookie",
-        cookie("shapers-google-calendar", "", origin, 0),
-      );
+    if (pending.calendar === true) {
+      try {
+        const value =
+          session.provider_token && user.data.user.id
+            ? seal(
+                {
+                  userId: user.data.user.id,
+                  accessToken: session.provider_token,
+                  refreshToken: session.provider_refresh_token || "",
+                  accessExpires: Date.now() + 50 * 60000,
+                  expires: Date.now() + 28 * 86400000,
+                },
+                env,
+              )
+            : "";
+        result.headers.append(
+          "Set-Cookie",
+          cookie(
+            "shapers-google-calendar",
+            value,
+            origin,
+            value ? 28 * 86400 : 0,
+          ),
+        );
+      } catch {
+        result.headers.append(
+          "Set-Cookie",
+          cookie("shapers-google-calendar", "", origin, 0),
+        );
+      }
     }
     const handoff = seal(
       {

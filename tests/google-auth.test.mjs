@@ -95,6 +95,8 @@ test("installed Supabase SDK creates S256 PKCE and exchanges the same server-onl
     sdk,
   );
   assert.equal(done.headers.get("location"), origin + "/auth/complete");
+  assert.ok(!done.headers.getSetCookie().some(c => c.includes("shapers-google-calendar=")),
+    "profile-only sign-in must not overwrite an existing calendar grant");
 });
 const origin = "http://localhost:3000";
 const request = (path, body = {}, cookie = "", host = origin) =>
@@ -110,12 +112,12 @@ const makeClient = (_env, storage) => ({
   auth: {
     signInWithOAuth: async ({ provider, options }) => {
       assert.equal(provider, "google");
-      assert.equal(
-        options.scopes,
-        "openid email profile https://www.googleapis.com/auth/calendar.events.readonly",
-      );
-      assert.equal(options.queryParams.access_type, "offline");
-      assert.equal(options.queryParams.prompt, "consent select_account");
+      const calendar = options.scopes.includes("calendar.events.readonly");
+      assert.equal(options.scopes, calendar
+        ? "openid email profile https://www.googleapis.com/auth/calendar.events.readonly"
+        : "openid email profile");
+      assert.equal(options.queryParams.access_type, calendar ? "offline" : undefined);
+      assert.equal(options.queryParams.prompt, calendar ? "consent select_account" : "select_account");
       assert.equal(options.skipBrowserRedirect, undefined);
       storage.setItem(
         "sb-fixture-code-verifier",
@@ -162,9 +164,28 @@ const cookies = (response) =>
     .filter((c) => !c.includes("Max-Age=0"))
     .map((c) => c.split(";")[0])
     .join("; ");
+test("ordinary Google sign-in requests only identity; Calendar requires an explicit boolean opt-in", async () => {
+  for (const calendar of [undefined, false, true]) {
+    let options;
+    const response = await startGoogle(request("/auth/google", { calendar }), env,
+      (configuration, storage) => {
+        const client = makeClient(configuration, storage);
+        return { auth: { ...client.auth, signInWithOAuth: async input => {
+          options = input.options;
+          return client.auth.signInWithOAuth(input);
+        } } };
+      }, settings);
+    assert.equal(response.status, 200);
+    assert.equal(options.scopes.includes("calendar.events.readonly"), calendar === true);
+    assert.equal(options.queryParams.include_granted_scopes, calendar === true ? "true" : undefined);
+  }
+  for (const calendar of ["true", "false", 1, null, {}]) {
+    assert.equal((await startGoogle(request("/auth/google", { calendar }), env, makeClient, settings)).status, 400);
+  }
+});
 async function begin(host = origin) {
   const response = await startGoogle(
-    request("/auth/google", { next: "/legacy" }, "", host),
+    request("/auth/google", { next: "/legacy", calendar: true }, "", host),
     { ...env, ...(host === origin ? {} : { APP_URL: host }) },
     makeClient,
     settings,
