@@ -2,7 +2,7 @@
 
 Osnovna Google prijava zahteva samo `openid email profile`. V Pregledu ali Sestankih klikni **Poveži Google koledar** in izberi isti račun kot pri prijavi. Ta ločeni tok pošlje `calendar: true` na `/auth/google` ter zahteva `calendar.events.readonly`, offline dostop in privolitev za glavni (`primary`) koledar. Izbira je vezana na šifrirani PKCE flow; navadna prijava ne zamenja obstoječega koledarskega dovoljenja s profilnim žetonom. Google mora pokazati dovoljenje za branje dogodkov; uporabnik ga mora sam odobriti.
 
-Živi pregled 2026-10-24: produkcijski APP_URL in Supabase Site URL sta usklajena na `https://shapers-os.vercel.app`, produkcijski callback je dovoljen, GOOGLE_CLIENT_ID in skriti GOOGLE_CLIENT_SECRET istega Supabase odjemalca sta nastavljena v Vercel Production. Google je za `vito.bajt@gmail.com` vrnil `403 access_denied`, ker račun ni testni uporabnik. Google Cloud projekt `371443663682` trenutnemu računu zavrne `oauthconfig.testusers.get`, `oauthconfig.verification.get` in `resourcemanager.projects.get`. Lastnik mora v Google Auth Platform → Audience dodati ta račun med Test users ter preveriti Calendar API. To zahteva lastnikov dostop; sama Vercel/Supabase nastavitev omejitve ne odpravi. Živo branje koledarja do takrat ostaja BLOCKED.
+Prvotni živi pregled 2026-10-24: produkcijski APP_URL in Supabase Site URL sta usklajena na `https://shapers-os.vercel.app`, produkcijski callback je dovoljen, GOOGLE_CLIENT_ID in skriti GOOGLE_CLIENT_SECRET istega Supabase odjemalca sta nastavljena v Vercel Production. Google je za `vito.bajt@gmail.com` vrnil `403 access_denied`, ker račun ni testni uporabnik. Google Cloud projekt `371443663682` trenutnemu računu zavrne `oauthconfig.testusers.get`, `oauthconfig.verification.get` in `resourcemanager.projects.get`. Lastnik mora v Google Auth Platform → Audience dodati ta račun med Test users ter preveriti Calendar API. To zahteva lastnikov dostop; sama Vercel/Supabase nastavitev omejitve ne odpravi. To prvotno blokado odpravi naknadno živo preverjanje spodaj.
 
 ## Nastavitev
 
@@ -13,6 +13,10 @@ Osnovna Google prijava zahteva samo `openid email profile`. V Pregledu ali Sesta
 5. Če manjkajo obnovitvene nastavitve, prva seja po privolitvi še vedno deluje. Po približno 50 minutah aplikacija zahteva ponovno povezavo in ne prikaže zastarelih dogodkov kot svežih.
 
 ## Prikaz in zasebnost
+
+### Naknadno živo preverjanje, 2026-10-24 ob 16:39 (Europe/Ljubljana)
+
+Prejšnja blokada testnega uporabnika je odpravljena: uporabnik je potrdil dodajanje svojega računa med Test users. V produkciji `https://shapers-os.vercel.app` je ponovna povezava z istim računom uspešno zaključila Google → Supabase PKCE → aplikacija. Google je pokazal že odobrene pravice za branje dogodkov in identiteto; pravic za pisanje ni bilo zahtevanih. Kartica Moj Google koledar je iz glavnega koledarja uspešno prikazala 31 prihodnjih dogodkov (8 vidnih in 23 pod Pokaži več), datume/ure ter povezave na Google/Meet. Ročna osvežitev je uspela. Opozorila o manjkajoči konfiguraciji samodejne obnove ni. Živa obnova po dejanskem izteku access tokena ostaja NOT_VERIFIED; ta pregled ne simulira izteka. To dokazuje osebni koledar; ločen organizacijski Google Calendar ostaja nenastavljen.
 
 Pregled in Sestanki samodejno prebereta prihodnjih 90 dni glavnega koledarja (tudi trenutno potekajoče dogodke). Prikažeta čas v Europe/Ljubljana, naslov, lokacijo in povezavo na dogodek/Google Meet. Ponavljajoči dogodki se razširijo v posamezne termine; odpovedani in izrecno zavrnjeni so izločeni. Celodnevni in večdnevni dogodki ohranijo datumski pomen ter izključni končni datum. Sekundarni/deljeni koledarji niso vključeni. Prvih osem vrstic je vidnih takoj, ostale na Pokaži več. Največ 500 dogodkov, ob omejitvi izrecno opozorilo.
 
