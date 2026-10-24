@@ -1,58 +1,61 @@
 # Shapers OS
 
-Slovenski delovni prostor za projekte, dogodke, člane in prostovoljske ure.
-
-## Zagon v GitHub Codespaces
-
-1. Odpri repozitorij z **Code → Codespaces → Open/Create**.
-2. Za obstoječi Codespace v terminalu zaženi:
-
-   ```bash
-   git pull --ff-only origin main
-   corepack enable
-   pnpm install --frozen-lockfile
-   pnpm dev
-   ```
-
-3. V zavihku **Ports** odpri vrata **3000** v brskalniku. Ohranijo naj zasebno vidnost.
-
-Povezava `*.github.dev` je urejevalnik kode. Aplikacija teče na posredovanih vratih 3000 (`*-3000.app.github.dev`). Nov Codespace uporabi `.devcontainer/devcontainer.json`; po začetni namestitvi se razvojni strežnik zažene samodejno. V obstoječem Codespacu lahko izbereš **Codespaces: Rebuild Container** za uporabo te konfiguracije.
+Slovenski delovni prostor za projekte, naloge, prostovoljske ure in udeležbo. Glavni pogled uporablja Supabase Auth in normalizirane tabele z RLS; brskalnik ni avtoritativna baza. Ciljni repozitorij je [Vitos911/Shapers-OS](https://github.com/Vitos911/Shapers-OS).
 
 ## Lokalni zagon
 
-Potrebuješ Node.js 22 ali novejši (za teste vsaj 22.18) in pnpm 11.25.0.
+Node.js 22.18+ in pnpm 11.25.0. Ustvari `.env.local` po `.env.example` in nastavi svoj projekt. Datoteka in `.private/` morata ostati zunaj Gita.
 
 ```bash
 corepack enable
 pnpm install --frozen-lockfile
-pnpm dev
-```
-
-Odpri `http://localhost:3000`. Produkcijski zagon:
-
-```bash
 pnpm test
+pnpm typecheck
+pnpm lint
 pnpm build
 pnpm start
 ```
 
+Odpri `http://localhost:3000`. Za razvoj uporabi `pnpm dev`. Preverjanje strežnika: `GET /api/health`. Brez nastavljenega Supabase se prikaže stanje za konfiguracijo, ne navidezna organizacija.
+
 ## Funkcije
 
-- Projekti s področjem, ciljnim datumom, statusom in seznamom nalog.
-- Člani z vlogami in seštevkom opravljenih ur.
-- Dogodki z datumom, lokacijo in ročnim beleženjem udeležbe.
-- Evidenca ur po članu in projektu, validacija datumov in 15-minutnih intervalov.
-- Iskanje v trenutnem pogledu, filtri projektov in pregled trenutnega meseca.
-- Izvoz ur v CSV ter izvoz/uvoz varnostne kopije JSON v Nastavitvah.
-- Preverjanje odzivnosti strežnika: `GET /api/health`.
-- Samodejni testi in produkcijski build v GitHub Actions.
+- MEMBER: lastni profil, dodeljene naloge, lastne ure, tedenski cilji, relevantni sestanki in udeležba.
+- ADMIN: člani, projekti, članstva projektov, naloge/dodelitve, popravljanje udeležbe in organizacijska analitika.
+- SUPERADMIN: zaupani dostopi/vloge, izključitev računa, povabila že odobrenim naslovom in nastavitve.
+- Prehodi nalog, zaključki in pomembne spremembe imajo shranjeno zgodovino; član ne more spremeniti prioritete, dodelitve ali vloge.
+- Google Calendar API je izključno za branje. Manjkajoča povezava je vidna kot napaka konfiguracije; ICS ni predstavljen kot živi koledar.
+- Stari JSON delovni prostori in izrecni lokalni način so ohranjeni na `/legacy`. Niso vir organizacijskih statistik; podatki se ne pretvarjajo ali brišejo samodejno.
 
-## Podatki in omejitve prve različice
+## Vzpostavitev in dokumentacija
 
-Če je Supabase nastavljen, aplikacija ponudi prijavo po e-pošti in skupne delovne prostore. Lastnik prostora lahko izbranim potrjenim e-poštnim računom dodeli ogled ali urejanje. Podatki se shranijo v bazo šele po uspešnem odgovoru; spori pri sočasnem urejanju zahtevajo osvežitev. Poglej [navodila za Supabase](docs/supabase.md).
+- [Infrastruktura: od prazne baze do produkcije](docs/infrastructure.md)
+- [Google Calendar: uvoz, readonly dostop in udeležba](docs/google-calendar.md)
+- [Varnost, RBAC in definicije meritev](docs/backend-security.md)
+- [Dokazi preverjanja in preostale omejitve](docs/verification.md)
+- [Prejšnji JSON prostori](docs/supabase.md)
+- [Oblikovne odločitve](docs/design.md)
 
-Lokalni način ostane na voljo. Ta shranjuje zapise v `localStorage` trenutnega brskalnika in se ne sinhronizira med napravami. Stari lokalni podatki ostanejo ohranjeni; prenos v Supabase sprožiš izrecno v Nastavitvah. Redno izvozi varnostno kopijo.
+V obstoječem projektu je ohranjenih vseh 20 članskih UUID-jev in oba prejšnja delovna prostora. Povezanih je 20 sandbox Auth računov. Zgodovinske ure so 120 tedenskih seštevkov (1.705,5 h), ne izmišljeni dnevni vnosi. 258 zapisov udeležbe čaka na prave Google reference. Imena desetih projektov v dostopnih virih niso bila podana, zato projekti niso izmišljeni.
 
-Začetni delovni prostor je prazen. Dodajanje člana ustvari zapis v evidenci; ne ustvari uporabniškega računa, dodeli dostopa ali pošlje vabila. Za Supabase sta v ignorirani `.env.local` nastavljena samo URL in publishable ključ. Secret ali service-role ključi niso potrebni. Privzeti Supabase mail strežnik ima omejene prejemnike; za širšo ekipo nastavi lasten SMTP v Supabase.
+Demo gesla so naključna, različna za vsak račun in samo v lokalni ignorirani `.private/demo-credentials.json`. Ne objavljaj je. Demo obrazec odpreš na prijavni strani; za ADMIN uporabi `ana.kovac@sandbox.example`, za MEMBER `ziga.krajnc@sandbox.example` z ustreznim zasebnim geslom. Realni SUPERADMIN mora najprej potrditi svojo e-pošto; noben realni račun ni samodejno potrjen in nobeno povabilo ni bilo poslano.
 
-`.env`, `.env.*`, ključi, običajne datoteke poverilnic, odvisnosti in build so izključeni iz Gita. Nikoli ne dodajaj dejanskih skrivnosti v izvorno kodo.
+## GitHub Codespaces
+
+V obstoječem Codespacu (vrata 3000 naj ostanejo zasebna):
+
+```bash
+git switch main
+git pull --ff-only origin main
+corepack enable
+pnpm install --frozen-lockfile
+pnpm test
+pnpm typecheck
+pnpm lint
+pnpm build
+pnpm start
+```
+
+Pred zagonom ustavi prejšnji razvojni strežnik na vratih 3000. Strežniške spremenljivke nastavi tudi v Codespacu; lokalna `.env.local` se namerno ne prenese z Gitom. Supabase Auth Site URL in dovoljene redirect URL-je prilagodi dejanskemu `*-3000.app.github.dev` naslovu. `*.github.dev` brez vrat je urejevalnik, ne aplikacija. Objavljena koda na GitHub še ne pomeni posodobljenega ali preverjenega Codespace strežnika.
+
+Nikoli ne dodajaj dejanskih ključev, poverilnic ali `.env.local` v commit. Edina različicena env datoteka je `.env.example` s praznimi vrednostmi/oznakami.

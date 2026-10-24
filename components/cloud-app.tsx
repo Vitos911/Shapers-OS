@@ -15,6 +15,8 @@ import {
   Users,
 } from "lucide-react";
 import Workspace from "./workspace";
+import OrganizationApp from "./organization-app";
+import Link from "next/link";
 import { cloudStore, localStore } from "@/lib/storage";
 import { emptyWorkspace } from "@/lib/model";
 
@@ -23,21 +25,21 @@ type CloudSpace = { id: string; name: string; owner_id: string };
 function CloudFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="cloud-entry">
-      <a className="brand" href="/">
+      <Link className="brand" href="/">
         <span className="brand-mark">
           <Earth size={26} />
         </span>
         <span>
           shapers<span className="brand-os">OS</span>
         </span>
-      </a>
+      </Link>
       <section className="cloud-entry-card">{children}</section>
       <p className="cloud-entry-footer">Prostor za skupen učinek.</p>
     </div>
   );
 }
 
-export default function CloudApp() {
+export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
   const [client, setClient] = useState<SupabaseClient | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +70,11 @@ export default function CloudApp() {
           );
         if (!alive) return;
         if (!config.configured) {
-          setLocal(true);
+          if (legacy) setLocal(true);
+          else
+            setError(
+              "Supabase ni konfiguriran. Organizacijski podatki zahtevajo povezano bazo; lokalni način ni nadomestilo.",
+            );
           setLoading(false);
           return;
         }
@@ -80,7 +86,10 @@ export default function CloudApp() {
           (_event, session) => {
             if (!alive) return;
             setUser(session?.user ?? null);
-            if (session) { setMessage(""); setError(""); }
+            if (session) {
+              setMessage("");
+              setError("");
+            }
             if (!session) {
               setSelected(null);
               setSpaces([]);
@@ -108,10 +117,10 @@ export default function CloudApp() {
       alive = false;
       unsubscribe?.();
     };
-  }, []);
+  }, [legacy]);
 
   async function loadSpaces() {
-    if (!client || !user) return;
+    if (!client || !user?.id) return;
     const { data, error } = await client
       .from("shapers_workspaces")
       .select("id,name,owner_id")
@@ -148,7 +157,7 @@ export default function CloudApp() {
     return () => {
       active = false;
     };
-  }, [client, user?.id]);
+  }, [client, user]);
 
   async function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -218,8 +227,10 @@ export default function CloudApp() {
   async function signOut() {
     if (!client) return;
     const { error } = await client.auth.signOut();
-    if (error) setError("Odjava ni uspela. Poskusi znova.");
-    else {
+    if (error) {
+      setError("Odjava ni uspela. Poskusi znova.");
+      if (!legacy) throw new Error("Odjava ni uspela. Poskusi znova.");
+    } else {
       setSelected(null);
       setSpaces([]);
       setUser(null);
@@ -237,7 +248,16 @@ export default function CloudApp() {
         <p role="status">Preverjam povezavo in prijavo.</p>
       </CloudFrame>
     );
-  if (local)
+  if (user && client && !legacy)
+    return (
+      <OrganizationApp
+        key={user.id}
+        client={client}
+        user={user}
+        onSignOut={signOut}
+      />
+    );
+  if (local && legacy)
     return (
       <Workspace
         store={localAdapter}
@@ -379,19 +399,80 @@ export default function CloudApp() {
           </button>
         </>
       )}
-      <button
-        className="cloud-text-button"
-        onClick={() => {
-          setLocal(true);
-          setError("");
-        }}
-      >
-        Nadaljuj samo v tem brskalniku
-      </button>
+      {!user && client && !legacy && (
+        <details>
+          <summary>Demo prijava z osebnim geslom</summary>
+          <p>
+            Za vnaprej pripravljene sandbox račune. Gesla niso javna; pridobi
+            jih od skrbnika.
+          </p>
+          <form
+            onSubmit={async (event) => {
+              event.preventDefault();
+              setBusy(true);
+              setError("");
+              const f = new FormData(event.currentTarget);
+              try {
+                const result = await client.auth.signInWithPassword({
+                  email: String(f.get("demoEmail")),
+                  password: String(f.get("demoPassword")),
+                });
+                if (result.error)
+                  setError(
+                    "Prijava ni uspela. Preveri osebne demo poverilnice.",
+                  );
+              } catch {
+                setError("Prijava ni uspela.");
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            <label>
+              Demo e-pošta
+              <input
+                name="demoEmail"
+                type="email"
+                autoComplete="username"
+                required
+              />
+            </label>
+            <label>
+              Osebno geslo
+              <input
+                name="demoPassword"
+                type="password"
+                autoComplete="current-password"
+                required
+              />
+            </label>
+            <button className="button primary" disabled={busy}>
+              Prijavi se
+            </button>
+          </form>
+        </details>
+      )}
+      {legacy && (
+        <button
+          className="cloud-text-button"
+          onClick={() => {
+            setLocal(true);
+            setError("");
+          }}
+        >
+          Nadaljuj samo v tem brskalniku
+        </button>
+      )}
       <p className="cloud-entry-note">
-        Obstoječi lokalni podatki ostanejo ohranjeni. V oblak jih preneseš v
-        Nastavitvah po prijavi.
+        {legacy
+          ? "Stari lokalni podatki ostanejo ohranjeni. To ni organizacijska baza."
+          : "Dostop do organizacije in vloge preverja strežnik. Stari prostori so ohranjeni v arhivu."}
       </p>
+      {!legacy && (
+        <Link className="cloud-text-button" href="/legacy">
+          Odpri prejšnje delovne prostore
+        </Link>
+      )}
     </CloudFrame>
   );
 }
@@ -418,8 +499,22 @@ function Sharing({
     else setAccess(data);
   }
   useEffect(() => {
-    if (owner) void refresh();
-  }, [workspaceId, owner]);
+    if (!owner) return;
+    let active = true;
+    void client
+      .from("shapers_workspace_access")
+      .select("email,role")
+      .eq("workspace_id", workspaceId)
+      .order("email")
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) setError("Dostopov ni mogoče prebrati.");
+        else setAccess(data);
+      });
+    return () => {
+      active = false;
+    };
+  }, [client, workspaceId, owner]);
   if (!owner)
     return (
       <section className="panel settings-panel">

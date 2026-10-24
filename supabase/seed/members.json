@@ -1,0 +1,182 @@
+[
+  {
+    "id": "86db4fe3-8283-4e2e-81c9-efc154b92d0d",
+    "name": "Aljaž Hribar",
+    "tier": "GO!",
+    "email": "aljaz.hribar@sandbox.example",
+    "series": "Community; Summer School",
+    "is_admin": false,
+    "weekly_hours": 4
+  },
+  {
+    "id": "d0b6d629-3718-40b0-8b89-6c1ab38ce66f",
+    "name": "Ana Kovač",
+    "tier": "Core",
+    "email": "ana.kovac@sandbox.example",
+    "series": "Community; Grants; Shapers Tech; Shapers Voice",
+    "is_admin": true,
+    "weekly_hours": 70
+  },
+  {
+    "id": "d10544e4-f679-4da9-acc5-1463eeca8add",
+    "name": "Blaž Bizjak",
+    "tier": "GO!",
+    "email": "blaz.bizjak@sandbox.example",
+    "series": "Community; Summer School",
+    "is_admin": false,
+    "weekly_hours": 4
+  },
+  {
+    "id": "dda1799c-2fde-477b-9505-ec52c65fcd82",
+    "name": "Eva Vidmar",
+    "tier": "Impact",
+    "email": "eva.vidmar@sandbox.example",
+    "series": "Community; Grants; Shape Talks",
+    "is_admin": false,
+    "weekly_hours": 10
+  },
+  {
+    "id": "3fe14e32-bbd3-4cc6-a2f6-55f1bc92e2e8",
+    "name": "Filip Rozman",
+    "tier": "GO!",
+    "email": "filip.rozman@sandbox.example",
+    "series": "Community; Grants",
+    "is_admin": false,
+    "weekly_hours": 4
+  },
+  {
+    "id": "4e1e1f0f-ea68-4afc-80db-85ba778fde7b",
+    "name": "Jan Potočnik",
+    "tier": "Impact",
+    "email": "jan.potocnik@sandbox.example",
+    "series": "Community; Grants; Shape Talks",
+    "is_admin": false,
+    "weekly_hours": 10
+  },
+  {
+    "id": "34f97c23-d503-4183-a489-f3f9100c60f0",
+    "name": "Katja Lesjak",
+    "tier": "GO!",
+    "email": "katja.lesjak@sandbox.example",
+    "series": "Community; Grants",
+    "is_admin": false,
+    "weekly_hours": 4
+  },
+  {
+    "id": "108d5c96-dbf6-4d3f-afa4-10282e76fe98",
+    "name": "Luka Novak",
+    "tier": "Core",
+    "email": "luka.novak@sandbox.example",
+    "series": "Community; Summer School; Shapers Tech; Shape Talks",
+    "is_admin": true,
+    "weekly_hours": 70
+  },
+  {
+    "id": "ece1d6fd-196d-4f3c-903a-dcd25cc07c05",
+    "name": "Maja Horvat",
+    "tier": "Core",
+    "email": "maja.horvat@sandbox.example",
+    "series": "Community; Summer School; Grants; Shapers Tech",
+    "is_admin": true,
+    "weekly_hours": 70
+  },
+  {
+    "id": "82748c61-ca92-4df0-a212-56007e2ad563",
+    "name": "Matic Kos",
+    "tier": "Impact",
+    "email": "matic.kos@sandbox.example",
+    "series": "Community; Shape Talks; Shapers Voice",
+    "is_admin": false,
+    "weekly_hours": 10
+  },
+  {
+    "id": "fa5cf4a1-4d3e-4ed7-b81c-a44d5cd5f33e",
+    "name": "Nejc Kralj",
+    "tier": "GO!",
+    "email": "nejc.kralj@sandbox.example",
+    "series": "Community; Shapers Tech",
+    "is_admin": false,
+    "weekly_hours": 4
+  },
+  {
+    "id": "510b59d4-42db-486e-a85a-39167cd34417",
+    "name": "Neža Oblak",
+    "tier": "GO!",
+    "email": "neza.oblak@sandbox.example",
+    "series": "Community; Shapers Voice",
+    "is_admin": false,
+    "weekly_hours": 4
+  },
+  {
+    "id": "c208430e-5976-44ae-9c67-73913356770c",
+    "name": "Nina Zupan",
+    "tier": "Impact",
+    "email": "nina.zupan@sandbox.example",
+    "series": "Community; Shapers Tech; Shapers Voice",
+    "is_admin": false,
+    "weekly_hours": 10
+  },
+  {
+    "id": "30431591-83eb-46f1-812b-36f4c3190083",
+    "name": "Petra Jerman",
+    "tier": "GO!",
+    "email": "petra.jerman@sandbox.example",
+    "series": "Community; Shape Talks",
+    "is_admin": false,
+    "weekly_hours": 4
+  },
+  {
+    "id": "de2bb8f3-9604-44cf-800c-a7115aa8e873",
+    "name": "Rok Golob",
+    "tier": "Impact",
+    "email": "rok.golob@sandbox.example",
+    "series": "Community; Shapers Tech; Shapers Voice",
+    "is_admin": false,
+    "weekly_hours": 10
+  },
+  {
+    "id": "5d5af8ed-e784-4edd-9504-803e2cfa89bf",
+    "name": "Sara Mlakar",
+    "tier": "Impact",
+    "email": "sara.mlakar@sandbox.example",
+    "series": "Community; Shapers Tech; Shapers Voice",
+    "is_admin": false,
+    "weekly_hours": 10
+  },
+  {
+    "id": "5de7a04d-368e-41b8-b66c-aed57381e400",
+    "name": "Tjaša Božič",
+    "tier": "GO!",
+    "email": "tjasa.bozic@sandbox.example",
+    "series": "Community; Summer School",
+    "is_admin": false,
+    "weekly_hours": 4
+  },
+  {
+    "id": "2dd9e630-b848-4486-b8c8-dd5a67107687",
+    "name": "Urban Petek",
+    "tier": "GO!",
+    "email": "urban.petek@sandbox.example",
+    "series": "Community; Shapers Tech",
+    "is_admin": false,
+    "weekly_hours": 4
+  },
+  {
+    "id": "741e7108-9249-4fcf-a1d6-a6803704bafe",
+    "name": "Zala Turk",
+    "tier": "GO!",
+    "email": "zala.turk@sandbox.example",
+    "series": "Community; Shapers Tech",
+    "is_admin": false,
+    "weekly_hours": 4
+  },
+  {
+    "id": "993b4566-5900-4d5c-b3c8-74f91df4b1e3",
+    "name": "Žiga Krajnc",
+    "tier": "Impact",
+    "email": "ziga.krajnc@sandbox.example",
+    "series": "Community; Summer School; Shapers Voice",
+    "is_admin": false,
+    "weekly_hours": 10
+  }
+]

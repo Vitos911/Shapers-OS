@@ -1,0 +1,842 @@
+[
+  {
+    "email": "ana.kovac@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 70,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "ana.kovac@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 73,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "ana.kovac@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 73,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "ana.kovac@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 73,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "ana.kovac@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 71,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "ana.kovac@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 49.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "luka.novak@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 86.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "luka.novak@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 66.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "luka.novak@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 49.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "luka.novak@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 83.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "luka.novak@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 75,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "luka.novak@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 61,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "maja.horvat@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 67.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "maja.horvat@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 57,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "maja.horvat@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 73,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "maja.horvat@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 47,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "maja.horvat@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 20.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "maja.horvat@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 28,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "ziga.krajnc@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 6,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "ziga.krajnc@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 10.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "ziga.krajnc@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 10,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "ziga.krajnc@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 11.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "ziga.krajnc@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 8.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "ziga.krajnc@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 6.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "nina.zupan@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 8,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "nina.zupan@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 9,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "nina.zupan@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 9.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "nina.zupan@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 7.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "nina.zupan@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 9,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "nina.zupan@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 8.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "jan.potocnik@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 13,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "jan.potocnik@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 14,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "jan.potocnik@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 6.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "jan.potocnik@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 12.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "jan.potocnik@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 11.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "jan.potocnik@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 7,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "eva.vidmar@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 8,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "eva.vidmar@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 11,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "eva.vidmar@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 13,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "eva.vidmar@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 11,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "eva.vidmar@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 9.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "eva.vidmar@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 4.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "matic.kos@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 0.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "matic.kos@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 4,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "matic.kos@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 5.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "matic.kos@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 2,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "matic.kos@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 2,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "matic.kos@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 0.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "sara.mlakar@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 7.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "sara.mlakar@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 11,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "sara.mlakar@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 16,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "sara.mlakar@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 10,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "sara.mlakar@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 11,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "sara.mlakar@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 6,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "rok.golob@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 13,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "rok.golob@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 11,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "rok.golob@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 11,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "rok.golob@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 12,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "rok.golob@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 10,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "rok.golob@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 8.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "zala.turk@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 4,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "zala.turk@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 3.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "zala.turk@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 2,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "zala.turk@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 4.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "zala.turk@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 4.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "zala.turk@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 2,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "nejc.kralj@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 2,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "nejc.kralj@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 4.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "nejc.kralj@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 6,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "nejc.kralj@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 4,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "nejc.kralj@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 4.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "nejc.kralj@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 4,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "tjasa.bozic@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "tjasa.bozic@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 3.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "tjasa.bozic@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 2.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "tjasa.bozic@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 1.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "tjasa.bozic@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 2,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "tjasa.bozic@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 1.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "aljaz.hribar@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 5.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "aljaz.hribar@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 3.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "aljaz.hribar@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 4.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "aljaz.hribar@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 4.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "aljaz.hribar@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 4,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "aljaz.hribar@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 2.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "petra.jerman@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 6,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "petra.jerman@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "petra.jerman@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 6,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "petra.jerman@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "petra.jerman@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 7,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "petra.jerman@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 3.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "blaz.bizjak@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 3.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "blaz.bizjak@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 4,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "blaz.bizjak@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 4.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "blaz.bizjak@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 7,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "blaz.bizjak@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 4.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "blaz.bizjak@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 2,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "katja.lesjak@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 2.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "katja.lesjak@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 4.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "katja.lesjak@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "katja.lesjak@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 3.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "katja.lesjak@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 3,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "katja.lesjak@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 2,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "urban.petek@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 1.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "urban.petek@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 0.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "urban.petek@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 0,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "urban.petek@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 1.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "urban.petek@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 1.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "urban.petek@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 0.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "neza.oblak@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 3.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "neza.oblak@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 4,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "neza.oblak@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 2.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "neza.oblak@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 4,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "neza.oblak@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 4,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "neza.oblak@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 1.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "filip.rozman@sandbox.example",
+    "week_start": "2026-09-14",
+    "through_date": "2026-09-20",
+    "hours": 3.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "filip.rozman@sandbox.example",
+    "week_start": "2026-09-21",
+    "through_date": "2026-09-27",
+    "hours": 5.5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "filip.rozman@sandbox.example",
+    "week_start": "2026-09-28",
+    "through_date": "2026-10-04",
+    "hours": 5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "filip.rozman@sandbox.example",
+    "week_start": "2026-10-05",
+    "through_date": "2026-10-11",
+    "hours": 5,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "filip.rozman@sandbox.example",
+    "week_start": "2026-10-12",
+    "through_date": "2026-10-18",
+    "hours": 3,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  },
+  {
+    "email": "filip.rozman@sandbox.example",
+    "week_start": "2026-10-19",
+    "through_date": "2026-10-23",
+    "hours": 2,
+    "source": "Sandbox hours sheet; final week through Friday 2026-10-23"
+  }
+]

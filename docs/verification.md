@@ -1,0 +1,28 @@
+# Verification record — 2026-10-24
+
+This records observed evidence, not a blanket “everything complete” claim. See README for repository/build checks and the source tests for exact assertions.
+
+## Database and imports
+
+- Applied organization backend, provisioning, historical-weekly-hours and policy/index refinement migrations on `xdzofggamwoywxwdduio`; restored its already-applied members migration to Git. Original three JSON workspace migrations and two existing workspaces preserved.
+- All 20 original member UUIDs preserved (sorted-ID digest `5938eaa1b582c5eb8e87a625f78dc66b`), tiers, targets and series unchanged. All 20 now linked to Auth; provisioning twice creates no duplicate accounts and does not rotate passwords.
+- Trusted access: 3 sandbox ADMIN, 17 MEMBER, plus 3 explicitly owner-approved real SUPERADMIN access entries pending their own verified-email login. No extra fake organization member created. Real operator sign-in/invitations not exercised.
+- Imported 120 weekly totals, 1,705.5 h; repeated import retained exactly the same count/sum. The final week is covered through 2026-10-23, not invented Saturday/Sunday hours.
+- The supplied [hours source](https://docs.google.com/spreadsheets/d/1qqtvH5Qxxo1gEmlwpp6dhXuOBIsbWt-c6vgup_dFr44/edit) and [attendance source](https://docs.google.com/spreadsheets/d/1mSLkOloUM1iPtcdudR-_yCst1dDEtznBonaYlmVbWTI/edit) were read only, never edited. 258 attendance records are saved as pending source; zero imported attendance/Google references until a real calendar can be read.
+- 55 source ICS events preserved and checked for unique UIDs, duration and Ljubljana DST switch. No Google writes performed. Ten named projects were unavailable; production project/task lists remain genuinely empty until users add data.
+
+## Automated coverage
+
+- `pnpm test`: model/storage regression tests, auth/role helpers, strict input/body limits, hour/import accounting, history-based analytics, attendance windows, Google pagination/recurrence/DST/error/empty cases, source ICS consistency.
+- `supabase/tests/organization_rls.sql`: executed against the live sandbox in a rollback transaction. MEMBER/ADMIN/SUPERADMIN boundaries, spoofed metadata/email, escalation rejection, task transitions/history, ownership, quarter-hour constraints, attendance windows/duplicates/correction, access disabling and anonymous rejection. Fixtures leave no persistent users or application records.
+- `scripts/check-organization.mjs`: actual Supabase password sign-ins for MEMBER/ADMIN → local Next API → Postgres → refreshed response. Project/task creation, assignment, done history, hour create/edit/reload, role denial and imported-period overlap denial. Temporary rows cleaned by exact per-run IDs; source/imported data retained.
+- 31/31 automated tests passed, zero skipped or failed. The suite covers public config credential isolation, private OAuth refresh and signed readonly service-account assertions in addition to API-key fixtures. TypeScript, lint (zero warnings), production build and dependency peer check passed. Production API smoke checks passed again after the final build; disposable test records were removed. A Windows sandbox EPERM during pnpm's project-link creation required a rerun with normal host permissions; that rerun passed. CI intentionally builds without secrets. Fixtures verify Google request behavior, not live Google authorization.
+- Secret scan checked 64 source files and 11 browser build chunks: no actual server-key occurrence or private credential pattern found. `.env.local`, `.private/` and the unrelated nested clone are ignored; only the safe `.env.example` template is tracked.
+
+Applied version sequence (first four pre-existing; final four added during this task): `20261024083823`, `20261024084128`, `20261024084522`, `20261024090853`, `20261024093558`, `20261024094543`, `20261024095435`, `20261024101422`. All migration files are versioned, including the previously remote-only members migration.
+
+## Browser and remaining boundaries
+
+Production localhost was opened in the in-app browser. Actual sandbox ADMIN login, logout and database-backed overview/analytics were observed: 20 members, 201.5 current-week hours, cohort/hour details from Supabase. Actual MEMBER login shows only that member's six weekly totals (53 h), no organization analytics navigation, and explicit Google setup state. A previous temporary connection-refused tab was replaced after the production server was confirmed healthy; no browser security or firewall bypass was used. A 390px viewport was not separately automated with the available browser interface.
+
+Not yet established by those checks: authenticated real SUPERADMIN browser workflow; live Google request; historical attendance import; separate fresh/empty Supabase project; latest hosted Codespace deployment. The existing private Codespace requires its owner's GitHub login and server env update; a main-branch push alone is not deployment verification. Keep these NOT VERIFIED until actually exercised. Local test accounts/SQL fixtures do not prove real SMTP delivery.

@@ -1,5 +1,7 @@
 # Supabase setup
 
+This page describes the previous JSON application at `/legacy`. The main organization backend and its migrations are documented in [infrastructure.md](infrastructure.md). Provisioning and Google reference sync need a **server-only** secret key; the legacy browser still does not. Existing workspace data and permissions are preserved, never automatically converted or deleted.
+
 Project: `ShapersOS` (`xdzofggamwoywxwdduio`).
 
 ## Environment

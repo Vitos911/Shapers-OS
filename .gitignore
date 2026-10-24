@@ -5,6 +5,8 @@ dist/
 coverage/
 .env
 .env.*
+env.local
+env.loca
 *.pem
 *.key
 *.p12
@@ -20,3 +22,8 @@ service-account*.json
 .DS_Store
 supabase/.temp/
 supabase/.branches/
+shapersos-workspace/
+.private/
+test-results/
+playwright-report/
+!.env.example
