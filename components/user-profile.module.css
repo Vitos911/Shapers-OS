@@ -1,0 +1,28 @@
+.profile { display: grid; gap: 24px; min-width: 0; color: #18283f; }
+.hero, .card { background: #ffffffc4; border: 1px solid #ffffffed; border-radius: 24px; box-shadow: 0 8px 30px #305e9c0a; }
+.hero { display: flex; gap: 24px; align-items: center; padding: 32px; }
+.avatar { display: grid; place-items: center; flex: 0 0 88px; width: 88px; height: 88px; background: #e0edff; color: #1554aa; border: 1px solid #fff; border-radius: 24px; font-size: 29px; font-weight: 650; }
+.identity { min-width: 0; }
+.eyebrow { font-size: 11px; letter-spacing: .12em; color: #536580; font-weight: 600; }
+.hero h2 { margin: 8px 0; font-size: clamp(24px, 3vw, 32px); letter-spacing: -.035em; overflow-wrap: anywhere; }
+.identity p { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; color: #536580; font-size: 14px; overflow-wrap: anywhere; }
+.badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.badges span { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background: #edf4ff; color: #1554aa; font-size: 12px; border-radius: 8px; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.card { padding: 28px; min-width: 0; }
+.card h2 { font-size: 18px; letter-spacing: -.02em; margin: 0 0 20px; }
+.details { display: grid; margin: 0; }
+.details > div { display: grid; grid-template-columns: minmax(100px, .8fr) minmax(0, 1.2fr); gap: 16px; padding: 13px 0; border-bottom: 1px solid #dce6f3; }
+.details dt { font-size: 13px; color: #536580; }
+.details dd { margin: 0; font-size: 14px; font-weight: 500; overflow-wrap: anywhere; }
+.note { color: #536580; font-size: 12px; line-height: 1.65; margin-top: 20px; }
+.empty { display: grid; gap: 14px; color: #536580; padding: 16px 0; }
+.empty svg { color: #3973bf; }
+.empty h3 { font-size: 16px; color: #243b5a; margin: 0; }
+.empty p { font-size: 14px; line-height: 1.75; margin: 0; max-width: 50ch; }
+.form { display: grid; gap: 10px; border-top: 1px solid #dce6f3; padding-top: 24px; margin-top: 24px; }
+.form label { font-size: 13px; font-weight: 600; }
+.form button { justify-self: start; margin-top: 6px; }
+.form input:focus-visible { outline: 2px solid #256acb; outline-offset: 3px; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } .card { padding: 22px; } .hero { padding: 24px; gap: 18px; align-items: flex-start; } .avatar { flex-basis: 64px; width: 64px; height: 64px; font-size: 23px; border-radius: 18px; } }
+@media (max-width: 420px) { .hero { flex-direction: column; } .details > div { grid-template-columns: 1fr; gap: 5px; } }

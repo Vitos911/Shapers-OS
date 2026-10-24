@@ -170,6 +170,10 @@ strong {
   color: #8492a8;
   margin-left: 3px;
 }
+.brand.brand-logo-link { justify-content: center; padding: 0; letter-spacing: normal; }
+.brand-logo { display: block; width: 136px; height: 136px; object-fit: contain; border-radius: 12px; }
+.cloud-entry > .brand.brand-logo-link { margin-bottom: 20px; }
+.cloud-entry .brand-logo { width: 160px; height: 160px; }
 .workspace-label {
   display: flex;
   align-items: center;

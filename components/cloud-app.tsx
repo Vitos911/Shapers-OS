@@ -9,13 +9,13 @@ import {
 import {
   ArrowRight,
   Cloud,
-  Earth,
   LogOut,
   RefreshCw,
   Users,
 } from "lucide-react";
 import Workspace from "./workspace";
 import OrganizationApp from "./organization-app";
+import BrandLogo from "./brand-logo";
 import Link from "next/link";
 import { cloudStore, localStore } from "@/lib/storage";
 import { emptyWorkspace } from "@/lib/model";
@@ -25,13 +25,8 @@ type CloudSpace = { id: string; name: string; owner_id: string };
 function CloudFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="cloud-entry">
-      <Link className="brand" href="/">
-        <span className="brand-mark">
-          <Earth size={26} />
-        </span>
-        <span>
-          shapers<span className="brand-os">OS</span>
-        </span>
+      <Link className="brand brand-logo-link" href="/">
+        <BrandLogo />
       </Link>
       <section className="cloud-entry-card">{children}</section>
       <p className="cloud-entry-footer">Prostor za skupen učinek.</p>

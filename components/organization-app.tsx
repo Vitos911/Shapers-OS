@@ -11,11 +11,14 @@ import {
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import Link from "next/link";
 import PersonalCalendar from "./personal-calendar";
+import BrandLogo from "./brand-logo";
+import UserProfile from "./user-profile";
+import { ownProfile } from "@/lib/user-profile";
 import MemberDashboard, { DashboardSkeleton } from "./dashboard/member-dashboard";
 import shellStyles from "./dashboard/organization-shell.module.css";
 import { isDate } from "@/lib/model";
 import {
-  Earth,
+  UserRound,
   LayoutDashboard,
   FolderKanban,
   CheckSquare,
@@ -58,6 +61,7 @@ type View =
   | "attendance"
   | "members"
   | "analytics"
+  | "profile"
   | "settings";
 type Edit = {
   kind: "projects" | "tasks" | "work" | "attendance";
@@ -79,6 +83,7 @@ const nav = [
   ["attendance", "Prisotnost", ClipboardCheck],
   ["members", "Člani", Users],
   ["analytics", "Analitika", BarChart3],
+  ["profile", "Moj profil", UserRound],
   ["settings", "Nastavitve", Settings2],
 ] as const;
 const labels: Record<string, string> = {
@@ -324,7 +329,8 @@ export default function OrganizationApp({
     actor = s.identity,
     admin = isAdmin(actor.role),
     superadmin = actor.role === "SUPERADMIN",
-    me = s.members.find((m) => m.id === actor.member_id);
+    me = s.members.find((m) => m.id === actor.member_id),
+    profile = ownProfile(s, user);
   const memberName = (id: string | null) =>
     s.members.find((m) => m.id === id)?.name || (id ? "Član" : "Nedodeljeno");
   const projectName = (id: string | null) =>
@@ -536,13 +542,8 @@ export default function OrganizationApp({
       )}
       <aside ref={navigation} id="org-navigation" className={"sidebar" + (menu ? " is-open" : "")} aria-label="Navigacija organizacije" role={menu ? "dialog" : undefined} aria-modal={menu || undefined}>
         <button className={shellStyles.close} aria-label="Zapri navigacijo" onClick={() => setMenu(false)}><X size={20} /></button>
-        <Link className="brand" href="/">
-          <span className="brand-mark">
-            <Earth size={26} />
-          </span>
-          <span>
-            shapers<span className="brand-os">OS</span>
-          </span>
+        <Link className="brand brand-logo-link" href="/">
+          <BrandLogo />
         </Link>
         <div className="org-hub">
           <strong>{s.settings.name}</strong>
@@ -557,6 +558,7 @@ export default function OrganizationApp({
                 aria-current={view === id ? "page" : undefined}
                 key={id}
                 href={"#" + id}
+                onClick={() => setMenu(false)}
               >
                 <Icon size={19} />
                 {label}
@@ -606,10 +608,10 @@ export default function OrganizationApp({
             <RefreshCw size={15} />
             Osveži iz baze
           </button>
-          <div className={shellStyles.profile}>
-            <span className={shellStyles.avatar} aria-hidden="true">{(me?.name || actor.email).slice(0, 1).toLocaleUpperCase("sl")}</span>
-            <div><strong>{me?.name || "Organizacija"}</strong><small>{me ? `Shapers ${me.tier}` : actor.role}</small></div>
-          </div>
+          <a className={shellStyles.profile} href="#profile" aria-label="Odpri moj profil" aria-current={view === "profile" ? "page" : undefined}>
+            <span className={shellStyles.avatar} aria-hidden="true">{profile?.initials || "?"}</span>
+            <div><strong>{profile?.name || actor.email}</strong><small>{me ? `Shapers ${me.tier}` : "Moj profil"}</small></div>
+          </a>
         </header>
         <main id="org-main" className="org-main">
           {view !== "overview" && <div className="page-heading">
@@ -617,7 +619,7 @@ export default function OrganizationApp({
             <h1>
               {nav.find((v) => v[0] === view)?.[1]}
             </h1>
-            <p>Skupen prostor. Preverjena prijava. Podatki v Supabase.</p>
+            <p>{view === "profile" ? "Tvoji podatki, članstvo in dostop do organizacije." : "Skupen prostor. Preverjena prijava. Podatki v Supabase."}</p>
           </div>}
           {error && (
             <div className="error-banner" role="alert">
@@ -630,6 +632,7 @@ export default function OrganizationApp({
             </div>
           )}
           {view === "meetings" && <PersonalCalendar key={user.id} client={client} />}
+          {view === "profile" && <UserProfile snapshot={s} user={user} busy={busy} onSaveName={(name) => action("profile", "PATCH", { name })} />}
           {(view === "analytics" || view === "members") && !admin ? (
             <Card title="Dostop je omejen">
               <p>Ta pogled zahteva administratorsko vlogo.</p>
@@ -1350,38 +1353,8 @@ export default function OrganizationApp({
           {view === "settings" && (
             <>
               <Card title="Moj profil">
-                <p>
-                  {actor.email} · {actor.role}
-                </p>
-                {me ? (
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      void action("profile", "PATCH", {
-                        name: new FormData(e.currentTarget).get("name"),
-                      });
-                    }}
-                  >
-                    <label>
-                      Ime
-                      <input
-                        name="name"
-                        required
-                        maxLength={160}
-                        defaultValue={me.name}
-                      />
-                    </label>
-                    <p>
-                      {me.tier} · {n(Number(me.weekly_hours))} h na teden ·{" "}
-                      {me.series}
-                    </p>
-                    <button className="button primary" disabled={busy}>
-                      Shrani profil
-                    </button>
-                  </form>
-                ) : (
-                  <p>Upravljalski račun nima izmišljenega članskega profila.</p>
-                )}
+                <p>Oglej si podatke svojega računa, članstvo in prikazno ime.</p>
+                <a className="button secondary" href="#profile">Odpri moj profil</a>
               </Card>
               <Card title="Ohranjeni delovni prostori">
                 <p>
