@@ -1,5 +1,13 @@
 # Verification record — 2026-10-24
 
+## Member Dashboard — feature/dashboard-tasks
+
+Dashboard implemented from the owner's Claude Design ZIP as modular React components with scoped glass/blue styling, self-hosted Inter, personal weekly progress, own-task completion, organizational meetings/attendance, working quick links and accessible mobile navigation. Existing auth, API/RLS, schema, historical-hour calculations and legacy are preserved. Full scope and reproducible checks: [member-dashboard.md](member-dashboard.md).
+
+54/54 source tests, TypeScript, lint and production build PASS. Local production browser checks PASS for actual MEMBER and ADMIN login, personal snapshot/hours, refresh/reload, quick links, work-editor opening and 390/768/1440px layouts without horizontal overflow. Mobile focus containment, Escape and focus restoration PASS. Separate intercepted browser checks PASS for task success/403, post-write read failure without false success, hours submission/reread/reload, meeting attendance, empty calendar and initial-load retry. Those test-only mutations never reach Supabase.
+
+NOT VERIFIED: live task/work persistence and mutation RLS; shared Google events (unconfigured); hosted Preview/Production login; independent B review. Existing personal Calendar locally reports missing/invalid APP_URL; no auth/configuration change was made. No database writes/deletes, main merge or Production deployment were performed.
+
 ## Google login follow-up
 
 Google OAuth was added with server PKCE, encrypted short-lived HttpOnly state/handoff cookies, same-origin POST protection, callback validation and the existing browser session model. 40/40 automated tests passed; both organization_rls.sql and google_auth_rls.sql passed against the live sandbox in rollback transactions. The owner explicitly approved their verified real account for SUPERADMIN in this follow-up (not an automatic signup promotion). No real sandbox-profile aliases were applied. All 20 original UUIDs/primary Auth links and 120 weekly totals remain unchanged.

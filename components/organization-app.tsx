@@ -11,6 +11,8 @@ import {
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import Link from "next/link";
 import PersonalCalendar from "./personal-calendar";
+import MemberDashboard, { DashboardSkeleton } from "./dashboard/member-dashboard";
+import shellStyles from "./dashboard/organization-shell.module.css";
 import { isDate } from "@/lib/model";
 import {
   Earth,
@@ -74,7 +76,7 @@ const nav = [
   ["projects", "Projekti", FolderKanban],
   ["hours", "Prostovoljske ure", Clock3],
   ["meetings", "Sestanki", CalendarDays],
-  ["attendance", "Udeležba", ClipboardCheck],
+  ["attendance", "Prisotnost", ClipboardCheck],
   ["members", "Člani", Users],
   ["analytics", "Analitika", BarChart3],
   ["settings", "Nastavitve", Settings2],
@@ -158,6 +160,34 @@ export default function OrganizationApp({
   const [from, setFrom] = useState(addDays(weekStart(), -35)),
     [to, setTo] = useState(ljubljanaDate());
   const [now, setNow] = useState(() => Date.now());
+  const navigation = useRef<HTMLElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!menu) return;
+    const previousOverflow = document.body.style.overflow;
+    const trigger = menuButton.current;
+    document.body.style.overflow = "hidden";
+    const panel = navigation.current;
+    const controls = () => Array.from(panel?.querySelectorAll<HTMLElement>("a[href], button:not(:disabled)") || []);
+    controls()[0]?.focus();
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { event.preventDefault(); setMenu(false); }
+      if (event.key === "Tab") {
+        const items = controls(), first = items[0], last = items.at(-1);
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }
+    };
+    const resize = () => { if (window.innerWidth > 1000) setMenu(false); };
+    document.addEventListener("keydown", keydown);
+    window.addEventListener("resize", resize);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", keydown);
+      window.removeEventListener("resize", resize);
+      trigger?.focus();
+    };
+  }, [menu]);
   async function signOut() {
     try {
       await onSignOut();
@@ -285,7 +315,7 @@ export default function OrganizationApp({
               </button>
             </>
           ) : (
-            <p role="status">Nalagam organizacijo iz Supabase …</p>
+            <DashboardSkeleton />
           )}
         </section>
       </div>
@@ -320,19 +350,6 @@ export default function OrganizationApp({
             : Date.parse(e.ends_at) < now)),
     )
     .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-  const next = s.meetings
-    .filter(
-      (e) =>
-        !e.cancelled &&
-        Date.parse(e.ends_at) >= now &&
-        (me ? relevant(e) : admin),
-    )
-    .sort((a, b) => a.starts_at.localeCompare(b.starts_at))[0];
-  const ownMetrics = analytics(s, {
-    from: weekStart(),
-    to: ljubljanaDate(),
-    member: actor.member_id || undefined,
-  });
   const shownTasks = s.tasks.filter(
     (t) =>
       !t.archived &&
@@ -506,7 +523,7 @@ export default function OrganizationApp({
       </article>
     ));
   return (
-    <div className="app-shell" aria-busy={busy}>
+    <div className={`app-shell ${shellStyles.shell}`} aria-busy={busy}>
       <a className="skip-link" href="#org-main">
         Preskoči na vsebino
       </a>
@@ -517,7 +534,8 @@ export default function OrganizationApp({
           onClick={() => setMenu(false)}
         />
       )}
-      <aside className={"sidebar" + (menu ? " is-open" : "")}>
+      <aside ref={navigation} id="org-navigation" className={"sidebar" + (menu ? " is-open" : "")} aria-label="Navigacija organizacije" role={menu ? "dialog" : undefined} aria-modal={menu || undefined}>
+        <button className={shellStyles.close} aria-label="Zapri navigacijo" onClick={() => setMenu(false)}><X size={20} /></button>
         <Link className="brand" href="/">
           <span className="brand-mark">
             <Earth size={26} />
@@ -553,11 +571,14 @@ export default function OrganizationApp({
           </button>
         </div>
       </aside>
-      <div className="main-shell">
+      <div className="main-shell" inert={menu}>
         <header className="topbar">
           <button
             className="button secondary org-menu"
+            ref={menuButton}
             aria-label="Odpri navigacijo"
+            aria-expanded={menu}
+            aria-controls="org-navigation"
             onClick={() => setMenu(!menu)}
           >
             <Menu size={18} />
@@ -567,6 +588,7 @@ export default function OrganizationApp({
           </span>
           <button
             className="button secondary"
+            aria-label="Osveži podatke iz baze"
             disabled={busy}
             onClick={async () => {
               setBusy(true);
@@ -584,17 +606,19 @@ export default function OrganizationApp({
             <RefreshCw size={15} />
             Osveži iz baze
           </button>
+          <div className={shellStyles.profile}>
+            <span className={shellStyles.avatar} aria-hidden="true">{(me?.name || actor.email).slice(0, 1).toLocaleUpperCase("sl")}</span>
+            <div><strong>{me?.name || "Organizacija"}</strong><small>{me ? `Shapers ${me.tier}` : actor.role}</small></div>
+          </div>
         </header>
         <main id="org-main" className="org-main">
-          <div className="page-heading">
+          {view !== "overview" && <div className="page-heading">
             <span className="eyebrow">SKUPAJ USTVARJAMO SPREMEMBE</span>
             <h1>
-              {view === "overview"
-                ? `Dobrodošel/a${me ? ", " + me.name.split(" ")[0] : ""}.`
-                : nav.find((v) => v[0] === view)?.[1]}
+              {nav.find((v) => v[0] === view)?.[1]}
             </h1>
             <p>Skupen prostor. Preverjena prijava. Podatki v Supabase.</p>
-          </div>
+          </div>}
           {error && (
             <div className="error-banner" role="alert">
               {error}
@@ -605,7 +629,7 @@ export default function OrganizationApp({
               {notice}
             </div>
           )}
-          {(view === "overview" || view === "meetings") && <PersonalCalendar key={user.id} client={client} />}
+          {view === "meetings" && <PersonalCalendar key={user.id} client={client} />}
           {(view === "analytics" || view === "members") && !admin ? (
             <Card title="Dostop je omejen">
               <p>Ta pogled zahteva administratorsko vlogo.</p>
@@ -613,83 +637,11 @@ export default function OrganizationApp({
           ) : null}
           {view === "overview" && (
             <>
-              <div className="stats-grid">
-                <Stat
-                  label={admin ? "Člani organizacije" : "Tedenski cilj"}
-                  value={
-                    admin
-                      ? s.members.length
-                      : n(Number(me?.weekly_hours || 0)) + " h"
-                  }
-                />
-                <Stat
-                  label="Ure ta teden"
-                  value={n(ownMetrics.weeklyHours) + " h"}
-                />
-                <Stat
-                  label="Odprte naloge"
-                  value={
-                    admin
-                      ? s.tasks.filter(
-                          (t) => !t.archived && t.status !== "done",
-                        ).length
-                      : shownTasks.filter((t) => t.status !== "done").length
-                  }
-                />
-                <Stat
-                  label="Zaključene ta teden"
-                  value={ownMetrics.completed}
-                />
-              </div>
-              <Card title="Naslednji relevantni sestanek">
-                {next ? (
-                  meetingCards([next])
-                ) : (
-                  <Empty>
-                    V bazi še ni prihodnjih relevantnih sestankov. Preveri
-                    zavihek Sestanki in stanje Google povezave.
-                  </Empty>
-                )}
-              </Card>
-              <Card title="Moj teden">
-                {me ? (
-                  <>
-                    <p>
-                      {n(ownMetrics.weeklyHours)} od{" "}
-                      {n(Number(me.weekly_hours))} ur · teden od{" "}
-                      {date(weekStart())}
-                    </p>
-                    <progress
-                      value={ownMetrics.weeklyHours}
-                      max={Math.max(
-                        Number(me.weekly_hours),
-                        ownMetrics.weeklyHours,
-                      )}
-                    />
-                    <button
-                      className="button primary"
-                      disabled={busy}
-                      onClick={() => setEdit({ kind: "work" })}
-                    >
-                      <Plus size={16} />
-                      Zabeleži ure
-                    </button>
-                  </>
-                ) : (
-                  <p>
-                    Upravljaš organizacijo brez dodatnega članskega zapisa.
-                    Evidenca ur zahteva pravi članski profil.
-                  </p>
-                )}
-              </Card>
-              <a className="button secondary" href="#tasks">
-                Odpri moje naloge
-              </a>
-              {admin && (
-                <a className="button secondary" href="#analytics">
-                  Organizacijska analitika
-                </a>
-              )}
+              <MemberDashboard snapshot={s} now={now} busy={busy}
+                onLogHours={() => setEdit({ kind: "work" })}
+                onComplete={(task) => { void action("tasks", "PATCH", { id: task.id, status: "done" }); }}
+              />
+              <PersonalCalendar key={user.id} client={client} />
             </>
           )}
           {view === "projects" && (
