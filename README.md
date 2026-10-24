@@ -36,6 +36,7 @@ Odpri `http://localhost:3000`. Za razvoj uporabi `pnpm dev`. Preverjanje strežn
 - [Dokazi preverjanja in preostale omejitve](docs/verification.md)
 - [Prejšnji JSON prostori](docs/supabase.md)
 - [Oblikovne odločitve](docs/design.md)
+- [Osebni Google koledar in samodejno branje prihodnjih dogodkov](docs/personal-calendar.md)
 
 V obstoječem projektu je ohranjenih vseh 20 članskih UUID-jev in oba prejšnja delovna prostora. Povezanih je 20 sandbox Auth računov. Zgodovinske ure so 120 tedenskih seštevkov (1.705,5 h), ne izmišljeni dnevni vnosi. 258 zapisov udeležbe čaka na prave Google reference. Imena desetih projektov v dostopnih virih niso bila podana, zato projekti niso izmišljeni.
 

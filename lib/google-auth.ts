@@ -71,7 +71,7 @@ function cookieKey(env: Env) {
     );
   return createHash("sha256").update(env.AUTH_COOKIE_SECRET).digest();
 }
-function seal(data: unknown, env: Env) {
+export function seal(data: unknown, env: Env) {
   const iv = randomBytes(12),
     cipher = createCipheriv("aes-256-gcm", cookieKey(env), iv);
   const encrypted = Buffer.concat([
@@ -82,7 +82,10 @@ function seal(data: unknown, env: Env) {
     "base64url",
   );
 }
-function unseal<T extends { expires: number }>(value: string, env: Env): T {
+export function unseal<T extends { expires: number }>(
+  value: string,
+  env: Env,
+): T {
   try {
     if (value.length > 3800) throw new Error();
     const bytes = Buffer.from(value, "base64url"),
@@ -111,12 +114,17 @@ function unseal<T extends { expires: number }>(value: string, env: Env): T {
 function cookieName(name: string, origin: string) {
   return origin.startsWith("https:") ? "__Host-" + name : name;
 }
-function cookie(name: string, value: string, origin: string, seconds: number) {
+export function cookie(
+  name: string,
+  value: string,
+  origin: string,
+  seconds: number,
+) {
   if (value.length > 3800)
     throw new HttpError(503, "Seja je prevelika za varen prenos.");
   return `${cookieName(name, origin)}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${seconds}${origin.startsWith("https:") ? "; Secure" : ""}`;
 }
-function readCookie(request: Request, name: string, origin: string) {
+export function readCookie(request: Request, name: string, origin: string) {
   const matches = (request.headers.get("cookie") || "")
     .split(";")
     .map((s) => s.trim())
@@ -128,7 +136,7 @@ function readCookie(request: Request, name: string, origin: string) {
     );
   return matches[0].slice(matches[0].indexOf("=") + 1);
 }
-function sameOrigin(request: Request, origin: string) {
+export function sameOrigin(request: Request, origin: string) {
   if (
     request.headers.get("origin") !== origin ||
     request.headers.get("sec-fetch-site") === "cross-site"
@@ -175,6 +183,10 @@ export function clearGoogleCookies(request: Request, env: Env = process.env) {
     const result = Response.json({ cleared: true }, { headers });
     result.headers.append("Set-Cookie", cookie(FLOW, "", origin, 0));
     result.headers.append("Set-Cookie", cookie(HANDOFF, "", origin, 0));
+    result.headers.append(
+      "Set-Cookie",
+      cookie("shapers-google-calendar", "", origin, 0),
+    );
     return result;
   } catch (e) {
     return failure(e);
@@ -231,8 +243,13 @@ export async function startGoogle(
       provider: "google",
       options: {
         redirectTo: origin + "/auth/callback?flow=" + flow,
-        scopes: "openid email profile",
-        queryParams: { prompt: "select_account" },
+        scopes:
+          "openid email profile https://www.googleapis.com/auth/calendar.events.readonly",
+        queryParams: {
+          prompt: "consent select_account",
+          access_type: "offline",
+          include_granted_scopes: "true",
+        },
       },
     });
     if (result.error || !result.data.url || !storage.verifier())
@@ -322,7 +339,37 @@ export async function googleCallback(
       user.data.user.is_anonymous
     )
       throw new Error("Unverified user");
-    // Google provider tokens are discarded; only the existing Supabase session is transferred.
+    // Keep provider credentials separate from the browser-readable Supabase handoff.
+    // Calendar setup must never break an otherwise valid login (e.g. cookie size limit).
+    try {
+      const value =
+        session.provider_token && user.data.user.id
+          ? seal(
+              {
+                userId: user.data.user.id,
+                accessToken: session.provider_token,
+                refreshToken: session.provider_refresh_token || "",
+                accessExpires: Date.now() + 50 * 60000,
+                expires: Date.now() + 28 * 86400000,
+              },
+              env,
+            )
+          : "";
+      result.headers.append(
+        "Set-Cookie",
+        cookie(
+          "shapers-google-calendar",
+          value,
+          origin,
+          value ? 28 * 86400 : 0,
+        ),
+      );
+    } catch {
+      result.headers.append(
+        "Set-Cookie",
+        cookie("shapers-google-calendar", "", origin, 0),
+      );
+    }
     const handoff = seal(
       {
         access_token: session.access_token,

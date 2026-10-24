@@ -2,6 +2,8 @@
 
 ## Stanje
 
+Nadaljnja nadgradnja: osebni Google koledar je opisan v [personal-calendar.md](personal-calendar.md). Google ponudnik je bil pozneje omogočen in uporabnik je potrdil uspešno prijavo; spodnja prvotna omejitev je zgodovinski zapis. OAuth zdaj zahteva tudi readonly koledarski obseg, provider poverilnice pa se hranijo samo v ločenem šifriranem HttpOnly piškotku, ne v browser session handoffu. Preostali opis prvotnega toka spodaj ne pomeni, da se koledarski token še vedno zavrže.
+
 Google OAuth 2.0 prek Supabase Auth je implementiran. Obstoječi e-poštni implicit flow, demo gesla, Supabase session storage in /legacy ostajajo ohranjeni. Google ponudnik je ob preverjanju izklopljen (`external.google=false`), zato uspešna živa Google prijava in produkcijski callback še nista preverjena. Lastnik je izrecno odobril svoj realni račun za SUPERADMIN; ne nastane dodaten izmišljeni član.
 
 ## Google Cloud Console

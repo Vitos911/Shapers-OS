@@ -10,10 +10,10 @@ import {
   clearGoogleCookies,
 } from "../lib/google-auth.ts";
 
-test("logout clears both transient OAuth cookies and rejects cross-origin calls", () => {
+test("logout clears transient OAuth and private calendar cookies, rejecting cross-origin calls", () => {
   const response = clearGoogleCookies(request("/auth/logout"), env);
   assert.equal(response.status, 200);
-  assert.equal(response.headers.getSetCookie().length, 2);
+  assert.equal(response.headers.getSetCookie().length, 3);
   for (const c of response.headers.getSetCookie()) assert.match(c, /Max-Age=0/);
   assert.equal(
     clearGoogleCookies(
@@ -110,7 +110,12 @@ const makeClient = (_env, storage) => ({
   auth: {
     signInWithOAuth: async ({ provider, options }) => {
       assert.equal(provider, "google");
-      assert.equal(options.scopes, "openid email profile");
+      assert.equal(
+        options.scopes,
+        "openid email profile https://www.googleapis.com/auth/calendar.events.readonly",
+      );
+      assert.equal(options.queryParams.access_type, "offline");
+      assert.equal(options.queryParams.prompt, "consent select_account");
       assert.equal(options.skipBrowserRedirect, undefined);
       storage.setItem(
         "sb-fixture-code-verifier",
@@ -142,6 +147,7 @@ const makeClient = (_env, storage) => ({
     getUser: async () => ({
       data: {
         user: {
+          id: "fixture-user",
           email_confirmed_at: verified ? "2026-10-24" : null,
           is_anonymous: false,
         },
@@ -275,6 +281,8 @@ test("PKCE callback validates encrypted cookie and flow, transfers only verified
   assert.equal(callback.headers.get("Cache-Control"), "private, no-store");
   const handoff = cookies(callback);
   assert.ok(!handoff.includes("fixture-access"));
+  assert.ok(handoff.includes("shapers-google-calendar="));
+  assert.ok(!handoff.includes("discard-google-token"));
   const finish = await finishGoogle(
     request("/auth/session", {}, handoff),
     env,

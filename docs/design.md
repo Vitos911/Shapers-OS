@@ -18,4 +18,6 @@ Reference lock: Refero's bundled typography and craft-details guidance. Live Ref
 
 QA target: preserve the white/blue workspace, readable content and navigation at 390px and desktop widths. Verify form submission, persistence across reload, project tasks, event attendance and hours accounting.
 
+Personal calendar reference lock: existing organization white panels/blue primary actions, current meeting cards and bundled craft-details async/semantic control guidance. Refero lookup again returned NO_SUBSCRIPTION. Direct-build addition, not a redesign: chronological agenda in overview/meetings, date before title, explicit private/primary-calendar label, inline loading/error/empty states, eight rows initially and progressive disclosure. No generated assets. Personal events stay visibly separate from organization attendance and shared calendar.
+
 Google login addition: the existing login card/button system is the reference lock; preserve blue email CTA, white surfaces, typography and labeled forms. Google is a full-width secondary action with disabled/busy state and inline actionable errors; callback recovery uses the same card. Refero again returned NO_SUBSCRIPTION; bundled craft guidance informed semantic buttons, visible focus and status announcements. No visual redesign or generated imagery was needed.

@@ -1835,3 +1835,14 @@ td small {
 .cloud-access-list small { display: block; color: var(--muted); font-size: 10px; }
 @media (max-width: 640px) { .cloud-entry { padding-top: 28px; } .cloud-entry-card { padding: 25px; } .cloud-entry-card h1 { font-size: 25px; } .cloud-controls > span { width: 100%; } }
 .google-login{width:100%;margin:18px 0 12px;min-height:44px;justify-content:center}
+.personal-calendar { margin-bottom: 24px; }
+.personal-calendar-heading, .personal-calendar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.personal-calendar-heading { justify-content: space-between; }
+.personal-calendar h2 { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+.personal-calendar-heading p, .personal-calendar-privacy { color: var(--muted, #64748b); font-size: 13px; }
+.personal-agenda { list-style: none; padding: 0; margin: 18px 0; }
+.personal-agenda li { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; padding: 18px 0; border-top: 1px solid var(--border, #e2e8f0); content-visibility: auto; contain-intrinsic-size: auto 110px; }
+.personal-agenda li > div:first-child { min-width: 0; flex: 1 1 230px; overflow-wrap: anywhere; }
+.personal-agenda time { color: var(--muted, #64748b); font-size: 12px; }
+.personal-agenda h3 { margin: 7px 0; font-size: 16px; }
+.personal-agenda p { margin: 6px 0; font-size: 13px; }

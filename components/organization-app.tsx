@@ -10,6 +10,7 @@ import {
 } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import Link from "next/link";
+import PersonalCalendar from "./personal-calendar";
 import { isDate } from "@/lib/model";
 import {
   Earth,
@@ -604,6 +605,7 @@ export default function OrganizationApp({
               {notice}
             </div>
           )}
+          {(view === "overview" || view === "meetings") && <PersonalCalendar key={user.id} client={client} />}
           {(view === "analytics" || view === "members") && !admin ? (
             <Card title="Dostop je omejen">
               <p>Ta pogled zahteva administratorsko vlogo.</p>
@@ -1030,7 +1032,7 @@ export default function OrganizationApp({
           )}
           {view === "meetings" && (
             <>
-              <Card title="Google Calendar · samo branje">
+              <Card title="Organizacijski Google Calendar · samo branje">
                 <p>
                   {s.calendar.configured
                     ? "Google branje je konfigurirano. Spodaj so zadnje uspešno shranjene reference; ob napaki ostanejo označene s časom zadnje osvežitve."
