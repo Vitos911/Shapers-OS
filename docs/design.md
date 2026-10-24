@@ -17,3 +17,5 @@ Reference lock: Refero's bundled typography and craft-details guidance. Live Ref
 | Legacy compatibility | Preserve existing JSON workspaces | Separate `/legacy` route retains original save and backup features |
 
 QA target: preserve the white/blue workspace, readable content and navigation at 390px and desktop widths. Verify form submission, persistence across reload, project tasks, event attendance and hours accounting.
+
+Google login addition: the existing login card/button system is the reference lock; preserve blue email CTA, white surfaces, typography and labeled forms. Google is a full-width secondary action with disabled/busy state and inline actionable errors; callback recovery uses the same card. Refero again returned NO_SUBSCRIPTION; bundled craft guidance informed semantic buttons, visible focus and status announcements. No visual redesign or generated imagery was needed.

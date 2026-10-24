@@ -1,5 +1,13 @@
 # Verification record — 2026-10-24
 
+## Google login follow-up
+
+Google OAuth was added with server PKCE, encrypted short-lived HttpOnly state/handoff cookies, same-origin POST protection, callback validation and the existing browser session model. 40/40 automated tests passed; both organization_rls.sql and google_auth_rls.sql passed against the live sandbox in rollback transactions. The owner explicitly approved their verified real account for SUPERADMIN in this follow-up (not an automatic signup promotion). No real sandbox-profile aliases were applied. All 20 original UUIDs/primary Auth links and 120 weekly totals remain unchanged.
+
+Production build, TypeScript and lint passed. Production HTTP checks verified missing-provider 503, CSRF 403, invalid-callback 303 recovery and cookie clearing, missing-handoff denial, logout cleanup and unauthenticated API 401. Actual MEMBER/ADMIN password/API regression smoke passed with fixture cleanup. Browser checks observed an existing session survive reload, logout return to the new Google/email/demo login screen, an actionable Google-not-configured message, and invalid-callback recovery. A missing local APP_URL initially caused a setup failure because the Next server binds to 0.0.0.0; setting the exact localhost origin and restarting resolved it. This did not bypass origin validation. Secret scans found neither the Supabase secret nor OAuth cookie key in 76 source files or 13 browser chunks.
+
+Migration `20261024115149_google_demo_profile_links` adds service-only explicit alias approval/removal and replaces only access.member_id uniqueness with an index; no public RLS access policy was relaxed. The first migration attempt had a CASE-expression syntax error, was rolled back and was corrected before successful application. Google Auth remains disabled, so successful live Google login/production callback is NOT VERIFIED. Setup and the exact callback/credential distinction are in [google-auth.md](google-auth.md).
+
 This records observed evidence, not a blanket “everything complete” claim. See README for repository/build checks and the source tests for exact assertions.
 
 ## Database and imports

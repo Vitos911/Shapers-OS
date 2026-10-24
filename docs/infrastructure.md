@@ -66,6 +66,8 @@ Next.js App Router runs UI and Node route handlers. Supabase provides Auth and P
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Alternative private-calendar JSON credential, single-line escaped JSON in dotenv; Reader access only |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` | Alternative private-calendar OAuth credentials, readonly Calendar events scope |
 | `DEMO_AUTH_ENABLED` | Provisioning safety gate; true only when deliberately creating fictional demo accounts |
+| `APP_URL` | Canonical origin for Google login; exact HTTPS origin in production |
+| `AUTH_COOKIE_SECRET` | Independent random server-only secret (32+ characters) for temporary encrypted OAuth cookies |
 | `CHECK_APP_ORIGIN` | Optional smoke-test origin, default `http://127.0.0.1:3000`; mutating smoke test rejects remote hosts |
 
 Google needs one credential mechanism, not all three. Browser config returns only the Supabase URL and publishable key. The original JSON workspace API remains compatible at `/legacy`; organization imports are explicit, never inferred from legacy JSON. Existing legacy spaces were inspected and left untouched.

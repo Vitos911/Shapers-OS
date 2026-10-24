@@ -7,6 +7,7 @@ test("public config exposes only safe fields and rejects misplaced server creden
       "SUPABASE_URL",
       "SUPABASE_PUBLISHABLE_KEY",
       "SUPABASE_SECRET_KEY",
+      "AUTH_COOKIE_SECRET",
     ],
     saved = Object.fromEntries(names.map((name) => [name, process.env[name]]));
   try {
@@ -15,6 +16,8 @@ test("public config exposes only safe fields and rejects misplaced server creden
     process.env.SUPABASE_URL = "https://fixture.supabase.co";
     process.env.SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fixture";
     process.env.SUPABASE_SECRET_KEY = "sb_secret_fixture";
+    process.env.AUTH_COOKIE_SECRET =
+      "fixture-cookie-key-never-expose-to-browser";
     const result = GET();
     assert.equal(result.headers.get("Cache-Control"), "no-store");
     assert.deepEqual(Object.keys(await result.json()).sort(), [

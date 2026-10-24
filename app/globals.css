@@ -1834,3 +1834,4 @@ td small {
 .cloud-access-list span { min-width: 0; overflow-wrap: anywhere; font-size: 12px; }
 .cloud-access-list small { display: block; color: var(--muted); font-size: 10px; }
 @media (max-width: 640px) { .cloud-entry { padding-top: 28px; } .cloud-entry-card { padding: 25px; } .cloud-entry-card h1 { font-size: 25px; } .cloud-controls > span { width: 100%; } }
+.google-login{width:100%;margin:18px 0 12px;min-height:44px;justify-content:center}

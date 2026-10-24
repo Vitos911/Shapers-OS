@@ -47,6 +47,7 @@ export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
   const [spaces, setSpaces] = useState<CloudSpace[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const localAdapter = useMemo(() => localStore(), []);
@@ -161,7 +162,7 @@ export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
 
   async function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!client || busy) return;
+    if (!client || busy || googleBusy) return;
     setBusy(true);
     setError("");
     setMessage("");
@@ -172,7 +173,7 @@ export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
       const { error } = await client.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: location.origin + "/",
+          emailRedirectTo: location.origin + (legacy ? "/legacy" : "/"),
           shouldCreateUser: true,
         },
       });
@@ -216,6 +217,35 @@ export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
     }
   }
 
+  async function loginGoogle() {
+    if (busy || googleBusy || !client) return;
+    setGoogleBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch("/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ next: legacy ? "/legacy" : "/" }),
+        cache: "no-store",
+        credentials: "same-origin",
+      });
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Google prijave ni mogoče začeti.");
+      const target = new URL(data.url);
+      if (
+        target.protocol !== "https:" ||
+        target.pathname !== "/auth/v1/authorize"
+      )
+        throw new Error("Neveljaven naslov prijave.");
+      location.assign(target.href);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Google prijava ni uspela.");
+      setGoogleBusy(false);
+    }
+  }
+
   function openSpace(id: string) {
     setSelected(id);
     setError("");
@@ -231,6 +261,15 @@ export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
       setError("Odjava ni uspela. Poskusi znova.");
       if (!legacy) throw new Error("Odjava ni uspela. Poskusi znova.");
     } else {
+      try {
+        await fetch("/auth/logout", {
+          method: "POST",
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+      } catch {
+        /* Supabase signOut already revoked refresh and removed the local session. */
+      }
       setSelected(null);
       setSpaces([]);
       setUser(null);
@@ -333,6 +372,16 @@ export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
           {message}
         </div>
       )}
+      {!user && (
+        <button
+          type="button"
+          className="button secondary google-login"
+          disabled={busy || googleBusy || !client}
+          onClick={() => void loginGoogle()}
+        >
+          {googleBusy ? "Odpiram Google …" : "Nadaljuj z Googlom"}
+        </button>
+      )}
       {!user ? (
         <form onSubmit={login}>
           <label>
@@ -346,7 +395,10 @@ export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
               placeholder="ti@skupnost.si"
             />
           </label>
-          <button className="button primary" disabled={busy || !client}>
+          <button
+            className="button primary"
+            disabled={busy || googleBusy || !client}
+          >
             {busy ? "Pošiljam …" : "Pošlji povezavo za prijavo"}
             <ArrowRight size={16} />
           </button>
@@ -409,6 +461,7 @@ export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
           <form
             onSubmit={async (event) => {
               event.preventDefault();
+              if (busy || googleBusy) return;
               setBusy(true);
               setError("");
               const f = new FormData(event.currentTarget);
@@ -446,7 +499,7 @@ export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
                 required
               />
             </label>
-            <button className="button primary" disabled={busy}>
+            <button className="button primary" disabled={busy || googleBusy}>
               Prijavi se
             </button>
           </form>

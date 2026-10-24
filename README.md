@@ -31,6 +31,7 @@ Odpri `http://localhost:3000`. Za razvoj uporabi `pnpm dev`. Preverjanje strežn
 
 - [Infrastruktura: od prazne baze do produkcije](docs/infrastructure.md)
 - [Google Calendar: uvoz, readonly dostop in udeležba](docs/google-calendar.md)
+- [Google prijava: Cloud Console, Supabase, callback in demo povezave](docs/google-auth.md)
 - [Varnost, RBAC in definicije meritev](docs/backend-security.md)
 - [Dokazi preverjanja in preostale omejitve](docs/verification.md)
 - [Prejšnji JSON prostori](docs/supabase.md)
