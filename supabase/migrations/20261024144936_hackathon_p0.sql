@@ -1,4 +1,5 @@
--- REVIEW ONLY. Not applied to Supabase. Generate a migration with the CLI after review.
+-- Generated with Supabase CLI migration new; rehearsed on an isolated restored snapshot.
+-- Not applied to Supabase until the matching deployment is ready for release.
 -- Apply as one transaction after a fresh backup and schema-drift check.
 begin;
 

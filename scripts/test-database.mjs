@@ -20,7 +20,7 @@ try {
   create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
   grant usage on schema public,auth,org_private to authenticated,service_role; grant usage on schema public to anon;`);
   await db.exec(await readFile(new URL('../tests/fixtures/production-schema.sql',import.meta.url),'utf8'));
-  await db.exec(await readFile(new URL('../database/planned/hackathon-p0.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261024144936_hackathon_p0.sql',import.meta.url),'utf8'));
   for (let n=1;n<=5;n++) {
     await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())',[uid(n),`fixture${n}@example.invalid`]);
     await db.query("insert into public.members(id,name,email,tier,weekly_hours,series,auth_user_id) values($1,$2,$3,'GO!',4,'Community',$4)",[mid(n),`Fixture ${n}`,`fixture${n}@example.invalid`,uid(n)]);
