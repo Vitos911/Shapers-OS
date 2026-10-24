@@ -32,6 +32,7 @@ import {
 import {
   addDays,
   analytics,
+  canManageTask,
   eligibleMeeting,
   isAdmin,
   ljubljanaDate,
@@ -80,6 +81,7 @@ const nav = [
   ["settings", "Nastavitve", Settings2],
 ] as const;
 const labels: Record<string, string> = {
+  backlog: "Backlog",
   todo: "Začeti",
   in_progress: "V teku",
   in_review: "V pregledu",
@@ -109,7 +111,7 @@ const time = (v: string) =>
     minute: "2-digit",
     timeZone: "Europe/Ljubljana",
   }).format(new Date(v));
-const percent = (v: number | null) => (v === null ? "—" : n(v * 100) + " %");
+const percent = (v: number | null) => (v === null ? "Ni podatkov" : n(v * 100) + " %");
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="panel org-panel">
@@ -148,6 +150,7 @@ export default function OrganizationApp({
     [edit, setEdit] = useState<Edit | null>(null),
     [access, setAccess] = useState<Access[]>([]);
   const [project, setProject] = useState(""),
+    [taskSearch, setTaskSearch] = useState(""),
     [member, setMember] = useState(""),
     [tier, setTier] = useState(""),
     [series, setSeries] = useState(""),
@@ -237,6 +240,10 @@ export default function OrganizationApp({
     setError("");
     setNotice("");
     try {
+      if (resource === "tasks" && method === "PATCH" && body && typeof body === "object") {
+        const data = body as Record<string, unknown>;
+        body = { expected_updated_at: snapshot?.tasks.find(t => t.id === data.id)?.updated_at, ...data };
+      }
       const result = await request(resource, method, body);
       await refresh();
       setEdit(null);
@@ -296,7 +303,7 @@ export default function OrganizationApp({
     superadmin = actor.role === "SUPERADMIN",
     me = s.members.find((m) => m.id === actor.member_id);
   const memberName = (id: string | null) =>
-    s.members.find((m) => m.id === id)?.name || (id ? "Član" : "Nedodeljeno");
+    s.members.find((m) => m.id === id)?.name || s.taskDirectory?.find(m => m.id === id)?.name || (id ? "Član" : "Nedodeljeno");
   const projectName = (id: string | null) =>
     s.projects.find((p) => p.id === id)?.name || "Brez projekta";
   const relevant = (e: Snapshot["meetings"][number]) =>
@@ -336,6 +343,7 @@ export default function OrganizationApp({
   const shownTasks = s.tasks.filter(
     (t) =>
       !t.archived &&
+      (!taskSearch || (t.title + " " + t.description).toLocaleLowerCase("sl").includes(taskSearch.toLocaleLowerCase("sl"))) &&
       (!project || t.project_id === project) &&
       (!member || t.assignee_id === member) &&
       (view !== "overview" || t.assignee_id === actor.member_id),
@@ -613,6 +621,23 @@ export default function OrganizationApp({
           ) : null}
           {view === "overview" && (
             <>
+              {admin && metrics && <>
+                {filters}
+                <Card title="Organizacija v izbranem obdobju">
+                  <p>{date(from)} – {date(to)}. Aktivnost pomeni zabeležene ure, zaključek naloge ali potrjeno prisotnost. Brez evidence ne pomeni neaktivnosti.</p>
+                  <div className="stats-grid">
+                    <Stat label="Člani z zabeleženo aktivnostjo" value={metrics.activeMembers} />
+                    <Stat label="Odprte / zamujene naloge zdaj" value={`${metrics.open} / ${metrics.overdue}`} />
+                    <Stat label="Pod ciljem ta teden z evidenco" value={metrics.behind} />
+                    <Stat label="Brez evidence ta teden" value={metrics.unknownWeekly} />
+                    <Stat label="Manjkajoča prisotnost v obdobju" value={metrics.missingAttendance} />
+                  </div>
+                  <h3>Napredek projektov zdaj</h3>
+                  {metrics.projects.length ? metrics.projects.map(p => <p key={p.id}>{p.name} · {p.done}/{p.total} zaključenih nalog</p>) : <Empty>Ni projektov za izbrani filter.</Empty>}
+                  <h3>Zadnji zaključki v obdobju</h3>
+                  {metrics.recentCompletions.length ? <ul>{metrics.recentCompletions.map(h => <li key={h.task_id}>{s.tasks.find(t => t.id === h.task_id)?.title || "Pretekla naloga"} · {date(h.occurred_at)}</li>)}</ul> : <Empty>V izbranem obdobju ni evidentiranih zaključkov.</Empty>}
+                </Card>
+              </>}
               <div className="stats-grid">
                 <Stat
                   label={admin ? "Člani organizacije" : "Tedenski cilj"}
@@ -641,6 +666,12 @@ export default function OrganizationApp({
                   value={ownMetrics.completed}
                 />
               </div>
+              <Card title="Moje prednostne naloge">
+                {shownTasks.filter(t => t.status !== "done").length ? <ul>{shownTasks.filter(t => t.status !== "done").sort((a,b) => PRIORITIES.indexOf(b.priority) - PRIORITIES.indexOf(a.priority) || (a.due_date || "9999").localeCompare(b.due_date || "9999")).slice(0,5).map(t => <li key={t.id}><button className="cloud-text-button" onClick={() => setEdit({kind:"tasks",data:t})}>{t.title}</button> · {labels[t.priority]}</li>)}</ul> : <Empty>Trenutno nimaš odprtih dodeljenih nalog.</Empty>}
+              </Card>
+              <Card title="Prihodnji roki mojih nalog">
+                {shownTasks.filter(t => t.status !== "done" && t.due_date && t.due_date >= ljubljanaDate()).length ? <ul>{shownTasks.filter(t => t.status !== "done" && t.due_date && t.due_date >= ljubljanaDate()).sort((a,b) => a.due_date!.localeCompare(b.due_date!)).slice(0,5).map(t => <li key={t.id}>{t.title} · {date(t.due_date!)}</li>)}</ul> : <Empty>Ni prihodnjih rokov.</Empty>}
+              </Card>
               <Card title="Naslednji relevantni sestanek">
                 {next ? (
                   meetingCards([next])
@@ -797,6 +828,7 @@ export default function OrganizationApp({
           {view === "tasks" && (
             <>
               <div className="org-actions">
+                <label>Iskanje nalog<input type="search" value={taskSearch} onChange={e => setTaskSearch(e.target.value)} /></label>
                 {admin && (
                   <button
                     className="button primary"
@@ -840,6 +872,21 @@ export default function OrganizationApp({
                   Samo moje
                 </button>
               </div>
+              <div className="org-kanban" aria-label="Kanban nalog">
+                {TASK_STATUSES.map(status => <section key={status} className="org-kanban-lane" onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }} onDrop={e => {
+                  e.preventDefault();
+                  const task = shownTasks.find(t => t.id === e.dataTransfer.getData("text/plain"));
+                  if (task && !busy && canManageTask(actor, task) && task.status !== status) void action("tasks", "PATCH", {id: task.id, status, expected_updated_at: task.updated_at});
+                }}>
+                  <h2>{labels[status]} <small>{shownTasks.filter(t => t.status === status).length}</small></h2>
+                  {shownTasks.filter(t => t.status === status).map(t => <article key={t.id} className="org-kanban-task" draggable={!busy && canManageTask(actor, t)} onDragStart={e => e.dataTransfer.setData("text/plain", t.id)}>
+                    <strong>{t.title}</strong><p>{projectName(t.project_id)} · {memberName(t.assignee_id)}</p>
+                    <small>{labels[t.priority]}{t.due_date ? " · " + date(t.due_date) : ""}</small>
+                    <button className="cloud-text-button" disabled={busy || !canManageTask(actor, t)} onClick={() => setEdit({kind: "tasks", data: t})}>Uredi nalogo</button>
+                  </article>)}
+                </section>)}
+              </div>
+              <p className="notice">Nalogo premakni med stolpci ali spremeni status v spodnji tabeli. Tabela in obrazec delujeta tudi s tipkovnico in na dotik.</p>
               <div className="org-table-wrap">
                 <table>
                   <thead>
@@ -868,7 +915,7 @@ export default function OrganizationApp({
                           </label>
                           <select
                             id={"status-" + t.id}
-                            disabled={busy}
+                            disabled={busy || !canManageTask(actor, t)}
                             value={t.status}
                             onChange={(e) =>
                               void action("tasks", "PATCH", {
@@ -883,6 +930,7 @@ export default function OrganizationApp({
                         <td>
                           <button
                             className="button secondary"
+                            disabled={busy || !canManageTask(actor, t)}
                             onClick={() => setEdit({ kind: "tasks", data: t })}
                           >
                             Uredi
@@ -1262,11 +1310,14 @@ export default function OrganizationApp({
                       obdobja. Dnevna razporeditev teh ur ni znana.
                     </p>
                   )}
+                  <p className="notice">Zaključki uporabljajo zadnji zabeleženi prehod naloge v Done. Prisotnost = (Present + Remote) / (Present + Remote + Unexcused); Excused in manjkajoče evidence so prikazane ločeno. Tedenski cilj se nanaša na tekoči teden, odprte naloge na trenutno stanje.</p>
+                  {metrics.overlapEntries > 0 && <p className="error-banner" role="alert">Iz vsot je izključenih {metrics.overlapEntries} dnevnih zapisov, ki se prekrivajo s tedenskim seštevkom. Skrbnik naj preveri izvor evidenc.</p>}
                   {project && (
                     <p className="notice">
                       Tedenski napredek vključuje vse projekte. Ure v obdobju
                       izključujejo zgodovinske tedenske seštevke brez podatka o
-                      projektu.
+                      projektu. Sestanki nimajo projektne povezave, zato stopnja
+                      prisotnosti pri projektnem filtru ni na voljo.
                     </p>
                   )}
                   <div className="stats-grid">
@@ -1276,6 +1327,8 @@ export default function OrganizationApp({
                     />
                     <Stat label="Ure ta teden" value={n(metrics.weeklyHours)} />
                     <Stat label="Pod tedenskim ciljem" value={metrics.behind} />
+                    <Stat label="Brez evidence ta teden" value={metrics.unknownWeekly} />
+                    <Stat label="Manjkajoče evidence prisotnosti" value={metrics.missingAttendance} />
                     <Stat
                       label="Zaključene naloge v obdobju"
                       value={metrics.completed}
@@ -1313,7 +1366,7 @@ export default function OrganizationApp({
                               </td>
                               <td>{r.tier}</td>
                               <td>{n(Number(r.weekly_hours))} h</td>
-                              <td>{n(r.weekly)} h</td>
+                              <td>{r.weeklyRecorded ? n(r.weekly) + " h" : "Ni podatkov"}</td>
                               <td>{n(r.hours)} h</td>
                               <td>{r.completed}</td>
                               <td>{percent(r.attendanceRate)}</td>
@@ -1339,7 +1392,7 @@ export default function OrganizationApp({
                             )}
                             value={w.hours}
                           />
-                          <strong>{n(w.hours)} h</strong>
+                          <strong>{n(w.hours)} h · {w.completed} zaključenih</strong>
                         </div>
                       ))}
                     </div>
@@ -1689,6 +1742,10 @@ function Editor({
   const d = (edit.data || {}) as unknown as Record<string, unknown>,
     kind = edit.kind;
   const val = (key: string, fallback = "") => String(d[key] ?? fallback);
+  const assignees = admin ? s.members : [...new Map([
+    ...s.members.filter(m => m.id === d.assignee_id),
+    ...(s.taskDirectory || []).filter(m => m.project_id === val("project_id")),
+  ].map(m => [m.id,m])).values()];
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget),
@@ -1699,6 +1756,7 @@ function Editor({
     if (data.assignee_id === "") data.assignee_id = null;
     if (data.due_date === "") data.due_date = null;
     if (edit.data) data.id = edit.data.id;
+    if (kind === "tasks" && edit.data) data.expected_updated_at = d.updated_at;
     await save(data);
   }
   const options = (values: string[]) =>
@@ -1776,12 +1834,13 @@ function Editor({
             )}
             {kind === "tasks" && (
               <>
-                {admin && (
+                {(
                   <>
                     <label>
                       Naslov naloge
                       <input
                         name="title"
+                        disabled={!admin}
                         required
                         maxLength={200}
                         defaultValue={val("title")}
@@ -1791,6 +1850,7 @@ function Editor({
                       Projekt
                       <select
                         name="project_id"
+                        disabled={!admin}
                         required
                         defaultValue={val("project_id")}
                       >
@@ -1808,8 +1868,8 @@ function Editor({
                         name="assignee_id"
                         defaultValue={val("assignee_id")}
                       >
-                        <option value="">Nedodeljeno</option>
-                        {s.members.map((m) => (
+                        <option value="" disabled={!admin}>Nedodeljeno</option>
+                        {assignees.map((m) => (
                           <option key={m.id} value={m.id}>
                             {m.name}
                           </option>

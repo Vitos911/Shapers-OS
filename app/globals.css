@@ -1836,6 +1836,12 @@ td small {
 @media (max-width: 640px) { .cloud-entry { padding-top: 28px; } .cloud-entry-card { padding: 25px; } .cloud-entry-card h1 { font-size: 25px; } .cloud-controls > span { width: 100%; } }
 .google-login{width:100%;margin:18px 0 12px;min-height:44px;justify-content:center}
 .personal-calendar { margin-bottom: 24px; }
+.org-kanban { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: 16px; overflow-x: auto; padding: 8px 0 20px; }
+.org-kanban-lane { padding: 14px; background: var(--background, #f5f7fa); border: 1px solid var(--border, #e2e8f0); border-radius: 16px; min-height: 160px; }
+.org-kanban-lane h2 { font-size: 14px; margin: 0 0 14px; }
+.org-kanban-task { background: var(--surface, white); border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 14px; margin-bottom: 12px; overflow-wrap: anywhere; }
+.org-kanban-task[draggable=true] { cursor: grab; }
+.org-kanban-task p { font-size: 12px; color: var(--muted, #64748b); }
 .personal-calendar-heading, .personal-calendar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .personal-calendar-heading { justify-content: space-between; }
 .personal-calendar h2 { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
@@ -1846,3 +1852,4 @@ td small {
 .personal-agenda time { color: var(--muted, #64748b); font-size: 12px; }
 .personal-agenda h3 { margin: 7px 0; font-size: 16px; }
 .personal-agenda p { margin: 6px 0; font-size: 13px; }
+

@@ -4,6 +4,9 @@ import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { analytics, ljubljanaDate, weekStart } from "../lib/organization.ts";
 const origin = process.env.CHECK_APP_ORIGIN || "http://127.0.0.1:3000";
+const database = new URL(process.env.SUPABASE_URL || "http://invalid");
+if (!["localhost", "127.0.0.1", "[::1]"].includes(database.hostname))
+  throw new Error("This mutating smoke test requires an isolated LOCAL Supabase database. A local app URL does not isolate its database.");
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin))
   throw new Error("This mutating smoke test only targets a local app.");
 const credentials = JSON.parse(
@@ -67,11 +70,10 @@ try {
     "calendar",
     "POST",
     { from: "2026-02-30", to: "2026-03-10" },
-    400,
+    403,
   );
-  await call(m, "calendar", "POST", { unexpected: true }, 400);
-  if (!organization.calendar.configured)
-    await call(m, "calendar", "POST", {}, 503);
+  await call(m, "calendar", "POST", { unexpected: true }, 403);
+  await call(m, "calendar", "POST", {}, 403);
   await call(
     a,
     "project-members",
@@ -112,7 +114,7 @@ try {
   );
   const assigned = await call(m, "snapshot");
   assert.ok(assigned.tasks.some((t) => t.id === task.id));
-  await call(m, "tasks", "PATCH", { id: task.id, status: "done" });
+  await call(m, "tasks", "PATCH", { id: task.id, status: "done", expected_updated_at: task.updated_at });
   const completed = await call(m, "snapshot");
   assert.ok(
     completed.history.some(
@@ -120,7 +122,8 @@ try {
     ),
   );
   assert.ok(completed.tasks.find((t) => t.id === task.id).completed_at);
-  await call(m, "tasks", "PATCH", { id: task.id, priority: "urgent" }, 403);
+  await call(m, "tasks", "PATCH", { id: task.id, priority: "urgent", expected_updated_at: completed.tasks.find(t => t.id === task.id).updated_at });
+  await call(m, "tasks", "PATCH", { id: task.id, title: "Forbidden rename", expected_updated_at: (await call(m,"snapshot")).tasks.find(t => t.id === task.id).updated_at }, 403);
   entry = await call(
     m,
     "work",

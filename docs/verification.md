@@ -1,5 +1,9 @@
 # Verification record — 2026-10-24
 
+## Current review branch
+
+The verification below predates this branch and is retained as repository history, not rerun production evidence. See [hackathon-rollout.md](hackathon-rollout.md) for the current local checks, proposed SQL and outstanding production tests. This review reran the 50-test baseline and added regression coverage. No production writes or migration applications were performed by this branch.
+
 ## Google login follow-up
 
 Google OAuth was added with server PKCE, encrypted short-lived HttpOnly state/handoff cookies, same-origin POST protection, callback validation and the existing browser session model. 40/40 automated tests passed; both organization_rls.sql and google_auth_rls.sql passed against the live sandbox in rollback transactions. The owner explicitly approved their verified real account for SUPERADMIN in this follow-up (not an automatic signup promotion). No real sandbox-profile aliases were applied. All 20 original UUIDs/primary Auth links and 120 weekly totals remain unchanged.

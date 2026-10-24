@@ -10,6 +10,7 @@ Node.js 22.18+ in pnpm 11.25.0. Ustvari `.env.local` po `.env.example` in nastav
 corepack enable
 pnpm install --frozen-lockfile
 pnpm test
+pnpm test:db
 pnpm typecheck
 pnpm lint
 pnpm build
@@ -20,14 +21,16 @@ Odpri `http://localhost:3000`. Za razvoj uporabi `pnpm dev`. Preverjanje strežn
 
 ## Funkcije
 
-- MEMBER: lastni profil, dodeljene naloge, lastne ure, tedenski cilji, relevantni sestanki in udeležba.
+- MEMBER: lastni profil, naloge dostopnih projektov, urejanje lastnih nalog, lastne ure, tedenski cilji, relevantni sestanki in udeležba.
 - ADMIN: člani, projekti, članstva projektov, naloge/dodelitve, popravljanje udeležbe in organizacijska analitika.
 - SUPERADMIN: zaupani dostopi/vloge, izključitev računa, povabila že odobrenim naslovom in nastavitve.
-- Prehodi nalog, zaključki in pomembne spremembe imajo shranjeno zgodovino; član ne more spremeniti prioritete, dodelitve ali vloge.
+- Prehodi nalog, zaključki in pomembne spremembe imajo shranjeno zgodovino. Po predlagani migraciji član ureja status, opis, prioriteto, rok in dovoljeno dodelitev svoje naloge znotraj projekta; vlog ne more spreminjati.
 - Google Calendar API je izključno za branje. Manjkajoča povezava je vidna kot napaka konfiguracije; ICS ni predstavljen kot živi koledar.
 - Stari JSON delovni prostori in izrecni lokalni način so ohranjeni na `/legacy`. Niso vir organizacijskih statistik; podatki se ne pretvarjajo ali brišejo samodejno.
 
 ## Vzpostavitev in dokumentacija
+
+Ta veja zahteva pregledano podatkovno spremembo pred namestitvijo aplikacije. SQL še ni bil izveden v Supabase. [Popravki P0, preverjanja, vrstni red izdaje in povrnitev](docs/hackathon-rollout.md) opisujejo tudi meje lokalnih testov. Obstoječa javna aplikacija Sites ostaja ločena in nespremenjena.
 
 - [Infrastruktura: od prazne baze do produkcije](docs/infrastructure.md)
 - [Google Calendar: uvoz, readonly dostop in udeležba](docs/google-calendar.md)
@@ -61,3 +64,4 @@ pnpm start
 Pred zagonom ustavi prejšnji razvojni strežnik na vratih 3000. Strežniške spremenljivke nastavi tudi v Codespacu; lokalna `.env.local` se namerno ne prenese z Gitom. Supabase Auth Site URL in dovoljene redirect URL-je prilagodi dejanskemu `*-3000.app.github.dev` naslovu. `*.github.dev` brez vrat je urejevalnik, ne aplikacija. Objavljena koda na GitHub še ne pomeni posodobljenega ali preverjenega Codespace strežnika.
 
 Nikoli ne dodajaj dejanskih ključev, poverilnic ali `.env.local` v commit. Edina različicena env datoteka je `.env.example` s praznimi vrednostmi/oznakami.
+
