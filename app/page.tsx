@@ -1,5 +1,5 @@
-import Workspace from "@/components/workspace";
+import CloudApp from "@/components/cloud-app";
 
 export default function Page() {
-  return <Workspace />;
+  return <CloudApp />;
 }

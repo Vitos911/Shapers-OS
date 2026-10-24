@@ -49,8 +49,10 @@ pnpm start
 
 ## Podatki in omejitve prve različice
 
-Ta različica shranjuje zapise v `localStorage` trenutnega brskalnika. Podatki se ne pošiljajo na strežnik, niso skupni članom in se ne sinhronizirajo med napravami, naslovi ali profili brskalnika. Brisanje podatkov brskalnika izbriše tudi zapise. Redno izvozi varnostno kopijo v Nastavitvah.
+Če je Supabase nastavljen, aplikacija ponudi prijavo po e-pošti in skupne delovne prostore. Lastnik prostora lahko izbranim potrjenim e-poštnim računom dodeli ogled ali urejanje. Podatki se shranijo v bazo šele po uspešnem odgovoru; spori pri sočasnem urejanju zahtevajo osvežitev. Poglej [navodila za Supabase](docs/supabase.md).
 
-Začetni delovni prostor je prazen. Dodajanje člana ustvari lokalni zapis; ne ustvari uporabniškega računa ali pošlje vabila. Prijava, dovoljenja in skupna baza v tej različici niso vključeni. Aplikacija ne potrebuje API ključev ali `.env` datotek. Za skupinsko produkcijsko uporabo je treba najprej dodati avtentikacijo, strežniško shranjevanje in nadzor dostopa.
+Lokalni način ostane na voljo. Ta shranjuje zapise v `localStorage` trenutnega brskalnika in se ne sinhronizira med napravami. Stari lokalni podatki ostanejo ohranjeni; prenos v Supabase sprožiš izrecno v Nastavitvah. Redno izvozi varnostno kopijo.
+
+Začetni delovni prostor je prazen. Dodajanje člana ustvari zapis v evidenci; ne ustvari uporabniškega računa, dodeli dostopa ali pošlje vabila. Za Supabase sta v ignorirani `.env.local` nastavljena samo URL in publishable ključ. Secret ali service-role ključi niso potrebni. Privzeti Supabase mail strežnik ima omejene prejemnike; za širšo ekipo nastavi lasten SMTP v Supabase.
 
 `.env`, `.env.*`, ključi, običajne datoteke poverilnic, odvisnosti in build so izključeni iz Gita. Nikoli ne dodajaj dejanskih skrivnosti v izvorno kodo.

@@ -18,3 +18,5 @@ service-account*.json
 *.log
 *.tsbuildinfo
 .DS_Store
+supabase/.temp/
+supabase/.branches/
