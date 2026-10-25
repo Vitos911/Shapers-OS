@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { createClient } from "@supabase/supabase-js";
-import { parseCsv, planImport } from "../lib/imports.ts";
+import { parseCsv, planImport, preflightImport } from "../lib/imports.ts";
 const args = process.argv.slice(2),
   option = (k) => args[args.indexOf(k) + 1];
 if (!args.includes("--type") || !args.includes("--file"))
@@ -37,29 +37,38 @@ const kind = option("--type"),
     await all("members"),
     kind === "attendance" ? await all("org_meetings") : [],
   );
+const table = {
+  projects: "org_projects",
+  work: "org_work_entries",
+  "weekly-hours": "org_weekly_hours",
+  attendance: "org_attendance",
+}[kind];
+if (!table) throw new Error("Invalid import type");
+const preflight = preflightImport(kind, plan.rows, await all(table), {
+  ...(kind === "work" ? {
+    projects: await all("org_projects"),
+    weeklyHours: await all("org_weekly_hours"),
+  } : {}),
+  ...(kind === "weekly-hours" ? { work: await all("org_work_entries") } : {}),
+});
 console.log(
   JSON.stringify(
     {
       dryRun: !args.includes("--apply"),
       planned: plan.rows.length,
-      conflicts: plan.conflicts,
+      toInsert: preflight.rows.length,
+      unchanged: preflight.unchanged,
+      conflicts: [...plan.conflicts, ...preflight.conflicts],
     },
     null,
     2,
   ),
 );
-if (plan.conflicts.length)
+if (plan.conflicts.length || preflight.conflicts.length)
   throw new Error("Resolve all conflicts before importing; no writes made");
 if (args.includes("--apply")) {
-  const table = {
-    projects: "org_projects",
-    work: "org_work_entries",
-    "weekly-hours": "org_weekly_hours",
-    attendance: "org_attendance",
-  }[kind];
-  if (!table) throw new Error("Invalid import type");
   // Conflict targets avoid overwriting edits or attendance from an earlier import.
-  for (const row of plan.rows) {
+  for (const row of preflight.rows) {
     const { error } = await db
       .from(table)
       .upsert(row, {
