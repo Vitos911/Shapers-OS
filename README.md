@@ -40,6 +40,7 @@ Ta veja zahteva pregledano podatkovno spremembo pred namestitvijo aplikacije. SQ
 - [Google Calendar: uvoz, readonly dostop in udeležba](docs/google-calendar.md)
 - [Google prijava: Cloud Console, Supabase, callback in demo povezave](docs/google-auth.md)
 - [Varnost, RBAC in definicije meritev](docs/backend-security.md)
+- [Ask Shaper: nastavitev, varnost, obseg in preverjanje AI asistenta](docs/ask-shaper.md)
 - [Dokazi preverjanja in preostale omejitve](docs/verification.md)
 - [Prejšnji JSON prostori](docs/supabase.md)
 - [Oblikovne odločitve](docs/design.md)

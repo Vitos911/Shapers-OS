@@ -202,6 +202,7 @@ export function analytics(
   s: Snapshot,
   f: AnalyticsFilter,
   today = ljubljanaDate(),
+  now = Date.now(),
 ) {
   const included = s.members.filter(
     (m) => (!f.member || m.id === f.member) && (!f.tier || m.tier === f.tier),
@@ -256,7 +257,7 @@ export function analytics(
       e.ends_at <
         new Date(midnightInLjubljana(addDays(f.to, 1))).toISOString() &&
       inRange(ljubljanaDate(new Date(e.starts_at))) &&
-      Date.parse(e.ends_at) <= Date.now(),
+      Date.parse(e.ends_at) <= now,
   );
   const week = weekStart(today),
     weekEnd = addDays(week, 7);

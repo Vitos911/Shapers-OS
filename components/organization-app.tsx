@@ -20,6 +20,7 @@ import shellStyles from "./dashboard/organization-shell.module.css";
 import polish from "./visual-polish.module.css";
 import { TaskActivityTimeline, WeeklyHoursHistory } from "./activity-history";
 import { attendanceHistory } from "@/lib/activity-history";
+import AskShaper from "./ask-shaper";
 import { isDate } from "@/lib/model";
 import {
   UserRound,
@@ -613,6 +614,7 @@ export default function OrganizationApp({
           </button>
         </div>
       </aside>
+      <AskShaper key={user.id} client={client} admin={admin} />
       <div className="main-shell" inert={menu}>
         <header className="topbar">
           <button
