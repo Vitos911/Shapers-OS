@@ -1,0 +1,170 @@
+/* Scoped to the organization app: /legacy and its shared global CSS are unchanged. */
+.shell {
+  --canvas: #f5f8fc;
+  --text: #192d49;
+  --muted: #53657d;
+  --border: #dce5f0;
+  --blue: #145ce6;
+  --blue-soft: #edf3ff;
+  --radius: 16px;
+  --polish-shadow: 0 3px 16px rgb(24 50 86 / 4%);
+  --polish-glass: #fff;
+  background: var(--canvas);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.pending :global(.cloud-entry-card) { padding: 28px; border-color: var(--border); border-radius: var(--radius); box-shadow: var(--polish-shadow); }
+.pending :global([role="status"]) { font-size: 14px; color: var(--muted); }
+
+.shell :global(.sidebar) {
+  width: 232px;
+  padding: 26px 16px 18px;
+  background: var(--polish-glass);
+  border-color: var(--border);
+  box-shadow: inset -1px 0 0 #fff;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.shell :global(.org-hub) { margin: 24px 8px 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.shell :global(.org-hub strong) { font-size: 14px; }
+.shell :global(.org-hub small) { font-size: 12px; }
+.shell :global(.nav-link) { min-height: 44px; font-size: 14px; padding: 10px 12px; gap: 10px; color: var(--muted); }
+.shell :global(.nav-link:hover) { background: #edf2f9; color: var(--text); }
+.shell :global(.nav-link.active) { background: #e7efff; color: #124fbf; box-shadow: inset 3px 0 0 var(--blue); }
+.shell :global(.sidebar-bottom) { padding: 24px 4px 0; }
+.shell :global(.sidebar-bottom > small) { display: block; margin-bottom: 12px; font-size: 12px; overflow-wrap: anywhere; }
+.shell :global(.sidebar-bottom .button) { width: 100%; }
+.shell :global(.main-shell) { margin-left: 232px; width: calc(100% - 232px); }
+.shell :global(.topbar) { height: auto; min-height: 68px; padding: 12px 32px; background: var(--polish-glass); gap: 16px; }
+.shell :global(.topbar > span) { min-width: 0; flex: 1; overflow-wrap: anywhere; font-size: 13px; color: var(--muted); }
+.shell :global(.topbar > .button) { flex-shrink: 0; }
+.shell :global(.org-main) { padding: 28px 32px 40px; gap: 20px; width: 100%; }
+.shell :global(.org-main > .page-heading) { padding: 22px 26px; border: 1px solid #d1e0f5; border-radius: var(--radius); background: linear-gradient(110deg, #fff, #edf4ff); }
+.shell :global(.eyebrow) { font-size: 12px; letter-spacing: .07em; color: #315b93; }
+.shell :global(h1) { font-size: clamp(26px, 2.4vw, 32px); line-height: 1.2; letter-spacing: -.035em; max-width: none; }
+.shell :global(h2) { font-size: 18px; line-height: 1.4; letter-spacing: -.02em; }
+.shell :global(.page-heading p) { font-size: 14px; margin-top: 8px; }
+.shell :global(.panel) { border-color: var(--border); border-radius: var(--radius); box-shadow: var(--polish-shadow); background: #fff; }
+.shell :global(.org-panel), .shell :global(.org-meeting) { padding: 22px; }
+.shell :global(.org-panel > p) { color: var(--muted); font-size: 14px; line-height: 1.65; }
+.shell :global(.org-panel > h2) { color: var(--text); }
+.shell :global(.stats-grid) { margin: 0; gap: 14px; }
+.shell :global(.org-stat) { padding: 18px 20px; gap: 8px; border-top: 3px solid #dce8fc; }
+.shell :global(.org-stat span) { color: var(--muted); font-size: 13px; }
+.shell :global(.org-stat strong) { font-size: 30px; line-height: 1.25; font-variant-numeric: tabular-nums; }
+.shell :global(.button) { min-height: 44px; font-size: 13px; padding: 10px 15px; border-radius: 10px; transition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease; }
+.shell :global(.primary) { box-shadow: inset 0 1px 0 #ffffff30, 0 2px 5px #145ce619; }
+.shell :global(.primary:hover:enabled) { background: #104fc7; }
+.shell :global(.secondary:hover:enabled) { border-color: #a7bfdf; background: #f2f6fd; }
+.shell :global(button:active:enabled) { box-shadow: inset 0 1px 3px #193b691a; }
+.shell :global(button:disabled) { opacity: .55; cursor: not-allowed; }
+.shell :global(:is(button, a, input, select, textarea, summary, [tabindex]):focus-visible) { outline: 3px solid var(--blue); outline-offset: 3px; }
+.shell :global(input), .shell :global(select), .shell :global(textarea) { min-height: 44px; min-width: 0; border-radius: 10px; border-color: #bdcce0; font-size: 14px; }
+.shell :global(input:hover:enabled), .shell :global(select:hover:enabled), .shell :global(textarea:hover:enabled) { border-color: #7c9ecb; }
+.shell :global(input::placeholder), .shell :global(textarea::placeholder) { color: #64748b; }
+.shell :global(label) { font-size: 13px; color: var(--text); }
+.shell :global(.org-panel > form) { display: grid; gap: 16px; }
+.shell :global(.org-panel > form > .button) { justify-self: start; }
+.shell :global(.org-panel > form > p) { color: var(--muted); font-size: 13px; line-height: 1.65; }
+.shell :global(.org-check) { flex-direction: row; align-items: center; }
+.shell :global(.org-check input) { min-height: 20px; width: 20px; height: 20px; }
+.shell :global(.org-actions) { gap: 12px; margin-bottom: 0; }
+.shell :global(.org-actions label), .shell :global(.org-filters label) { max-width: 100%; }
+.shell :global(.org-filters) { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; background: #edf2f9; }
+/* Keep absolutely positioned accessible labels inside the scrolling table. */
+.shell :global(.org-table-wrap) { position: relative; max-width: 100%; min-width: 0; border-radius: 14px; overscroll-behavior-x: contain; scrollbar-color: #a4b9d4 #f3f6fb; }
+.shell :global(.org-table-wrap table) { font-size: 14px; }
+.shell :global(.org-table-wrap th), .shell :global(.org-table-wrap td) { padding: 14px 16px; }
+.shell :global(.org-table-wrap th) { background: #eef3fa; color: #405675; font-size: 13px; }
+.shell :global(.org-table-wrap td small) { font-size: 12px; color: var(--muted); }
+.shell :global(.org-table-wrap td) { color: var(--text); }
+.shell :global(.org-table-wrap tbody tr:hover) { background: #f5f8fe; }
+.shell :global(.org-table-wrap tbody tr:last-child td) { border-bottom: 0; }
+.shell :global(.org-table-wrap td:first-child) { min-width: 170px; }
+.shell :global(.org-table-wrap select) { min-width: 145px; }
+.shell :global(.status-badge) { display: inline-flex; align-items: center; font-size: 12px; border: 1px solid var(--border); background: #f1f5fa; color: var(--muted); border-radius: 6px; padding: 4px 8px; white-space: nowrap; }
+.shell :global(.status-badge[data-status="active"]), .taskMeta > span { background: #edf3ff; color: #28569d; }
+.shell :global(.status-badge[data-status="present"]) { background: #edf8f1; color: #246343; }
+.shell :global(.status-badge[data-status="remote"]) { background: #edf3ff; color: #28569d; }
+.shell :global(.status-badge[data-status="excused"]) { background: #fff6e4; color: #7f5313; }
+.shell :global(.status-badge[data-status="unexcused"]), .shell :global([data-priority="urgent"]) { background: #fff0ee; color: #9c3229; }
+.shell :global([data-priority="high"]) { background: #fff5e0; color: #805019; }
+.shell :global(.org-main progress) { display: block; height: 10px; border: 0; border-radius: 999px; background: #e6edf7; appearance: none; overflow: hidden; }
+.shell :global(progress::-webkit-progress-bar) { background: #e6edf7; border-radius: 999px; }
+.shell :global(progress::-webkit-progress-value) { background: var(--blue); border-radius: 999px; }
+.shell :global(progress::-moz-progress-bar) { background: var(--blue); border-radius: 999px; }
+.shell :global(.org-bars > div) { grid-template-columns: 110px minmax(0, 1fr) 70px; font-variant-numeric: tabular-nums; }
+.shell :global(.org-bars meter) { height: 12px; }
+.shell :global(.org-empty) { border: 1px dashed #bdcde2; border-radius: 12px; background: #f6f9fd; padding: 20px; color: var(--muted); font-size: 14px; line-height: 1.65; }
+.shell :global(.error-banner), .shell :global(.info-banner) { font-size: 14px; line-height: 1.6; border-radius: 12px; margin: 0; overflow-wrap: anywhere; }
+.shell :global(.error-banner) { background: #fff1f1; border-color: #f0c4c4; color: #9c2727; }
+.shell :global(.info-banner) { background: #edf4ff; border-color: #bdd3f5; color: #234f8d; }
+.shell :global(.personal-calendar) { margin-bottom: 0; }
+.shell :global(.personal-calendar-heading p), .shell :global(.personal-calendar-privacy), .shell :global(.org-meeting small) { font-size: 13px; line-height: 1.6; }
+.shell :global(.personal-calendar-heading h2) { font-size: 18px; }
+.shell :global(.org-meeting .eyebrow) { margin: 0; }
+.shell :global(.org-meeting summary) { min-height: 44px; padding: 10px 0; }
+.shell :global(.org-calendar h3), .shell :global(.org-calendar p) { font-size: 13px; }
+.shell :global(.dialog) { border: 1px solid #fff; background: var(--polish-glass); border-radius: 20px; box-shadow: 0 24px 80px #193b6933; max-width: calc(100vw - 32px); overscroll-behavior: contain; }
+.shell :global(.dialog::backdrop) { background: #132b5166; }
+.shell :global(.dialog h2) { font-size: 22px; }
+.shell :global(.dialog-inner) { padding: 26px; }
+.shell :global(.dialog .org-fields) { gap: 18px; }
+
+.overviewGrid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.overviewGrid > * { min-width: 0; }
+.week { grid-column: 2; grid-row: 1; }
+.meeting { grid-column: 1 / -1; grid-row: 2; }
+.tasks { grid-column: 1; grid-row: 1; }
+.overviewGrid :global(.org-panel > h2) { display: flex; align-items: center; gap: 9px; }
+.overviewGrid :global(.org-panel > h2 svg) { color: var(--blue); }
+.overviewGrid :global(.org-meeting) { box-shadow: none; border: 0; padding: 0; border-radius: 0; }
+.overviewGrid :global(.org-meeting small:last-child) { overflow-wrap: anywhere; }
+.taskList { list-style: none; padding: 0; margin: 16px 0; }
+.taskList li { padding: 16px 0; border-top: 1px solid var(--border); }
+.taskList a { display: block; border-radius: 6px; overflow-wrap: anywhere; }
+.taskList a:hover strong { color: var(--blue); }
+.taskList strong { display: block; font-size: 15px; line-height: 1.5; }
+.taskList p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.taskMeta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 9px; color: var(--muted); font-size: 12px; }
+.taskMeta > span { border-radius: 5px; padding: 3px 7px; }
+
+@supports (backdrop-filter: blur(1px)) {
+  .shell { --polish-glass: rgb(255 255 255 / 88%); }
+  .shell :global(.sidebar), .shell :global(.topbar) { backdrop-filter: blur(16px) saturate(1.1); }
+  .shell :global(.dialog) { backdrop-filter: blur(24px); }
+}
+@media (max-width: 1100px) {
+  .shell :global(.org-main) { padding: 24px; }
+  .shell :global(.topbar) { padding-inline: 24px; }
+  .shell :global(.stats-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .overviewGrid { grid-template-columns: minmax(0, 1fr); }
+  .tasks, .week, .meeting { grid-column: auto; grid-row: auto; }
+}
+@media (max-width: 1000px) {
+  .shell :global(.sidebar) { width: 256px; transform: translateX(-100%); visibility: hidden; }
+  .shell :global(.sidebar.is-open) { transform: translateX(0); visibility: visible; }
+  .shell :global(.main-shell) { margin-left: 0; width: 100%; }
+  .shell :global(.sidebar-backdrop) { display: block; position: fixed; inset: 0; z-index: 29; border: 0; background: #132b5166; }
+}
+@media (max-width: 700px) {
+  .shell :global(.org-main) { padding: 18px 16px 32px; gap: 16px; }
+  .shell :global(.topbar) { padding: 10px 16px; gap: 10px; flex-wrap: wrap; }
+  .shell :global(.topbar > span) { font-size: 12px; }
+  .shell :global(.topbar > .button:last-child) { margin-left: auto; }
+  .shell :global(.org-main > .page-heading) { padding: 20px; }
+  .shell :global(.org-panel), .shell :global(.org-meeting) { padding: 18px; }
+  .shell :global(.org-stat) { padding: 16px; }
+  .shell :global(.stats-grid), .overviewGrid { gap: 12px; }
+  .shell :global(.org-actions label), .shell :global(.org-filters label) { min-width: 0; flex: 1 1 140px; }
+  .shell :global(input), .shell :global(select), .shell :global(textarea) { font-size: 16px; }
+  .shell :global(.org-bars > div) { grid-template-columns: 85px minmax(0, 1fr) 60px; gap: 8px; font-size: 12px; }
+  .shell :global(.dialog-inner) { padding: 20px; }
+  .shell :global(.personal-calendar-actions) { width: 100%; }
+  .shell :global(.personal-calendar-actions .button) { flex: 1; }
+  .overviewGrid :global(.org-meeting) { padding: 0; }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .shell { --polish-glass: #fff; }
+  .shell :global(.sidebar), .shell :global(.topbar), .shell :global(.dialog) { backdrop-filter: none; }
+}

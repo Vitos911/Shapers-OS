@@ -81,7 +81,9 @@ export type TaskHistory = {
   old_status: string | null;
   new_status: string;
   occurred_at: string;
-  changes: { after?: { project_id?: string } };
+  actor_id?: string | null;
+  actor_name?: string | null;
+  changes: { before?: Partial<OrgTask> | null; after?: Partial<OrgTask> };
 };
 export type Snapshot = {
   identity: Identity;

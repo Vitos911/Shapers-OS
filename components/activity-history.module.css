@@ -1,0 +1,22 @@
+.details { min-width: 180px; max-width: 520px; margin-top: 10px; }
+.details summary, .hours summary { min-height: 44px; padding: 10px 0; color: var(--blue); font-size: 13px; font-weight: 600; cursor: pointer; }
+.taskDetails { padding: 16px 0 4px; white-space: normal; overflow-wrap: anywhere; }
+.taskDetails h3 { font-size: 16px; }
+.taskDetails h4 { font-size: 14px; margin: 22px 0 6px; }
+.description { color: var(--muted); white-space: pre-wrap; margin-top: 8px; }
+.caption, .byline { color: var(--muted); font-size: 12px; line-height: 1.65; }
+.timeline { list-style: none; padding: 0 0 0 16px; margin: 18px 0; border-left: 2px solid var(--border); }
+.timeline li { position: relative; padding: 0 0 24px 6px; }
+.timeline li::before { content: ""; position: absolute; left: -22px; top: 6px; width: 10px; height: 10px; border: 2px solid var(--surface); border-radius: 50%; background: var(--blue); }
+.byline { margin: 6px 0 12px; }
+.changes { display: grid; gap: 10px; margin: 0; }
+.changes > div { border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--canvas); }
+.changes dt { font-size: 12px; font-weight: 600; }
+.changes dd { margin: 5px 0 0; display: grid; gap: 4px; font-size: 12px; white-space: pre-wrap; }
+.changes dd > :first-child { color: var(--muted); }
+.hours { min-width: 0; }
+.hours h2 { margin: 12px 0; }
+.hours .caption { margin: 10px 0; }
+.hours :global(.org-table-wrap) { margin-top: 18px; }
+.comparison { display: grid; gap: 8px; min-width: 140px; font-variant-numeric: tabular-nums; }
+@media (max-width: 700px) { .details { max-width: 290px; } }

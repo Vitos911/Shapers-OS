@@ -17,6 +17,9 @@ import Leaderboard from "./leaderboard";
 import { ownProfile } from "@/lib/user-profile";
 import MemberDashboard, { DashboardSkeleton } from "./dashboard/member-dashboard";
 import shellStyles from "./dashboard/organization-shell.module.css";
+import polish from "./visual-polish.module.css";
+import { TaskActivityTimeline, WeeklyHoursHistory } from "./activity-history";
+import { attendanceHistory } from "@/lib/activity-history";
 import { isDate } from "@/lib/model";
 import {
   UserRound,
@@ -181,6 +184,9 @@ export default function OrganizationApp({
     [personal, setPersonal] = useState(false);
   const [from, setFrom] = useState(addDays(weekStart(), -35)),
     [to, setTo] = useState(ljubljanaDate());
+  const [attendanceFrom, setAttendanceFrom] = useState(""),
+    [attendanceTo, setAttendanceTo] = useState(""),
+    [attendancePast, setAttendancePast] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const navigation = useRef<HTMLElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -314,7 +320,7 @@ export default function OrganizationApp({
   );
   if (!snapshot)
     return (
-      <div className="cloud-entry">
+      <div className={`cloud-entry ${polish.shell} ${polish.pending}`}>
         <section className="cloud-entry-card">
           <h1>Shapers OS</h1>
           {error ? (
@@ -380,6 +386,9 @@ export default function OrganizationApp({
       (!member || t.assignee_id === member) &&
       (view !== "overview" || t.assignee_id === actor.member_id),
   );
+  const attendanceRows = view === "attendance" ? attendanceHistory(s, {
+    from: attendanceFrom, to: attendanceTo, member, series, pastOnly: attendancePast,
+  }, now) : { error: null, rows: [] };
   const shownHours = s.work
     .filter(
       (e) =>
@@ -546,7 +555,7 @@ export default function OrganizationApp({
       </article>
     ));
   return (
-    <div className={`app-shell ${shellStyles.shell}`} aria-busy={busy}>
+    <div className={`app-shell ${shellStyles.shell} ${polish.shell}`} aria-busy={busy}>
       <a className="skip-link" href="#org-main">
         Preskoči na vsebino
       </a>
@@ -673,6 +682,7 @@ export default function OrganizationApp({
               <PersonalCalendar key={user.id} client={client} />
             </>
           )}
+          {(view === "overview" || view === "meetings") && <PersonalCalendar key={user.id} client={client} />}
           {view === "projects" && (
             <>
               <div className="org-actions">
@@ -839,6 +849,7 @@ export default function OrganizationApp({
                         <td>
                           <strong>{t.title}</strong>
                           <small>{projectName(t.project_id)}</small>
+                          <TaskActivityTimeline task={t} snapshot={s} />
                         </td>
                         <td>{memberName(t.assignee_id)}</td>
                         <td>{t.due_date ? date(t.due_date) : "—"}</td>
@@ -898,6 +909,7 @@ export default function OrganizationApp({
           {view === "hours" && (
             <>
               {filters}
+              <WeeklyHoursHistory snapshot={s} filter={{ from, to, member, project }} now={now} />
               <div className="org-actions">
                 <strong>
                   {n(shownHours.reduce((a, e) => a + Number(e.hours), 0))} h
@@ -1131,6 +1143,9 @@ export default function OrganizationApp({
           {view === "attendance" && (
             <>
               <div className="org-actions">
+                <label>Prisotnost od<input type="date" value={attendanceFrom} onChange={(e) => setAttendanceFrom(e.target.value)} /></label>
+                <label>Prisotnost do<input type="date" value={attendanceTo} onChange={(e) => setAttendanceTo(e.target.value)} /></label>
+                <label>Obdobje sestankov<select value={attendancePast ? "past" : "all"} onChange={(e) => setAttendancePast(e.target.value === "past")}><option value="all">Vsi shranjeni zapisi</option><option value="past">Pretekli sestanki</option></select></label>
                 {admin && (
                   <button
                     className="button primary"
@@ -1165,8 +1180,10 @@ export default function OrganizationApp({
               </div>
               <p>
                 Člani se prijavijo v zavihku Sestanki; administrator lahko
-                popravi tudi pretekle zapise.
+                popravi tudi pretekle zapise. Prikazujemo shranjene statuse;
+                manjkajočih zapisov ne označimo samodejno kot neopravičene.
               </p>
+              {attendanceRows.error && <p role="alert">{attendanceRows.error}</p>}
               <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                 <table>
                   <thead>
@@ -1179,50 +1196,35 @@ export default function OrganizationApp({
                     </tr>
                   </thead>
                   <tbody>
-                    {s.attendance
-                      .filter(
-                        (a) =>
-                          (!member || a.member_id === member) &&
-                          (!series ||
-                            s.meetings.find((e) => e.id === a.meeting_id)
-                              ?.series === series),
-                      )
-                      .map((a) => (
-                        <tr key={a.id}>
-                          <td>
-                            {s.meetings.find((e) => e.id === a.meeting_id)
-                              ?.title || "Zgodovinski sestanek"}
-                            <small>
-                              {s.meetings.find((e) => e.id === a.meeting_id)
-                                ?.starts_at
-                                ? date(
-                                    s.meetings.find(
-                                      (e) => e.id === a.meeting_id,
-                                    )!.starts_at,
-                                  )
-                                : ""}
-                            </small>
-                          </td>
-                          <td>{memberName(a.member_id)}</td>
-                          <td><span className="status-badge" data-status={a.status}>{labels[a.status]}</span></td>
-                          <td>{a.note}</td>
-                          <td>
-                            {admin && (
-                              <button
-                                className="button secondary"
-                                onClick={() =>
-                                  setEdit({ kind: "attendance", data: a })
-                                }
-                              >
-                                Popravi
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+                    {attendanceRows.rows.map(({ record: a, meeting }) => (
+                      <tr key={a.id}>
+                        <td>
+                          {meeting?.title || "Zgodovinski sestanek"}
+                          <small>
+                            {meeting ? `${date(meeting.starts_at)} · ${meeting.series || "Brez serije"}` : "Datum in serija nista dostopna"}
+                          </small>
+                        </td>
+                        <td>{memberName(a.member_id)}</td>
+                        <td><span className="status-badge" data-status={a.status}>{labels[a.status]}</span></td>
+                        <td>{a.note}</td>
+                        <td>
+                          {admin && (
+                            <button
+                              className="button secondary"
+                              onClick={() =>
+                                setEdit({ kind: "attendance", data: a })
+                              }
+                            >
+                              Popravi
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
+              {!attendanceRows.error && !attendanceRows.rows.length && <Empty>Ni shranjenih zapisov prisotnosti za izbrane filtre.</Empty>}
             </>
           )}
           {(view === "analytics" || view === "members") && admin && (
