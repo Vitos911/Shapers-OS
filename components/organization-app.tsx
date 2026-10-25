@@ -11,6 +11,7 @@ import {
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import Link from "next/link";
 import PersonalCalendar from "./personal-calendar";
+import polish from "./visual-polish.module.css";
 import { isDate } from "@/lib/model";
 import {
   Earth,
@@ -262,7 +263,7 @@ export default function OrganizationApp({
   );
   if (!snapshot)
     return (
-      <div className="cloud-entry">
+      <div className={`cloud-entry ${polish.shell} ${polish.pending}`}>
         <section className="cloud-entry-card">
           <h1>Shapers OS</h1>
           {error ? (
@@ -506,7 +507,7 @@ export default function OrganizationApp({
       </article>
     ));
   return (
-    <div className="app-shell" aria-busy={busy}>
+    <div className={`app-shell ${polish.shell}`} aria-busy={busy}>
       <a className="skip-link" href="#org-main">
         Preskoči na vsebino
       </a>
@@ -593,7 +594,7 @@ export default function OrganizationApp({
                 ? `Dobrodošel/a${me ? ", " + me.name.split(" ")[0] : ""}.`
                 : nav.find((v) => v[0] === view)?.[1]}
             </h1>
-            <p>Skupen prostor. Preverjena prijava. Podatki v Supabase.</p>
+            <p>Tvoje naloge, ure in dogajanje v organizaciji.</p>
           </div>
           {error && (
             <div className="error-banner" role="alert">
@@ -605,7 +606,6 @@ export default function OrganizationApp({
               {notice}
             </div>
           )}
-          {(view === "overview" || view === "meetings") && <PersonalCalendar key={user.id} client={client} />}
           {(view === "analytics" || view === "members") && !admin ? (
             <Card title="Dostop je omejen">
               <p>Ta pogled zahteva administratorsko vlogo.</p>
@@ -641,50 +641,76 @@ export default function OrganizationApp({
                   value={ownMetrics.completed}
                 />
               </div>
-              <Card title="Naslednji relevantni sestanek">
-                {next ? (
-                  meetingCards([next])
-                ) : (
-                  <Empty>
-                    V bazi še ni prihodnjih relevantnih sestankov. Preveri
-                    zavihek Sestanki in stanje Google povezave.
-                  </Empty>
-                )}
-              </Card>
-              <Card title="Moj teden">
-                {me ? (
-                  <>
-                    <p>
-                      {n(ownMetrics.weeklyHours)} od{" "}
-                      {n(Number(me.weekly_hours))} ur · teden od{" "}
-                      {date(weekStart())}
-                    </p>
-                    <progress
-                      value={ownMetrics.weeklyHours}
-                      max={Math.max(
-                        Number(me.weekly_hours),
-                        ownMetrics.weeklyHours,
-                      )}
-                    />
-                    <button
-                      className="button primary"
-                      disabled={busy}
-                      onClick={() => setEdit({ kind: "work" })}
-                    >
-                      <Plus size={16} />
-                      Zabeleži ure
-                    </button>
-                  </>
-                ) : (
-                  <p>
-                    Upravljaš organizacijo brez dodatnega članskega zapisa.
-                    Evidenca ur zahteva pravi članski profil.
-                  </p>
-                )}
-              </Card>
-              <a className="button secondary" href="#tasks">
-                Odpri moje naloge
-              </a>
+              <div className={polish.overviewGrid}>
+                <div className={polish.tasks}>
+                  <Card title="Moje naloge">
+                    {shownTasks.filter((t) => t.status !== "done").length ? (
+                      <ul className={polish.taskList}>
+                        {shownTasks.filter((t) => t.status !== "done").slice(0, 3).map((t) => (
+                          <li key={t.id}>
+                            <a href="#tasks">
+                              <strong>{t.title}</strong>
+                              <p>{projectName(t.project_id)}</p>
+                              <div className={polish.taskMeta}>
+                                <span>{labels[t.status]}</span>
+                                <span data-priority={t.priority}>{labels[t.priority]} prednost</span>
+                                {t.due_date && <time dateTime={t.due_date}>Rok: {date(t.due_date)}</time>}
+                              </div>
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : <Empty>Trenutno nimaš odprtih dodeljenih nalog.</Empty>}
+                    <a className="button secondary" href="#tasks">Odpri moje naloge</a>
+                  </Card>
+                </div>
+                <div className={polish.week}>
+                  <Card title="Moj teden">
+                    {me ? (
+                      <>
+                        <p>
+                          {n(ownMetrics.weeklyHours)} od{" "}
+                          {n(Number(me.weekly_hours))} ur · teden od{" "}
+                          {date(weekStart())}
+                        </p>
+                        <progress
+                          aria-label="Napredek tedenskih ur"
+                          value={ownMetrics.weeklyHours}
+                          max={Math.max(
+                            Number(me.weekly_hours),
+                            ownMetrics.weeklyHours,
+                          )}
+                        />
+                        <button
+                          className="button primary"
+                          disabled={busy}
+                          onClick={() => setEdit({ kind: "work" })}
+                        >
+                          <Plus size={16} />
+                          Zabeleži ure
+                        </button>
+                      </>
+                    ) : (
+                      <p>
+                        Upravljaš organizacijo brez dodatnega članskega zapisa.
+                        Evidenca ur zahteva pravi članski profil.
+                      </p>
+                    )}
+                  </Card>
+                </div>
+                <div className={polish.meeting}>
+                  <Card title="Naslednji relevantni sestanek">
+                    {next ? (
+                      meetingCards([next])
+                    ) : (
+                      <Empty>
+                        V bazi še ni prihodnjih relevantnih sestankov. Preveri
+                        zavihek Sestanki in stanje Google povezave.
+                      </Empty>
+                    )}
+                  </Card>
+                </div>
+              </div>
               {admin && (
                 <a className="button secondary" href="#analytics">
                   Organizacijska analitika
@@ -692,6 +718,7 @@ export default function OrganizationApp({
               )}
             </>
           )}
+          {(view === "overview" || view === "meetings") && <PersonalCalendar key={user.id} client={client} />}
           {view === "projects" && (
             <>
               <div className="org-actions">
@@ -709,7 +736,7 @@ export default function OrganizationApp({
               <div className="org-cards">
                 {s.projects.map((p) => (
                   <Card key={p.id} title={p.name}>
-                    <span className="status-badge">{labels[p.status]}</span>
+                    <span className="status-badge" data-status={p.status}>{labels[p.status]}</span>
                     <p>{p.description || "Brez opisa."}</p>
                     <small>
                       Ustvarjeno {date(p.created_at)} · posodobljeno{" "}
@@ -840,7 +867,7 @@ export default function OrganizationApp({
                   Samo moje
                 </button>
               </div>
-              <div className="org-table-wrap">
+              <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                 <table>
                   <thead>
                     <tr>
@@ -861,7 +888,7 @@ export default function OrganizationApp({
                         </td>
                         <td>{memberName(t.assignee_id)}</td>
                         <td>{t.due_date ? date(t.due_date) : "—"}</td>
-                        <td>{labels[t.priority]}</td>
+                        <td><span className="status-badge" data-priority={t.priority}>{labels[t.priority]}</span></td>
                         <td>
                           <label className="sr-only" htmlFor={"status-" + t.id}>
                             Status: {t.title}
@@ -932,7 +959,7 @@ export default function OrganizationApp({
                   </button>
                 )}
               </div>
-              <div className="org-table-wrap">
+              <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                 <table>
                   <thead>
                     <tr>
@@ -1006,7 +1033,7 @@ export default function OrganizationApp({
                 </strong>{" "}
                 iz tedenskih agregatov, poleg dnevnih vnosov zgoraj.
               </p>
-              <div className="org-table-wrap">
+              <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                 <table>
                   <thead>
                     <tr>
@@ -1185,7 +1212,7 @@ export default function OrganizationApp({
                 Člani se prijavijo v zavihku Sestanki; administrator lahko
                 popravi tudi pretekle zapise.
               </p>
-              <div className="org-table-wrap">
+              <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                 <table>
                   <thead>
                     <tr>
@@ -1222,7 +1249,7 @@ export default function OrganizationApp({
                             </small>
                           </td>
                           <td>{memberName(a.member_id)}</td>
-                          <td>{labels[a.status]}</td>
+                          <td><span className="status-badge" data-status={a.status}>{labels[a.status]}</span></td>
                           <td>{a.note}</td>
                           <td>
                             {admin && (
@@ -1290,7 +1317,7 @@ export default function OrganizationApp({
                     />
                   </div>
                   <Card title="Člani in prispevek">
-                    <div className="org-table-wrap">
+                    <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                       <table>
                         <thead>
                           <tr>
@@ -1345,7 +1372,7 @@ export default function OrganizationApp({
                     </div>
                   </Card>
                   <Card title="Primerjava razredov">
-                    <div className="org-table-wrap">
+                    <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                       <table>
                         <thead>
                           <tr>
@@ -1496,7 +1523,7 @@ export default function OrganizationApp({
                     >
                       Naloži dostope
                     </button>
-                    <div className="org-table-wrap">
+                    <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                       <table>
                         <thead>
                           <tr>
@@ -1710,6 +1737,7 @@ function Editor({
   return (
     <dialog
       className="dialog"
+      aria-labelledby="org-editor-heading"
       ref={dialog}
       onCancel={(e) => {
         if (busy) e.preventDefault();
@@ -1718,7 +1746,7 @@ function Editor({
     >
       <div className="dialog-inner">
         <div className="org-actions">
-          <h2>
+          <h2 id="org-editor-heading">
             {edit.data ? "Uredi" : "Dodaj"}{" "}
             {kind === "projects"
               ? "projekt"
