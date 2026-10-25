@@ -173,3 +173,21 @@
 @media (max-width:600px) { .performance { gap:8px; } .performance article { padding:14px 12px; } .performance article > strong, .performance .fire { font-size:27px; } .performance .fire > svg { width:28px; height:28px; } .podium { grid-template-columns:1fr; gap:10px; margin-top:15px; } .podium li, .podium li[data-place="1"] { min-height:0; flex-direction:row; flex-wrap:wrap; text-align:left; padding:14px; } .podium li[data-place="1"] { order:0; } .podium li > div { flex:1; min-width:100px; } .podium .avatar, .podium [data-place="1"] .avatar { width:34px; height:34px; } .podium .podiumMeta { flex-basis:100%; flex-direction:row; justify-content:flex-end; gap:12px; } .filters > label { width:100%; } .subheading { font-size:14px; } }
 @media (prefers-reduced-motion:reduce) { .card *, .card *::before, .card *::after { animation:none !important; transition:none !important; } .podium li:hover { transform:none; } }
 .sparkline { border-bottom:1px solid var(--border); }
+
+
+/* Richer, accessible achievement colors. */
+.performance article { border-top:4px solid #2563eb; box-shadow:0 4px 16px #172e500c; }
+.performance [data-stat="rank"] { border-top-color:#e0ac28; background:linear-gradient(145deg,#fff5d9,#fff 76%); }
+.performance [data-stat="tasks"] { border-top-color:#2563eb; background:linear-gradient(145deg,#eef4ff,#fff 76%); }
+.performance [data-stat="hours"] { border-top-color:#16834d; background:linear-gradient(145deg,#eaf8f0,#fff 76%); }
+.performance [data-stat="streak"] { border-top-color:#e76a1b; background:linear-gradient(145deg,#fff0e2,#fff 76%); }
+.performance [data-stat="streak"] .fire { color:#a84710; }
+.podium li[data-place="1"] { background:linear-gradient(160deg,#ffedac,#fff 78%); border-color:#d5a32b; }
+.podium li[data-place="2"] { background:linear-gradient(160deg,#e6edf6,#fff 78%); border-color:#9faec2; }
+.podium li[data-place="3"] { background:linear-gradient(160deg,#f8e1ce,#fff 78%); border-color:#cb946a; }
+.tableWrap thead { background:#edf3fc; color:#30496c; font-size:12px; }
+.tableWrap tbody tr:nth-child(even) { background:#f7f9fe; }
+.tableWrap tbody tr:hover { background:#e9f1ff; }
+.tableWrap tbody [data-own="true"] { background:#e3edff; }
+.achievements [data-earned="true"] { background:#eaf8ef; color:#17643d; border-color:#8bc8a3; }
+.achievements [data-earned="true"][data-badge="on-fire"], .achievements [data-earned="true"][data-badge="unstoppable"] { background:#ffeddc; color:#a6470d; border-color:#e9a66e; }
