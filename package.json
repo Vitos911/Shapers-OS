@@ -16,7 +16,7 @@
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "check": "pnpm test && pnpm test:db && pnpm typecheck && pnpm lint && pnpm build",
     "test:db": "node scripts/test-database.mjs",
-    "test:browser": "node scripts/check-release-browser.mjs"
+    "test:browser": "node scripts/check-release-browser.mjs && node scripts/check-work-timer-browser.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",

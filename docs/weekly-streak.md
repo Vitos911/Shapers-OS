@@ -10,8 +10,10 @@ successful work saves and refreshes reread the authoritative snapshot.
 ## Counting rules
 
 - The verified `identity.member_id` selects the member. Unlinked accounts have no personal card.
-- Current tier targets are GO! **4h**, Impact **10h**, Core **70h**. There is no tier-history
-  table, so the card explicitly describes all calculations as using the current tier.
+- The authoritative target is `members.weekly_hours`, shared with the dashboard and
+  leaderboard. Tier defaults remain GO! **4h**, Impact **10h**, Core **70h**, but do not
+  override a stored individual goal. There is no goal-history table; this card uses
+  the member’s current stored target.
 - Weeks are Monday–Sunday in Europe/Ljubljana. Work dates are already calendar dates;
   instants use `ljubljanaDate`, then existing `weekStart` / `addDays` utilities.
 - An imported aggregate is authoritative from `week_start` through `through_date`, inclusive.
@@ -47,7 +49,7 @@ labels and responsive layout. No external design style is claimed as reviewed.
 
 ## Verification
 
-`pnpm test` includes tier thresholds, quarter-hour deficits, unfinished weeks, missing weeks,
+`pnpm test` includes stored member goals, quarter-hour deficits, unfinished weeks, missing weeks,
 both Ljubljana DST transitions at Monday boundaries, Sunday work, year rollover, full and
 partial import overlap, future/deleted/foreign records, all milestones, unavailable profiles
 and input immutability. Run `pnpm typecheck`, `pnpm lint`, `pnpm build` as well.

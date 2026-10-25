@@ -1,6 +1,6 @@
 # Skupne podatkovne pogodbe
 
-Vir tipov je obstoječi `lib/organization.ts`: `Identity`, `Snapshot`, `OrgMember`, `OrgProject`, `OrgTask`, `WorkEntry`, `WeeklyHours`, `Meeting`, `Attendance`, `TaskHistory`. Ne ustvarjaj konkurenčnega modela v UI. Validacijo določa `lib/org-validation.ts`, končne pravice in omejitve pa aktualna Supabase shema/RLS/triggerji. Tipizacija sama ni varnostna meja.
+Vir tipov je obstoječi `lib/organization.ts`: `Identity`, `Snapshot`, `WorkSession`, `WorkState`, `OrgMember`, `OrgProject`, `OrgTask`, `WorkEntry`, `WeeklyHours`, `Meeting`, `Attendance`, `TaskHistory`. Ne ustvarjaj konkurenčnega modela v UI. Validacijo določa `lib/org-validation.ts`, končne pravice in omejitve pa aktualna Supabase shema/RLS/triggerji. Tipizacija sama ni varnostna meja.
 
 ## Obstoječi API
 
@@ -12,7 +12,9 @@ Vse `/api/org/*` zahteve imajo `Authorization: Bearer <Supabase access token>`. 
 | `projects` | POST/PATCH: name, description, status; PATCH z id | ADMIN/SUPERADMIN |
 | `tasks` | POST/PATCH: project_id, title, description, assignee_id, status, priority, due_date; PATCH id/archived v dovoljenem obsegu in obvezni expected_updated_at | Ustvarjanje ADMIN; trenutni izvajalec status/opis/prioriteta/rok ter dodelitev članu istega projekta |
 | `project-members` | POST: project_id, member_id; `remove: true` za odstranitev članstva | ADMIN/SUPERADMIN |
-| `work` | POST/PATCH: date, hours, description, project_id; lastnik iz seje; PATCH id in dovoljeni deleted | Lastni vnosi; admin lahko bere, ne piše v imenu drugega |
+| `work-timer` | GET: server_now, sessions, work (trajni + začasni dnevni zapisi). POST: action=start/pause/resume/stop, session_id; start project_id/description, ostali expected_version | Aktivni povezan član, samo lastna seja; strežniški čas, varen RPC |
+| `work` | POST/PATCH: member_id, date, hours, description, project_id, reason; PATCH id, expected_updated_at in deleted | Samo ADMIN/SUPERADMIN; poln popravek dnevnega zapisa z razlogom, RLS/varen RPC |
+| `work-audit` | GET: zadnjih 100 sprememb org_work_entries, reason v new_data.adjustment_reason | ADMIN/SUPERADMIN; nespremenljiva org_audit sled |
 | `attendance` | POST/PATCH: meeting_id, member_id, status, note; PATCH id | Lastni present/remote v oknu; ADMIN tudi excused/unexcused/popravki |
 | `calendar` | POST: samo from/to (YYYY-MM-DD); server prebere Google in shrani reference | ADMIN/SUPERADMIN pred privilegiranim delom; Google izključno GET |
 | `profile` | PATCH: name | Lastni profil |
@@ -32,3 +34,5 @@ Tabelni seznam je orientacija po obstoječi poti; točne allowliste preveri v `f
 - MEMBER, ADMIN in SUPERADMIN vedno iz zaupane baze. Skriti gumbi, hash in props `role` ne nadomeščajo RLS. Service client se nikoli ne vrača odjemalcu.
 
 Pred spremembo shared modela ali API A/B potrdita polja, pravice, migracijo in sprejemni test. Najprej združita pregledan združljiv temelj, nato posodobita feature veji. Do roka se izogibaj preimenovanju delujočih env imen, tabel, statusov in auth tokov.
+
+Časovnik in postopek izdaje: [live-work-timer.md](live-work-timer.md). Ure časovnika ohranijo natančne sekunde (brez četrturnega zaokroževanja); admin dnevni vnos upošteva dejansko dolžino dneva v Ljubljani.

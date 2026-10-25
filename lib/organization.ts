@@ -44,7 +44,25 @@ export type WorkEntry = {
   hours: number;
   description: string;
   deleted: boolean;
+  updated_at?: string;
+  session_id?: string | null;
+  provisional?: boolean;
+  adjustment_reason?: string | null;
 };
+export type WorkSession = {
+  id: string;
+  user_id: string;
+  member_id: string;
+  project_id: string | null;
+  description: string;
+  started_at: string;
+  state: "running" | "paused" | "stopped";
+  version: number;
+  stopped_at: string | null;
+  duration_seconds: number | null;
+  elapsed_seconds: number;
+};
+export type WorkState = { server_now: string; sessions: WorkSession[]; work: WorkEntry[] };
 export type WeeklyHours = {
   id: string;
   member_id: string;

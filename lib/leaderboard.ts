@@ -55,9 +55,9 @@ export function scoreWeek(source: LeaderboardSource, week: string, asOf: Date): 
   return source.members.filter((member) => Object.hasOwn(WEEKLY_TARGETS, member.tier)).map((member) => {
     // Reuse the exact Weekly Streak coverage rules, including partial weekly imports.
     const work = [...new Map(source.work.map((entry) => [entry.id, entry])).values()];
-    const hours = weeklyStreak({ ...source, work, identity: { member_id: member.id } as Identity }, new Date(cutoff < end ? cutoff : cutoff - 1))!.hours;
     const target = Number(member.weekly_hours);
     if (!Number.isFinite(target) || target <= 0) throw new Error("Članu manjka veljaven tedenski cilj ur.");
+    const hours = weeklyStreak({ ...source, work, identity: { member_id: member.id } as Identity }, new Date(cutoff < end ? cutoff : cutoff - 1))!.hours;
     const tasks = [...new Map(source.tasks.map((task) => [task.id, task])).values()].filter((task) => task.assignee_id === member.id && !task.archived);
     const completedTasks = tasks.filter((task) => {
       const event = completed.get(task.id);

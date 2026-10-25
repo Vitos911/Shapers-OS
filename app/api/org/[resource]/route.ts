@@ -11,6 +11,7 @@ import {
 import { fields, InputError, uuid } from "@/lib/org-validation";
 import { addDays, ljubljanaDate, type Snapshot } from "@/lib/organization";
 import { calendarConfigured, syncCalendar } from "@/lib/google-calendar";
+import { timerCommand, adminWorkCommand, workRpcError } from "@/lib/work-timer-server";
 import { isDate } from "@/lib/model";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,6 +28,17 @@ export async function GET(request: Request, context: Context) {
   try {
     const { resource } = await context.params;
     const { client, identity } = await requireAuth(request);
+    if (resource === "work-timer") {
+      const result = await client.rpc("org_work_state");
+      if (result.error) throw workRpcError(result.error.code);
+      return response(result.data);
+    }
+    if (resource === "work-audit") {
+      requireRole(identity);
+      const result = await client.from("org_audit").select("*").eq("entity", "org_work_entries").order("occurred_at", { ascending: false }).limit(100);
+      if (result.error) throw new HttpError(503, "Revizije ur ni mogoče prebrati.");
+      return response(result.data);
+    }
     if (resource === "access") {
       requireRole(identity, ["SUPERADMIN"]);
       const result = await client.rpc("org_list_access");
@@ -64,7 +76,12 @@ export async function GET(request: Request, context: Context) {
         "org_meeting_members",
         "org_settings",
         "org_weekly_hours",
-      ].map((t) => allRows(client, t)),
+      ].map(async (t) => {
+        if (t !== "org_work_entries") return allRows(client, t);
+        const result = await client.rpc("org_work_state");
+        if (result.error) throw workRpcError(result.error.code);
+        return result.data.work;
+      }),
     );
     const setting = settings[0] || {
       name: "Shapers OS",
@@ -109,6 +126,18 @@ async function mutate(request: Request, context: Context, partial: boolean) {
     const { resource } = await context.params;
     const { client, identity } = await requireAuth(request);
     const body = await jsonBody(request);
+    if (resource === "work-timer") {
+      if (partial) throw new HttpError(405, "Časovnik uporablja POST.");
+      const result = await client.rpc("org_work_timer", timerCommand(body));
+      if (result.error) throw workRpcError(result.error.code);
+      return response(result.data);
+    }
+    if (resource === "work") {
+      requireRole(identity);
+      const result = await client.rpc("org_admin_work", adminWorkCommand(body, partial));
+      if (result.error) throw workRpcError(result.error.code);
+      return response(result.data, partial ? 200 : 201);
+    }
     if (resource === "calendar") {
       requireRole(identity);
       if (
@@ -235,16 +264,6 @@ async function mutate(request: Request, context: Context, partial: boolean) {
     const data = fields(resource, input, partial);
     if (resource === "tasks" && !partial && "archived" in data)
       throw new HttpError(400, "Arhiviranje zahteva obstoječo nalogo.");
-    if (resource === "work" && !partial) {
-      if (!identity.member_id)
-        throw new HttpError(
-          403,
-          "Za beleženje ur potrebuješ povezan članski profil.",
-        );
-      data.member_id = identity.member_id;
-      if ("deleted" in data)
-        throw new HttpError(400, "Neveljavno začetno stanje.");
-    }
     if (resource === "profile") {
       if (!identity.member_id)
         throw new HttpError(403, "Ni članskega profila.");

@@ -18,6 +18,9 @@ import { ownProfile } from "@/lib/user-profile";
 import MemberDashboard, { DashboardSkeleton } from "./dashboard/member-dashboard";
 import shellStyles from "./dashboard/organization-shell.module.css";
 import polish from "./visual-polish.module.css";
+import { LiveWorkTimer } from "./hours/live-work-timer";
+import { WorkAudit } from "./hours/work-audit";
+import type { WorkState } from "../lib/organization";
 import { TaskActivityTimeline, WeeklyHoursHistory } from "./activity-history";
 import { attendanceHistory } from "@/lib/activity-history";
 import AskShaper from "./ask-shaper";
@@ -232,7 +235,7 @@ export default function OrganizationApp({
     return () => clearInterval(timer);
   }, []);
   const request = useCallback(
-    async (resource: string, method = "GET", body?: unknown) => {
+    async (resource: string, method = "GET", body?: unknown, signal?: AbortSignal) => {
       const session = await client.auth.getSession();
       const token = session.data.session?.access_token;
       if (!token) throw new Error("Prijava je potekla. Prijavi se znova.");
@@ -244,6 +247,7 @@ export default function OrganizationApp({
         },
         body: body ? JSON.stringify(body) : undefined,
         cache: "no-store",
+        signal,
       });
       const data = await result.json();
       if (!result.ok) {
@@ -255,6 +259,9 @@ export default function OrganizationApp({
     },
     [client],
   );
+  const workStateChanged = useCallback((state: WorkState) => {
+    setSnapshot(previous => previous ? { ...previous, work: state.work } : previous);
+  }, []);
   const refresh = useCallback(async () => {
     try {
       const data = (await request("snapshot")) as Snapshot;
@@ -417,7 +424,6 @@ export default function OrganizationApp({
         (!member || h.member_id === member),
     )
     .sort((a, b) => b.week_start.localeCompare(a.week_start));
-  const canEdit = (id: string) => id === actor.member_id;
   const choices = (values: string[]) =>
     values.map((v) => (
       <option key={v} value={v}>
@@ -682,11 +688,12 @@ export default function OrganizationApp({
               <p>Ta pogled zahteva administratorsko vlogo.</p>
             </Card>
           ) : null}
+          {(view === "overview" || view === "hours") && <LiveWorkTimer key={actor.user_id} identity={actor} projects={s.projects} request={request} onState={workStateChanged} onSaved={refresh} />}
           {view === "overview" && (
             <>
               <MemberDashboard snapshot={s} now={now} busy={busy}
                 leaderboard={<Leaderboard snapshot={s} now={now} request={request} mode="widget" />}
-                onLogHours={() => setEdit({ kind: "work" })}
+                onLogHours={() => { location.hash = "hours"; }}
                 onComplete={(task) => { void action("tasks", "PATCH", { id: task.id, status: "done" }); }}
               />
 
@@ -965,14 +972,14 @@ export default function OrganizationApp({
                   {n(shownHours.reduce((a, e) => a + Number(e.hours), 0))} h
                   dnevnih vnosov v obdobju
                 </strong>
-                {me && (
+                {admin && (
                   <button
                     className="button primary"
                     disabled={busy}
                     onClick={() => setEdit({ kind: "work" })}
                   >
                     <Plus size={16} />
-                    Zabeleži ure
+                    Administrativni vnos za nazaj
                   </button>
                 )}
               </div>
@@ -997,32 +1004,8 @@ export default function OrganizationApp({
                         <td>{n(Number(e.hours))}</td>
                         <td>{e.description}</td>
                         <td>
-                          {canEdit(e.member_id) && (
-                            <>
-                              <button
-                                className="button secondary"
-                                onClick={() =>
-                                  setEdit({ kind: "work", data: e })
-                                }
-                              >
-                                Uredi
-                              </button>
-                              <button
-                                className="cloud-text-button"
-                                disabled={busy}
-                                onClick={() => {
-                                  if (
-                                    confirm("Odstranim ta vnos iz evidence ur?")
-                                  )
-                                    void action("work", "PATCH", {
-                                      id: e.id,
-                                      deleted: true,
-                                    });
-                                }}
-                              >
-                                Odstrani
-                              </button>
-                            </>
+                          {e.provisional ? <span>Aktivna seja · začasno</span> : admin && (
+                            <button className="button secondary" disabled={busy} onClick={() => setEdit({ kind: "work", data: e })}>Uredi z razlogom</button>
                           )}
                         </td>
                       </tr>
@@ -1035,6 +1018,7 @@ export default function OrganizationApp({
               )}
             </>
           )}
+          {view === "hours" && admin && <WorkAudit key={s.work.map(e => e.updated_at || e.id).join()} request={request} />}
           {view === "hours" && (
             <Card title="Uvoženi tedenski seštevki">
               <p>
@@ -1712,7 +1696,9 @@ function Editor({
     if (data.assignee_id === "") data.assignee_id = null;
     if (data.due_date === "") data.due_date = null;
     if (edit.data) data.id = edit.data.id;
-    if (kind === "tasks" && edit.data) data.expected_updated_at = d.updated_at;
+    if ((kind === "tasks" || kind === "work") && edit.data) data.expected_updated_at = d.updated_at;
+    if (kind === "work" && edit.data) data.member_id = d.member_id;
+    if (kind === "work") data.deleted = f.get("deleted") === "on";
     await save(data);
   }
   const options = (values: string[]) =>
@@ -1868,8 +1854,11 @@ function Editor({
                 </label>
               </>
             )}
-            {kind === "work" && (
+            {kind === "work" && admin && (
               <>
+                {!edit.data && <label>Član<select name="member_id" defaultValue={s.identity.member_id || ""} required><option value="">Izberi člana</option>{s.members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select></label>}
+                <label>Razlog administrativnega posega<textarea name="reason" maxLength={2000} required /></label>
+                {edit.data && <label><input type="checkbox" name="deleted" defaultChecked={!!d.deleted} /> Odstrani iz seštevkov (revizijska sled ostane)</label>}
                 <label>
                   Datum
                   <input
@@ -1885,9 +1874,9 @@ function Editor({
                   <input
                     name="hours"
                     type="number"
-                    min="0.25"
-                    max="24"
-                    step="0.25"
+                    min="0"
+                    max="25"
+                    step="any"
                     defaultValue={val("hours", "1")}
                     required
                   />
