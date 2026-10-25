@@ -38,7 +38,7 @@ Odpri `http://localhost:3000`. Za razvoj uporabi `pnpm dev`. Preverjanje strežn
 - [Oblikovne odločitve](docs/design.md)
 - [Osebni Google koledar in samodejno branje prihodnjih dogodkov](docs/personal-calendar.md)
 
-V obstoječem projektu je ohranjenih vseh 20 članskih UUID-jev in oba prejšnja delovna prostora. Povezanih je 20 sandbox Auth računov. Zgodovinske ure so 120 tedenskih seštevkov (1.705,5 h), ne izmišljeni dnevni vnosi. 258 zapisov udeležbe čaka na prave Google reference. Imena desetih projektov v dostopnih virih niso bila podana, zato projekti niso izmišljeni.
+V obstoječem projektu je ohranjenih vseh 20 članskih UUID-jev in oba prejšnja delovna prostora. Povezanih je 20 sandbox Auth računov. Zgodovinske ure so 120 tedenskih seštevkov (1.705,5 h), ne izmišljeni dnevni vnosi. Vseh 258 zgodovinskih zapisov udeležbe je uvoženih in povezanih z obstoječimi sinhroniziranimi sestanki; [poročilo uvoza](docs/attendance-import.md) loči ta nabor od poznejših ročnih zapisov. Imena desetih projektov v dostopnih virih niso bila podana, zato projekti niso izmišljeni.
 
 Demo gesla so naključna, različna za vsak račun in samo v lokalni ignorirani `.private/demo-credentials.json`. Ne objavljaj je. Demo obrazec odpreš na prijavni strani; za ADMIN uporabi `ana.kovac@sandbox.example`, za MEMBER `ziga.krajnc@sandbox.example` z ustreznim zasebnim geslom. Realni SUPERADMIN mora najprej potrditi svojo e-pošto; noben realni račun ni samodejno potrjen in nobeno povabilo ni bilo poslano.
 

@@ -74,6 +74,8 @@ Google needs one credential mechanism, not all three. Browser config returns onl
 
 ## Verification commands
 
+Historical attendance import verification and its required service-INSERT trigger repair are documented in [attendance-import.md](attendance-import.md). Apply the tracked migration through the normal reviewed migration workflow before running historical attendance imports on another environment. Never disable triggers or grant application users service-role access.
+
 ```bash
 pnpm test
 pnpm typecheck

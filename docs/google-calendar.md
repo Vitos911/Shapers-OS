@@ -1,6 +1,6 @@
 # Google Calendar (read-only)
 
-Status: implementation and fixture tests exist; live Calendar access is NOT VERIFIED. This project has no configured Calendar ID/API key/readonly OAuth credential yet. The supplied ICS contains 55 unique events; it is source material, not a replacement live calendar. Nothing has been imported, created, modified or deleted in Google Calendar by this application or agent.
+Status, 2026-10-25: all 55 persisted meetings have Google event IDs and synchronization timestamps. All 258 historical attendance records have been imported against those references; see [attendance import verification](attendance-import.md). Live Google API access was not exercised during this attendance task. The supplied ICS contains 55 unique events and remains source material, not a replacement live calendar. This attendance task did not create, modify or delete Google Calendar events.
 
 ## Operator setup
 
@@ -21,7 +21,7 @@ Status: implementation and fixture tests exist; live Calendar access is NOT VERI
    node --env-file=.env.local scripts/import-sandbox.mjs --type attendance --file supabase/seed/attendance-pending-calendar.json --apply
    ```
 
-   Matching order: explicit Google event ID, iCal UID + Ljubljana date, then unique series + Ljubljana date. Ambiguous/missing matches are reported and block the apply. Existing `(meeting_id, member_id)` records and corrections are preserved, not overwritten. Rerun safely after correcting source matches.
+   Matching order: explicit Google event ID, iCal UID + Ljubljana date, then unique series + Ljubljana date. Ambiguous/missing matches are reported and block the apply. Existing `(meeting_id, member_id)` records and corrections are preserved, not overwritten. Rerun safely after correcting source matches. Migration `20261025080709_historical_attendance_service_import.sql` is required for service-key historical INSERTs: it exempts only the actual database `service_role` INSERT from self-check-in validation. User roles, RLS, UPDATE guards, immutable attendance identity, audit and history triggers remain in effect. No helper-function privileges are granted to the service role.
 
 ## Failure behavior and limitations
 

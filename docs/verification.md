@@ -1,5 +1,7 @@
 # Verification record — 2026-10-24
 
+2026-10-25 attendance update: [the historical import report](attendance-import.md) supersedes earlier pending-attendance statements below. All 258 source records are now stored. MEMBER/ADMIN local production browser and API checks, SUPERADMIN SQL/RLS checks, and regression checks passed; real SUPERADMIN browser login and hosted deployment remain untested in this task.
+
 ## Member Dashboard — feature/dashboard-tasks
 
 Dashboard implemented from the owner's Claude Design ZIP as modular React components with scoped glass/blue styling, self-hosted Inter, personal weekly progress, own-task completion, organizational meetings/attendance, working quick links and accessible mobile navigation. Existing auth, API/RLS, schema, historical-hour calculations and legacy are preserved. Full scope and reproducible checks: [member-dashboard.md](member-dashboard.md).
