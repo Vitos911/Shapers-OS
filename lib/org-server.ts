@@ -66,13 +66,16 @@ export function requireAdmin(actor: Identity) {
 export async function allRows(client: SupabaseClient, table: string) {
   const rows: Record<string, unknown>[] = [];
   const order =
-    table === "org_project_members"
+    table === "org_leaderboard_weeks"
+      ? "week_start"
+      : table === "org_project_members"
       ? "project_id"
       : table === "org_meeting_members"
         ? "meeting_id"
         : "id";
   for (let start = 0; start < 50000; start += 500) {
     let query = client.from(table).select("*").order(order);
+    if (table === "org_leaderboard_weeks") query = query.order("version");
     if (table.endsWith("_members")) query = query.order("member_id");
     const { data, error } = await query.range(start, start + 499);
     if (error) throw new HttpError(503, `Branje ${table} ni uspelo.`);

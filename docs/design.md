@@ -1,5 +1,7 @@
 # Shapers OS interface direction
 
+> Current visual direction (25 October 2026): [Global Shapers UI redesign](ui-redesign.md). This supersedes the earlier glass/blue visual target below; original feature and verification records are retained.
+
 Purpose: a Slovenian workspace for a community's projects, meetings, tasks, members and volunteer hours. The main organization app reads Supabase; the earlier local/JSON application remains isolated at `/legacy`.
 
 Reference lock: Refero's bundled typography and craft-details guidance. Live Refero searches returned NO_SUBSCRIPTION, so no live screen or style is claimed as reviewed. Direct build follows the user's request to create a working application.

@@ -1,5 +1,7 @@
 # Member Dashboard
 
+> Current visual direction (25 October 2026): [Global Shapers UI redesign](ui-redesign.md). This supersedes the earlier glass/blue visual target below; original feature and verification records are retained.
+
 Implemented on `feature/dashboard-tasks` in the existing root Next.js application.
 
 ## Scope and reference
@@ -21,8 +23,12 @@ Auth, `cloud-app.tsx`, Google callback, API, RLS, schema, shared organization mo
 
 `components/dashboard/member-dashboard.tsx` exports MemberDashboard, DashboardHero, WeeklyHoursProgress, MyTasksCard, UpcomingMeetingsCard, QuickActions and DashboardSkeleton. Cards receive typed slices of the existing Snapshot. API requests and mutations remain in OrganizationApp.
 
-- Identity and target come from the verified snapshot and `members.weekly_hours`.
-- Weekly hours reuse `analytics`, `ljubljanaDate` and `weekStart`; no new aggregate or daily-history interpretation. Accounts without a member profile receive no personal totals or unassigned tasks.
+The overview also includes the authenticated [Leaderboard widget](leaderboard.md) directly
+after Weekly Streak; the full page and profile achievements use the same server endpoint.
+Existing task, meeting, hours and personal-calendar elements remain in place.
+
+- Identity comes from the verified snapshot; weekly targets follow the member's current tier (GO! 4h, Impact 10h, Core 70h).
+- Hero hours and the prominent Weekly Streak card share `weeklyStreak`, using existing `ljubljanaDate` and `weekStart` utilities and excluding work covered by historical imports. Accounts without a member profile receive no personal totals or unassigned tasks. See [weekly-streak.md](weekly-streak.md) for counting rules, milestones, pause-data limitations and verification.
 - Tasks exclude archived/completed/foreign assignments. Order: overdue, urgent, dated, undated; date and priority break ties. First five shown, with a total and link to Tasks.
 - Completion sends only `id` and `status: done` through the existing handler. Success requires mutation and successful snapshot reread.
 - Next four meetings come only from the organizational snapshot, excluding cancelled/ended events, with series, Ljubljana date/time and the member's attendance. Personal Google events never supply attendance references.

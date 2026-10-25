@@ -8,6 +8,7 @@ import { readFile, mkdir } from "node:fs/promises";
 import { isAbsolute } from "node:path";
 import { pathToFileURL } from "node:url";
 import { analytics, ljubljanaDate, weekStart, addDays } from "../lib/organization.ts";
+import { weeklyStreak } from "../lib/weekly-streak.ts";
 
 const origin = process.env.CHECK_APP_ORIGIN || "http://127.0.0.1:3210";
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin)) throw new Error("Only a local app is allowed.");
@@ -41,11 +42,19 @@ try {
     assert.equal(live.identity.role, role);
     const me = live.members.find((member) => member.id === live.identity.member_id);
     assert.ok(me);
-    await visible(page.getByRole("heading", { name: `Pozdravljen/a, ${me.name.split(" ")[0]}.`, exact: true }));
+    await visible(page.getByRole("heading", { name: "Tvoj teden. Tvoj vpliv.", exact: true }));
+    await visible(page.getByText(`Pozdravljen/a, ${me.name.split(" ")[0]}. Pregled nalog, ur in dogajanja v organizaciji.`, { exact: true }));
     const today = ljubljanaDate();
     const weekly = analytics(live, { from: weekStart(today), to: today, member: me.id }, today).weeklyHours;
     const format = (n) => new Intl.NumberFormat("sl-SI", { maximumFractionDigits: 2 }).format(n);
     assert.match(await page.locator("dl").innerText(), new RegExp(format(weekly).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    const streakCard = page.getByRole("region", { name: "Weekly Streak", exact: true });
+    await visible(streakCard);
+    const streak = weeklyStreak(live);
+    assert.ok(streak);
+    assert.ok((await streakCard.innerText()).includes(`${streak.current}\nzaporednih`));
+    assert.equal(await streakCard.getByRole("list", { name: "Zadnjih 6 tednov" }).getByRole("listitem").count(), 6);
+    assert.equal(Number(await streakCard.getByRole("progressbar").getAttribute("value")), Math.min(100, streak.hours / streak.target * 100));
     assert.equal(await page.getByRole("navigation", { name: "Glavna navigacija" }).getByRole("link", { name: "Analitika", exact: true }).count(), role === "ADMIN" ? 1 : 0);
     for (const width of [1440, 768, 390]) {
       await page.setViewportSize({ width, height: 1100 });
@@ -167,6 +176,30 @@ try {
       await visible(page.locator("#dashboard-welcome"));
       assert.ok((await page.locator("dl").innerText()).includes("1,25"));
       assert.equal(writes.length, 4);
+      assert.ok((await streakCard.innerText()).includes("1,25 /"), "Streak rereads hours after an isolated work submission");
+      // All subsequent snapshots remain browser-only; no invented hours reach Supabase.
+      const goal = weeklyStreak(fixture).target;
+      const monday = weekStart(today);
+      fixture.weeklyHours = Array.from({ length: 12 }, (_, i) => {
+        const start = addDays(monday, -(i + 1) * 7);
+        return { member_id: me.id, week_start: start, through_date: addDays(start, 6), hours: goal };
+      });
+      await page.getByRole("button", { name: "Osveži podatke iz baze" }).click();
+      await visible(streakCard.locator('[data-achieved="true"]').nth(3));
+      assert.equal(await streakCard.locator('[data-achieved="true"]').count(), 4);
+      assert.ok((await streakCard.innerText()).includes("12\nzaporednih"));
+      for (const width of [390, 768, 1440]) {
+        await page.setViewportSize({ width, height: 1100 });
+        await noOverflow(page);
+        await page.screenshot({ path: `test-results/dashboard/streak-milestones-${width}.png`, fullPage: true });
+      }
+      fixture.work.push({ id: "streak-test-completion", member_id: me.id, date: today, hours: goal - 1.25, deleted: false });
+      await page.getByRole("button", { name: "Osveži podatke iz baze" }).click();
+      await visible(streakCard.getByText("Cilj tega tedna je dosežen.", { exact: true }));
+      assert.ok((await streakCard.innerText()).includes("13\nzaporednih"));
+      await page.reload();
+      await visible(streakCard.getByText("Cilj tega tedna je dosežen.", { exact: true }));
+      assert.equal(Number(await streakCard.getByRole("progressbar").getAttribute("value")), 100);
       failRead = true;
       await page.reload();
       await visible(page.getByRole("alert").filter({ hasText: "Browser test refresh failure" }));
@@ -174,6 +207,7 @@ try {
       await page.getByRole("button", { name: "Poskusi znova" }).click();
       await visible(page.locator("#dashboard-welcome"));
       checks.push("ISOLATED transport: completion authorization error/success, refresh failure without false success, task PATCH allowlist, hours POST, reread/reload, empty disconnected calendar, meeting/attendance, initial-load retry; no live database mutations");
+      checks.push("WEEKLY STREAK: real snapshot-derived total and six indicators; isolated hours reread/reload, unfinished 12-week run, four earned milestones, 13-week completion, responsive 390/768/1440");
     }
     assert.deepEqual(errors, []);
     await context.close();
