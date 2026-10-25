@@ -183,32 +183,47 @@ export async function reserveSharedBudget(client: Pick<SupabaseClient, "rpc">) {
 
 function providerConfig(env: NodeJS.ProcessEnv) {
   const requested = env.SHAPER_AI_PROVIDER?.trim().toLowerCase();
-  if (requested && !["openai", "groq"].includes(requested))
-    throw new HttpError(503, "SHAPER_AI_PROVIDER mora biti groq ali openai.");
-  const key = env.SHAPER_AI_API_KEY?.trim() || (requested !== "openai" ? env.GROQ_API_KEY?.trim() : "");
-  if (!key) throw new HttpError(503, "Ask Shaper še ni konfiguriran. Skrbnik mora nastaviti SHAPER_AI_API_KEY oziroma GROQ_API_KEY za Groq.");
-  const provider = requested || (key.startsWith("gsk_") || (!env.SHAPER_AI_API_KEY?.trim() && env.GROQ_API_KEY?.trim()) ? "groq" : "openai");
-  if ((provider === "openai" && key.startsWith("gsk_")) || (provider === "groq" && key.startsWith("sk-")))
-    throw new HttpError(503, "AI ključ se ne ujema z izbranim SHAPER_AI_PROVIDER. Preveri strežniške nastavitve.");
+  if (requested && !["openai", "groq", "deepseek"].includes(requested))
+    throw new HttpError(503, "SHAPER_AI_PROVIDER mora biti groq, deepseek ali openai.");
+  const genericKey = env.SHAPER_AI_API_KEY?.trim();
+  const provider = requested || (genericKey
+    ? (genericKey.startsWith("gsk_") ? "groq" : "openai")
+    : (env.DEEPSEEK_API_KEY?.trim() || env.DEEPSEEK_API?.trim()) ? "deepseek" : (env.GROQ_API_KEY?.trim() || env.GROQ_API?.trim()) ? "groq" : "openai");
+  const key = genericKey || (provider === "deepseek" ? (env.DEEPSEEK_API_KEY?.trim() || env.DEEPSEEK_API?.trim())
+    : provider === "groq" ? (env.GROQ_API_KEY?.trim() || env.GROQ_API?.trim()) : undefined);
+  if (!key) throw new HttpError(503, "Ask Shaper še ni konfiguriran. Nastavi SHAPER_AI_API_KEY ali ustrezen ključ ponudnika.");
+  if ((provider === "openai" && key.startsWith("gsk_")) ||
+      (provider === "groq" && !key.startsWith("gsk_")) ||
+      (provider === "deepseek" && key.startsWith("gsk_")))
+    throw new HttpError(503, "AI ključ se ne ujema z izbranim SHAPER_AI_PROVIDER.");
   return {
     key, provider,
-    endpoint: provider === "groq" ? "https://api.groq.com/openai/v1/chat/completions" : "https://api.openai.com/v1/chat/completions",
-    model: env.SHAPER_AI_MODEL?.trim() || (provider === "groq" ? "openai/gpt-oss-20b" : "gpt-4.1-mini"),
-    maxTokens: provider === "groq" ? 768 : 300,
+    endpoint: provider === "groq" ? "https://api.groq.com/openai/v1/chat/completions"
+      : provider === "deepseek" ? "https://api.deepseek.com/chat/completions"
+      : "https://api.openai.com/v1/chat/completions",
+    model: env.SHAPER_AI_MODEL?.trim() || (provider === "groq" ? "openai/gpt-oss-20b"
+      : provider === "deepseek" ? "deepseek-flash" : "gpt-4.1-mini"),
+    maxTokens: provider === "groq" ? 768 : provider === "deepseek" ? 1200 : 300,
   };
 }
 async function completion(config: ReturnType<typeof providerConfig>, fetcher: Fetcher, system: string, input: unknown, schema: object) {
   try {
+    const deepseek = config.provider === "deepseek";
+    const jsonSystem = deepseek
+      ? system + "\nVrni izključno veljaven JSON objekt, ki ustreza naslednji shemi JSON: " + JSON.stringify(schema)
+      : system;
     const result = await fetcher(config.endpoint, {
       method: "POST", redirect: "error", cache: "no-store", signal: AbortSignal.timeout(15000),
       headers: { Authorization: `Bearer ${config.key}`, "Content-Type": "application/json" },
       body: JSON.stringify({ model: config.model, temperature: 0,
-        max_completion_tokens: config.maxTokens,
+        ...(deepseek ? { max_tokens: config.maxTokens, thinking: { type: "disabled" } }
+          : { max_completion_tokens: config.maxTokens }),
         ...(config.provider === "openai" ? { store: false } : {}),
         ...(config.provider === "groq" && ["openai/gpt-oss-20b", "openai/gpt-oss-120b"].includes(config.model)
           ? { reasoning_effort: "low", include_reasoning: false } : {}),
-        messages: [{ role: "system", content: system }, { role: "user", content: JSON.stringify(input) }],
-        response_format: { type: "json_schema", json_schema: { name: "ask_shaper", strict: true, schema } },
+        messages: [{ role: "system", content: jsonSystem }, { role: "user", content: JSON.stringify(input) }],
+        response_format: deepseek ? { type: "json_object" }
+          : { type: "json_schema", json_schema: { name: "ask_shaper", strict: true, schema } },
       }),
     });
     if (!result.ok) throw unavailable();
