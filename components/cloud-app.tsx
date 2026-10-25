@@ -19,16 +19,32 @@ import BrandLogo from "./brand-logo";
 import Link from "next/link";
 import { cloudStore, localStore } from "@/lib/storage";
 import { emptyWorkspace } from "@/lib/model";
+import styles from "./login-aurora.module.css";
 
 type CloudSpace = { id: string; name: string; owner_id: string };
 
-function CloudFrame({ children }: { children: React.ReactNode }) {
+function CloudFrame({
+  children,
+  aurora = false,
+}: {
+  children: React.ReactNode;
+  aurora?: boolean;
+}) {
   return (
-    <div className="cloud-entry">
+    <div className={`cloud-entry${aurora ? ` ${styles.frame}` : ""}`}>
+      {aurora && (
+        <div className={styles.aurora} aria-hidden="true">
+          <span className={`${styles.light} ${styles.blue}`} />
+          <span className={`${styles.light} ${styles.orange}`} />
+          <span className={`${styles.light} ${styles.purple}`} />
+        </div>
+      )}
       <Link className="brand brand-logo-link" href="/">
         <BrandLogo />
       </Link>
-      <section className="cloud-entry-card">{children}</section>
+      <section className={`cloud-entry-card${aurora ? ` ${styles.card}` : ""}`}>
+        {children}
+      </section>
       <p className="cloud-entry-footer">Prostor za skupen učinek.</p>
     </div>
   );
@@ -274,7 +290,7 @@ export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
 
   if (loading)
     return (
-      <CloudFrame>
+      <CloudFrame aurora={!legacy}>
         <div className="cloud-entry-icon">
           <Cloud size={28} />
         </div>
@@ -346,11 +362,13 @@ export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
     );
 
   return (
-    <CloudFrame>
+    <CloudFrame aurora={!legacy && !user}>
       <div className="cloud-entry-icon">
         <Cloud size={28} />
       </div>
-      <span className="eyebrow">SHAPERS OS + SUPABASE</span>
+      <span className="eyebrow">
+        {legacy ? "SHAPERS OS + SUPABASE" : "SHAPERS OS"}
+      </span>
       <h1>{user ? "Izberi svoj prostor." : "Skupaj, tudi na spletu."}</h1>
       <p>
         {user

@@ -1,0 +1,92 @@
+.frame.frame {
+  position: relative;
+  isolation: isolate;
+  background: #f5f8ff;
+}
+
+/* Clip only decoration: tall forms and keyboard focus can still scroll naturally. */
+.aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.frame > :not(.aurora) {
+  position: relative;
+  z-index: 1;
+}
+
+.frame .card {
+  min-width: 0;
+  background: #ffffff;
+  border: 1px solid #dce6f6;
+  border-radius: 24px;
+  box-shadow: 0 16px 48px -16px #243f7024, 0 2px 8px #243f7006;
+}
+
+.light {
+  --drift-x: 55px;
+  --drift-y: -45px;
+  position: absolute;
+  width: clamp(440px, 54vw, 780px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(60px);
+  animation: aurora-drift 22s ease-in-out infinite;
+}
+
+.blue {
+  top: -10%;
+  left: -12%;
+  background: radial-gradient(ellipse at center, #dceaff 0%, #dceaffb3 38%, #dceaff00 70%);
+  animation-delay: -7s;
+}
+
+.orange {
+  --drift-x: -60px;
+  --drift-y: 35px;
+  top: 8%;
+  right: -16%;
+  background: radial-gradient(ellipse at center, #ffe5ce 0%, #ffe5ce99 38%, #ffe5ce00 70%);
+  animation-duration: 25s;
+  animation-delay: -16s;
+}
+
+.purple {
+  --drift-x: -35px;
+  --drift-y: -50px;
+  bottom: -24%;
+  left: 22%;
+  background: radial-gradient(ellipse at center, #e5deff 0%, #e5deffb3 38%, #e5deff00 70%);
+  animation-duration: 19s;
+  animation-delay: -11s;
+}
+
+@keyframes aurora-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(var(--drift-x), var(--drift-y)) scale(1.06); }
+}
+
+@media (max-width: 640px) {
+  .light {
+    --drift-x: 22px;
+    --drift-y: -18px;
+    width: 360px;
+    filter: blur(40px);
+  }
+
+  .blue { top: 0; left: -190px; }
+  .orange { top: 24%; right: -200px; }
+  .purple { bottom: -120px; left: -70px; }
+
+  .frame .card { border-radius: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .light {
+    animation: none;
+    transform: none;
+  }
+}
