@@ -11,6 +11,7 @@ import {
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import Link from "next/link";
 import PersonalCalendar from "./personal-calendar";
+import AskShaper from "./ask-shaper";
 import { isDate } from "@/lib/model";
 import {
   Earth,
@@ -553,6 +554,7 @@ export default function OrganizationApp({
           </button>
         </div>
       </aside>
+      <AskShaper key={user.id} client={client} admin={admin} />
       <div className="main-shell">
         <header className="topbar">
           <button
