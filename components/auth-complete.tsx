@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import BrandLogo from "./brand-logo";
 import { createClient } from "@supabase/supabase-js";
 async function complete() {
   const error = new URLSearchParams(location.search).get("error");
@@ -62,6 +63,7 @@ export default function AuthComplete() {
   }, []);
   return (
     <main className="cloud-entry">
+      <Link className="brand brand-logo-link" href="/" prefetch={false}><BrandLogo /></Link>
       <section className="cloud-entry-card">
         <span className="eyebrow">SHAPERS OS</span>
         <h1>

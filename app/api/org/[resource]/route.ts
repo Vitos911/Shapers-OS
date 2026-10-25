@@ -71,6 +71,8 @@ export async function GET(request: Request, context: Context) {
       calendar_id: "",
       timezone: "Europe/Ljubljana",
     };
+    const directory = await client.rpc("org_task_directory");
+    if (directory.error) throw new HttpError(503, "Imenik projekta ni pripravljen. Preveri organizacijsko migracijo.");
     return response({
       identity,
       members,
@@ -82,6 +84,7 @@ export async function GET(request: Request, context: Context) {
       attendance,
       history,
       projectMembers,
+      taskDirectory: directory.data,
       meetingMembers,
       settings: setting,
       calendar: {
@@ -107,6 +110,7 @@ async function mutate(request: Request, context: Context, partial: boolean) {
     const { client, identity } = await requireAuth(request);
     const body = await jsonBody(request);
     if (resource === "calendar") {
+      requireRole(identity);
       if (
         Object.keys(body).some((k) => !["from", "to"].includes(k)) ||
         ("from" in body && typeof body.from !== "string") ||
@@ -225,7 +229,9 @@ async function mutate(request: Request, context: Context, partial: boolean) {
         resource === "settings" ? ["SUPERADMIN"] : ["ADMIN", "SUPERADMIN"],
       );
     if (resource === "tasks" && !partial) requireRole(identity);
-    const { id, ...input } = body;
+    const { id, expected_updated_at, ...input } = body;
+    if (expected_updated_at !== undefined && (resource !== "tasks" || !partial)) throw new HttpError(400, "Neveljaven pogoj posodobitve.");
+    if (resource === "tasks" && partial && (typeof expected_updated_at !== "string" || !Number.isFinite(Date.parse(expected_updated_at)))) throw new HttpError(400, "Osveži nalogo pred urejanjem.");
     const data = fields(resource, input, partial);
     if (resource === "tasks" && !partial && "archived" in data)
       throw new HttpError(400, "Arhiviranje zahteva obstoječo nalogo.");
@@ -266,11 +272,14 @@ async function mutate(request: Request, context: Context, partial: boolean) {
     const query = partial
       ? client.from(table).update(data).eq("id", uuid(id))
       : client.from(table).insert(data);
+    if (resource === "tasks" && partial) query.eq("updated_at", expected_updated_at);
     const changed = await query.select().single();
     if (changed.error)
       throw new HttpError(
         changed.error.code === "42501" ? 403 : 409,
-        changed.error.code === "23505"
+        resource === "tasks" && partial && changed.error.code === "PGRST116"
+          ? "Naloga je bila medtem spremenjena ali ni več na voljo. Osveži podatke pred ponovnim urejanjem."
+          : changed.error.code === "23505"
           ? "Zapis že obstaja. Osveži podatke in uredi obstoječega."
           : "Shranjevanje ni uspelo. Preveri dovoljenja, datume, dodelitve in okno prijave udeležbe.",
       );

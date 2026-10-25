@@ -16,7 +16,16 @@ import {
   fetchGoogleEvents,
   normalizeEvent,
   safeHttpUrl,
+  syncCalendar,
 } from "../lib/google-calendar.ts";
+
+test("member cannot trigger shared calendar reads or privileged writes", async () => {
+  const forbidden = new Proxy({}, { get() { throw new Error("database must not be reached"); } });
+  await assert.rejects(
+    () => syncCalendar(forbidden, { role: "MEMBER", member_id: "m", user_id: "u", email: "fixture@invalid.example" }, "2026-10-01", "2026-11-01"),
+    e => e.status === 403,
+  );
+});
 
 test("private OAuth calendar refreshes on server and uses a Bearer token for GET only", async () => {
   const calls = [];
@@ -393,7 +402,10 @@ test("analytics use persisted completion history, nondeleted hours and eligible 
   assert.equal(a.completed, 1);
   assert.equal(a.open, 1);
   assert.equal(a.overdue, 1);
-  assert.equal(a.attendanceRate, 0.5);
+  assert.equal(a.attendanceRate, 1);
+  assert.equal(a.missingAttendance, 1);
+  assert.equal(a.weekly.length, 1);
+  assert.equal(a.weekly[0].completed, a.completed);
   assert.equal(a.behind, 1);
   assert.equal(a.activeMembers, 1);
 });

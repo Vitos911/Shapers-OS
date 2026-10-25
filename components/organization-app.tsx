@@ -11,9 +11,19 @@ import {
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import Link from "next/link";
 import PersonalCalendar from "./personal-calendar";
+import BrandLogo from "./brand-logo";
+import UserProfile from "./user-profile";
+import Leaderboard from "./leaderboard";
+import { ownProfile } from "@/lib/user-profile";
+import MemberDashboard, { DashboardSkeleton } from "./dashboard/member-dashboard";
+import shellStyles from "./dashboard/organization-shell.module.css";
+import polish from "./visual-polish.module.css";
+import { TaskActivityTimeline, WeeklyHoursHistory } from "./activity-history";
+import { attendanceHistory } from "@/lib/activity-history";
+import AskShaper from "./ask-shaper";
 import { isDate } from "@/lib/model";
 import {
-  Earth,
+  UserRound,
   LayoutDashboard,
   FolderKanban,
   CheckSquare,
@@ -28,10 +38,12 @@ import {
   X,
   BarChart3,
   ClipboardCheck,
+  Trophy,
 } from "lucide-react";
 import {
   addDays,
   analytics,
+  canManageTask,
   eligibleMeeting,
   isAdmin,
   ljubljanaDate,
@@ -56,6 +68,8 @@ type View =
   | "attendance"
   | "members"
   | "analytics"
+  | "profile"
+  | "leaderboard"
   | "settings";
 type Edit = {
   kind: "projects" | "tasks" | "work" | "attendance";
@@ -70,16 +84,32 @@ type Access = {
 };
 const nav = [
   ["overview", "Pregled", LayoutDashboard],
+  ["leaderboard", "Leaderboard", Trophy],
   ["tasks", "Moje naloge", CheckSquare],
   ["projects", "Projekti", FolderKanban],
   ["hours", "Prostovoljske ure", Clock3],
   ["meetings", "Sestanki", CalendarDays],
-  ["attendance", "Udeležba", ClipboardCheck],
+  ["attendance", "Prisotnost", ClipboardCheck],
   ["members", "Člani", Users],
   ["analytics", "Analitika", BarChart3],
+  ["profile", "Moj profil", UserRound],
   ["settings", "Nastavitve", Settings2],
 ] as const;
+const viewDescriptions: Record<View, string> = {
+  overview: "Pregled nalog, ur in dogajanja v organizaciji.",
+  leaderboard: "Tedenski prispevek, napredek in dosežki skupnosti.",
+  tasks: "Tvoje naloge, prioritete in naslednji koraki.",
+  projects: "Projekti, ki ideje spreminjajo v dejanja.",
+  hours: "Zabeleženo delo in pregled tvojega prispevka.",
+  meetings: "Prihajajoči sestanki in pregled koledarjev.",
+  attendance: "Tvoja udeležba in zgodovina srečanj.",
+  members: "Članstvo, tedenski cilji in prispevek ekipe.",
+  analytics: "Pregled ur, nalog in udeležbe v organizaciji.",
+  profile: "Tvoji podatki, članstvo in dostop do organizacije.",
+  settings: "Nastavitve organizacije in upravljanje dostopa.",
+};
 const labels: Record<string, string> = {
+  backlog: "Backlog",
   todo: "Začeti",
   in_progress: "V teku",
   in_review: "V pregledu",
@@ -109,7 +139,7 @@ const time = (v: string) =>
     minute: "2-digit",
     timeZone: "Europe/Ljubljana",
   }).format(new Date(v));
-const percent = (v: number | null) => (v === null ? "—" : n(v * 100) + " %");
+const percent = (v: number | null) => (v === null ? "Ni podatkov" : n(v * 100) + " %");
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="panel org-panel">
@@ -148,6 +178,7 @@ export default function OrganizationApp({
     [edit, setEdit] = useState<Edit | null>(null),
     [access, setAccess] = useState<Access[]>([]);
   const [project, setProject] = useState(""),
+    [taskSearch, setTaskSearch] = useState(""),
     [member, setMember] = useState(""),
     [tier, setTier] = useState(""),
     [series, setSeries] = useState(""),
@@ -157,7 +188,38 @@ export default function OrganizationApp({
     [personal, setPersonal] = useState(false);
   const [from, setFrom] = useState(addDays(weekStart(), -35)),
     [to, setTo] = useState(ljubljanaDate());
+  const [attendanceFrom, setAttendanceFrom] = useState(""),
+    [attendanceTo, setAttendanceTo] = useState(""),
+    [attendancePast, setAttendancePast] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const navigation = useRef<HTMLElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!menu) return;
+    const previousOverflow = document.body.style.overflow;
+    const trigger = menuButton.current;
+    document.body.style.overflow = "hidden";
+    const panel = navigation.current;
+    const controls = () => Array.from(panel?.querySelectorAll<HTMLElement>("a[href], button:not(:disabled)") || []);
+    controls()[0]?.focus();
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { event.preventDefault(); setMenu(false); }
+      if (event.key === "Tab") {
+        const items = controls(), first = items[0], last = items.at(-1);
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }
+    };
+    const resize = () => { if (window.innerWidth > 1000) setMenu(false); };
+    document.addEventListener("keydown", keydown);
+    window.addEventListener("resize", resize);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", keydown);
+      window.removeEventListener("resize", resize);
+      trigger?.focus();
+    };
+  }, [menu]);
   async function signOut() {
     try {
       await onSignOut();
@@ -237,6 +299,10 @@ export default function OrganizationApp({
     setError("");
     setNotice("");
     try {
+      if (resource === "tasks" && method === "PATCH" && body && typeof body === "object") {
+        const data = body as Record<string, unknown>;
+        body = { expected_updated_at: snapshot?.tasks.find(t => t.id === data.id)?.updated_at, ...data };
+      }
       const result = await request(resource, method, body);
       await refresh();
       setEdit(null);
@@ -262,7 +328,7 @@ export default function OrganizationApp({
   );
   if (!snapshot)
     return (
-      <div className="cloud-entry">
+      <div className={`cloud-entry ${polish.shell} ${polish.pending}`}>
         <section className="cloud-entry-card">
           <h1>Shapers OS</h1>
           {error ? (
@@ -285,7 +351,7 @@ export default function OrganizationApp({
               </button>
             </>
           ) : (
-            <p role="status">Nalagam organizacijo iz Supabase …</p>
+            <DashboardSkeleton />
           )}
         </section>
       </div>
@@ -294,9 +360,10 @@ export default function OrganizationApp({
     actor = s.identity,
     admin = isAdmin(actor.role),
     superadmin = actor.role === "SUPERADMIN",
-    me = s.members.find((m) => m.id === actor.member_id);
+    me = s.members.find((m) => m.id === actor.member_id),
+    profile = ownProfile(s, user);
   const memberName = (id: string | null) =>
-    s.members.find((m) => m.id === id)?.name || (id ? "Član" : "Nedodeljeno");
+    s.members.find((m) => m.id === id)?.name || s.taskDirectory?.find(m => m.id === id)?.name || (id ? "Član" : "Nedodeljeno");
   const projectName = (id: string | null) =>
     s.projects.find((p) => p.id === id)?.name || "Brez projekta";
   const relevant = (e: Snapshot["meetings"][number]) =>
@@ -320,26 +387,17 @@ export default function OrganizationApp({
             : Date.parse(e.ends_at) < now)),
     )
     .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-  const next = s.meetings
-    .filter(
-      (e) =>
-        !e.cancelled &&
-        Date.parse(e.ends_at) >= now &&
-        (me ? relevant(e) : admin),
-    )
-    .sort((a, b) => a.starts_at.localeCompare(b.starts_at))[0];
-  const ownMetrics = analytics(s, {
-    from: weekStart(),
-    to: ljubljanaDate(),
-    member: actor.member_id || undefined,
-  });
   const shownTasks = s.tasks.filter(
     (t) =>
       !t.archived &&
+      (!taskSearch || (t.title + " " + t.description).toLocaleLowerCase("sl").includes(taskSearch.toLocaleLowerCase("sl"))) &&
       (!project || t.project_id === project) &&
       (!member || t.assignee_id === member) &&
       (view !== "overview" || t.assignee_id === actor.member_id),
   );
+  const attendanceRows = view === "attendance" ? attendanceHistory(s, {
+    from: attendanceFrom, to: attendanceTo, member, series, pastOnly: attendancePast,
+  }, now) : { error: null, rows: [] };
   const shownHours = s.work
     .filter(
       (e) =>
@@ -506,7 +564,7 @@ export default function OrganizationApp({
       </article>
     ));
   return (
-    <div className="app-shell" aria-busy={busy}>
+    <div className={`app-shell ${shellStyles.shell} ${polish.shell}`} aria-busy={busy}>
       <a className="skip-link" href="#org-main">
         Preskoči na vsebino
       </a>
@@ -517,35 +575,38 @@ export default function OrganizationApp({
           onClick={() => setMenu(false)}
         />
       )}
-      <aside className={"sidebar" + (menu ? " is-open" : "")}>
-        <Link className="brand" href="/">
-          <span className="brand-mark">
-            <Earth size={26} />
-          </span>
-          <span>
-            shapers<span className="brand-os">OS</span>
-          </span>
+      <aside ref={navigation} id="org-navigation" className={"sidebar" + (menu ? " is-open" : "")} aria-label="Navigacija organizacije" role={menu ? "dialog" : undefined} aria-modal={menu || undefined}>
+        <button className={shellStyles.close} aria-label="Zapri navigacijo" onClick={() => setMenu(false)}><X size={20} /></button>
+        <Link className="brand brand-logo-link" href="/">
+          <BrandLogo />
+          <span className={shellStyles.wordmark}>Shapers <span>OS</span></span>
         </Link>
         <div className="org-hub">
           <strong>{s.settings.name}</strong>
-          <small>{actor.role} · Supabase</small>
+          <small>{actor.role}</small>
         </div>
         <nav aria-label="Glavna navigacija">
+          <span className={shellStyles.navHeading}>Delovni prostor</span>
           {nav
-            .filter((v) => admin || !["analytics", "members"].includes(v[0]))
+            .filter((v) => v[0] !== "profile" && (admin || !["analytics", "members"].includes(v[0])))
             .map(([id, label, Icon]) => (
               <a
                 className={"nav-link" + (view === id ? " active" : "")}
                 aria-current={view === id ? "page" : undefined}
                 key={id}
                 href={"#" + id}
+                onClick={() => setMenu(false)}
               >
-                <Icon size={19} />
+                <Icon size={18} aria-hidden="true" />
                 {label}
               </a>
             ))}
         </nav>
         <div className="sidebar-bottom">
+          <a className={shellStyles.footerProfile} href="#profile" aria-label="Moj profil" aria-current={view === "profile" ? "page" : undefined}>
+            <span className={shellStyles.avatar} aria-hidden="true">{profile?.initials || "?"}</span>
+            <span><strong>{profile?.name || actor.email}</strong><span>{me ? `Shapers ${me.tier}` : actor.role}</span></span>
+          </a>
           <small>{user.email}</small>
           <button className="button secondary" onClick={() => void signOut()}>
             <LogOut size={16} />
@@ -553,20 +614,26 @@ export default function OrganizationApp({
           </button>
         </div>
       </aside>
-      <div className="main-shell">
+      <div className="main-shell" inert={menu}>
+        <AskShaper key={user.id} client={client} admin={admin} />
         <header className="topbar">
           <button
             className="button secondary org-menu"
+            ref={menuButton}
             aria-label="Odpri navigacijo"
+            aria-expanded={menu}
+            aria-controls="org-navigation"
             onClick={() => setMenu(!menu)}
           >
             <Menu size={18} />
           </button>
-          <span>
-            {s.settings.name} / {nav.find((v) => v[0] === view)?.[1]}
+          <span className={shellStyles.breadcrumb}>
+            Shapers OS <span aria-hidden="true">/</span> <strong>{nav.find((v) => v[0] === view)?.[1]}</strong>
           </span>
+          <span className={shellStyles.week}><CalendarDays size={14} aria-hidden="true" />Teden od {date(weekStart(ljubljanaDate(new Date(now))))}</span>
           <button
             className="button secondary"
+            aria-label="Osveži podatke iz baze"
             disabled={busy}
             onClick={async () => {
               setBusy(true);
@@ -584,17 +651,19 @@ export default function OrganizationApp({
             <RefreshCw size={15} />
             Osveži iz baze
           </button>
+          <a className={shellStyles.profile} href="#profile" aria-label="Odpri moj profil" aria-current={view === "profile" ? "page" : undefined}>
+            <span className={shellStyles.avatar} aria-hidden="true">{profile?.initials || "?"}</span>
+            <div><strong>{profile?.name || actor.email}</strong><small>{me ? `Shapers ${me.tier}` : "Moj profil"}</small></div>
+          </a>
         </header>
         <main id="org-main" className="org-main">
-          <div className="page-heading">
-            <span className="eyebrow">SKUPAJ USTVARJAMO SPREMEMBE</span>
+          {view !== "overview" && <div className="page-heading">
+            <span className="eyebrow">{String(nav.findIndex((v) => v[0] === view) + 1).padStart(2, "0")} — DELOVNI PROSTOR</span>
             <h1>
-              {view === "overview"
-                ? `Dobrodošel/a${me ? ", " + me.name.split(" ")[0] : ""}.`
-                : nav.find((v) => v[0] === view)?.[1]}
+              {nav.find((v) => v[0] === view)?.[1]}
             </h1>
-            <p>Skupen prostor. Preverjena prijava. Podatki v Supabase.</p>
-          </div>
+            <p>{viewDescriptions[view]}</p>
+          </div>}
           {error && (
             <div className="error-banner" role="alert">
               {error}
@@ -605,7 +674,9 @@ export default function OrganizationApp({
               {notice}
             </div>
           )}
-          {(view === "overview" || view === "meetings") && <PersonalCalendar key={user.id} client={client} />}
+          {view === "meetings" && <PersonalCalendar key={user.id} client={client} />}
+          {view === "profile" && <><UserProfile snapshot={s} user={user} busy={busy} onSaveName={(name) => action("profile", "PATCH", { name })} /><Leaderboard snapshot={s} now={now} request={request} mode="achievements" /></>}
+          {view === "leaderboard" && <Leaderboard snapshot={s} now={now} request={request} />}
           {(view === "analytics" || view === "members") && !admin ? (
             <Card title="Dostop je omejen">
               <p>Ta pogled zahteva administratorsko vlogo.</p>
@@ -613,83 +684,36 @@ export default function OrganizationApp({
           ) : null}
           {view === "overview" && (
             <>
-              <div className="stats-grid">
-                <Stat
-                  label={admin ? "Člani organizacije" : "Tedenski cilj"}
-                  value={
-                    admin
-                      ? s.members.length
-                      : n(Number(me?.weekly_hours || 0)) + " h"
-                  }
-                />
-                <Stat
-                  label="Ure ta teden"
-                  value={n(ownMetrics.weeklyHours) + " h"}
-                />
-                <Stat
-                  label="Odprte naloge"
-                  value={
-                    admin
-                      ? s.tasks.filter(
-                          (t) => !t.archived && t.status !== "done",
-                        ).length
-                      : shownTasks.filter((t) => t.status !== "done").length
-                  }
-                />
-                <Stat
-                  label="Zaključene ta teden"
-                  value={ownMetrics.completed}
-                />
-              </div>
-              <Card title="Naslednji relevantni sestanek">
-                {next ? (
-                  meetingCards([next])
-                ) : (
-                  <Empty>
-                    V bazi še ni prihodnjih relevantnih sestankov. Preveri
-                    zavihek Sestanki in stanje Google povezave.
-                  </Empty>
-                )}
+              <MemberDashboard snapshot={s} now={now} busy={busy}
+                leaderboard={<Leaderboard snapshot={s} now={now} request={request} mode="widget" />}
+                onLogHours={() => setEdit({ kind: "work" })}
+                onComplete={(task) => { void action("tasks", "PATCH", { id: task.id, status: "done" }); }}
+              />
+
+              {admin && metrics && <>
+                {filters}
+                <Card title="Organizacija v izbranem obdobju">
+                  <p>{date(from)} – {date(to)}. Aktivnost pomeni zabeležene ure, zaključek naloge ali potrjeno prisotnost. Brez evidence ne pomeni neaktivnosti.</p>
+                  <div className="stats-grid">
+                    <Stat label="Člani z zabeleženo aktivnostjo" value={metrics.activeMembers} />
+                    <Stat label="Odprte / zamujene naloge zdaj" value={`${metrics.open} / ${metrics.overdue}`} />
+                    <Stat label="Pod ciljem ta teden z evidenco" value={metrics.behind} />
+                    <Stat label="Brez evidence ta teden" value={metrics.unknownWeekly} />
+                    <Stat label="Manjkajoča prisotnost v obdobju" value={metrics.missingAttendance} />
+                  </div>
+                  <h3>Napredek projektov zdaj</h3>
+                  {metrics.projects.length ? metrics.projects.map(p => <p key={p.id}>{p.name} · {p.done}/{p.total} zaključenih nalog</p>) : <Empty>Ni projektov za izbrani filter.</Empty>}
+                  <h3>Zadnji zaključki v obdobju</h3>
+                  {metrics.recentCompletions.length ? <ul>{metrics.recentCompletions.map(h => <li key={h.task_id}>{s.tasks.find(t => t.id === h.task_id)?.title || "Pretekla naloga"} · {date(h.occurred_at)}</li>)}</ul> : <Empty>V izbranem obdobju ni evidentiranih zaključkov.</Empty>}
+                </Card>
+              </>}
+              <Card title="Moje prednostne naloge">
+                {shownTasks.filter(t => t.status !== "done").length ? <ul>{shownTasks.filter(t => t.status !== "done").sort((a,b) => PRIORITIES.indexOf(b.priority) - PRIORITIES.indexOf(a.priority) || (a.due_date || "9999").localeCompare(b.due_date || "9999")).slice(0,5).map(t => <li key={t.id}><button className="cloud-text-button" onClick={() => setEdit({kind:"tasks",data:t})}>{t.title}</button> · {labels[t.priority]}</li>)}</ul> : <Empty>Trenutno nimaš odprtih dodeljenih nalog.</Empty>}
               </Card>
-              <Card title="Moj teden">
-                {me ? (
-                  <>
-                    <p>
-                      {n(ownMetrics.weeklyHours)} od{" "}
-                      {n(Number(me.weekly_hours))} ur · teden od{" "}
-                      {date(weekStart())}
-                    </p>
-                    <progress
-                      value={ownMetrics.weeklyHours}
-                      max={Math.max(
-                        Number(me.weekly_hours),
-                        ownMetrics.weeklyHours,
-                      )}
-                    />
-                    <button
-                      className="button primary"
-                      disabled={busy}
-                      onClick={() => setEdit({ kind: "work" })}
-                    >
-                      <Plus size={16} />
-                      Zabeleži ure
-                    </button>
-                  </>
-                ) : (
-                  <p>
-                    Upravljaš organizacijo brez dodatnega članskega zapisa.
-                    Evidenca ur zahteva pravi članski profil.
-                  </p>
-                )}
+              <Card title="Prihodnji roki mojih nalog">
+                {shownTasks.filter(t => t.status !== "done" && t.due_date && t.due_date >= ljubljanaDate()).length ? <ul>{shownTasks.filter(t => t.status !== "done" && t.due_date && t.due_date >= ljubljanaDate()).sort((a,b) => a.due_date!.localeCompare(b.due_date!)).slice(0,5).map(t => <li key={t.id}>{t.title} · {date(t.due_date!)}</li>)}</ul> : <Empty>Ni prihodnjih rokov.</Empty>}
               </Card>
-              <a className="button secondary" href="#tasks">
-                Odpri moje naloge
-              </a>
-              {admin && (
-                <a className="button secondary" href="#analytics">
-                  Organizacijska analitika
-                </a>
-              )}
+              <PersonalCalendar key={user.id} client={client} />
             </>
           )}
           {view === "projects" && (
@@ -709,7 +733,7 @@ export default function OrganizationApp({
               <div className="org-cards">
                 {s.projects.map((p) => (
                   <Card key={p.id} title={p.name}>
-                    <span className="status-badge">{labels[p.status]}</span>
+                    <span className="status-badge" data-status={p.status}>{labels[p.status]}</span>
                     <p>{p.description || "Brez opisa."}</p>
                     <small>
                       Ustvarjeno {date(p.created_at)} · posodobljeno{" "}
@@ -797,6 +821,7 @@ export default function OrganizationApp({
           {view === "tasks" && (
             <>
               <div className="org-actions">
+                <label>Iskanje nalog<input type="search" value={taskSearch} onChange={e => setTaskSearch(e.target.value)} /></label>
                 {admin && (
                   <button
                     className="button primary"
@@ -840,7 +865,22 @@ export default function OrganizationApp({
                   Samo moje
                 </button>
               </div>
-              <div className="org-table-wrap">
+              <div className="org-kanban" aria-label="Kanban nalog">
+                {TASK_STATUSES.map(status => <section key={status} className="org-kanban-lane" onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }} onDrop={e => {
+                  e.preventDefault();
+                  const task = shownTasks.find(t => t.id === e.dataTransfer.getData("text/plain"));
+                  if (task && !busy && canManageTask(actor, task) && task.status !== status) void action("tasks", "PATCH", {id: task.id, status, expected_updated_at: task.updated_at});
+                }}>
+                  <h2>{labels[status]} <small>{shownTasks.filter(t => t.status === status).length}</small></h2>
+                  {shownTasks.filter(t => t.status === status).map(t => <article key={t.id} className="org-kanban-task" draggable={!busy && canManageTask(actor, t)} onDragStart={e => e.dataTransfer.setData("text/plain", t.id)}>
+                    <strong>{t.title}</strong><p>{projectName(t.project_id)} · {memberName(t.assignee_id)}</p>
+                    <small>{labels[t.priority]}{t.due_date ? " · " + date(t.due_date) : ""}</small>
+                    <button className="cloud-text-button" disabled={busy || !canManageTask(actor, t)} onClick={() => setEdit({kind: "tasks", data: t})}>Uredi nalogo</button>
+                  </article>)}
+                </section>)}
+              </div>
+              <p className="notice">Nalogo premakni med stolpci ali spremeni status v spodnji tabeli. Tabela in obrazec delujeta tudi s tipkovnico in na dotik.</p>
+              <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                 <table>
                   <thead>
                     <tr>
@@ -858,18 +898,20 @@ export default function OrganizationApp({
                         <td>
                           <strong>{t.title}</strong>
                           <small>{projectName(t.project_id)}</small>
+                          <TaskActivityTimeline task={t} snapshot={s} />
                         </td>
                         <td>{memberName(t.assignee_id)}</td>
                         <td>{t.due_date ? date(t.due_date) : "—"}</td>
-                        <td>{labels[t.priority]}</td>
+                        <td><span className="status-badge" data-priority={t.priority}>{labels[t.priority]}</span></td>
                         <td>
                           <label className="sr-only" htmlFor={"status-" + t.id}>
                             Status: {t.title}
                           </label>
                           <select
                             id={"status-" + t.id}
-                            disabled={busy}
+                            disabled={busy || !canManageTask(actor, t)}
                             value={t.status}
+                            data-status={t.status}
                             onChange={(e) =>
                               void action("tasks", "PATCH", {
                                 id: t.id,
@@ -883,6 +925,7 @@ export default function OrganizationApp({
                         <td>
                           <button
                             className="button secondary"
+                            disabled={busy || !canManageTask(actor, t)}
                             onClick={() => setEdit({ kind: "tasks", data: t })}
                           >
                             Uredi
@@ -916,6 +959,7 @@ export default function OrganizationApp({
           {view === "hours" && (
             <>
               {filters}
+              <WeeklyHoursHistory snapshot={s} filter={{ from, to, member, project }} now={now} />
               <div className="org-actions">
                 <strong>
                   {n(shownHours.reduce((a, e) => a + Number(e.hours), 0))} h
@@ -932,7 +976,7 @@ export default function OrganizationApp({
                   </button>
                 )}
               </div>
-              <div className="org-table-wrap">
+              <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                 <table>
                   <thead>
                     <tr>
@@ -1006,7 +1050,7 @@ export default function OrganizationApp({
                 </strong>{" "}
                 iz tedenskih agregatov, poleg dnevnih vnosov zgoraj.
               </p>
-              <div className="org-table-wrap">
+              <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                 <table>
                   <thead>
                     <tr>
@@ -1149,6 +1193,9 @@ export default function OrganizationApp({
           {view === "attendance" && (
             <>
               <div className="org-actions">
+                <label>Prisotnost od<input type="date" value={attendanceFrom} onChange={(e) => setAttendanceFrom(e.target.value)} /></label>
+                <label>Prisotnost do<input type="date" value={attendanceTo} onChange={(e) => setAttendanceTo(e.target.value)} /></label>
+                <label>Obdobje sestankov<select value={attendancePast ? "past" : "all"} onChange={(e) => setAttendancePast(e.target.value === "past")}><option value="all">Vsi shranjeni zapisi</option><option value="past">Pretekli sestanki</option></select></label>
                 {admin && (
                   <button
                     className="button primary"
@@ -1183,9 +1230,11 @@ export default function OrganizationApp({
               </div>
               <p>
                 Člani se prijavijo v zavihku Sestanki; administrator lahko
-                popravi tudi pretekle zapise.
+                popravi tudi pretekle zapise. Prikazujemo shranjene statuse;
+                manjkajočih zapisov ne označimo samodejno kot neopravičene.
               </p>
-              <div className="org-table-wrap">
+              {attendanceRows.error && <p role="alert">{attendanceRows.error}</p>}
+              <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                 <table>
                   <thead>
                     <tr>
@@ -1197,50 +1246,35 @@ export default function OrganizationApp({
                     </tr>
                   </thead>
                   <tbody>
-                    {s.attendance
-                      .filter(
-                        (a) =>
-                          (!member || a.member_id === member) &&
-                          (!series ||
-                            s.meetings.find((e) => e.id === a.meeting_id)
-                              ?.series === series),
-                      )
-                      .map((a) => (
-                        <tr key={a.id}>
-                          <td>
-                            {s.meetings.find((e) => e.id === a.meeting_id)
-                              ?.title || "Zgodovinski sestanek"}
-                            <small>
-                              {s.meetings.find((e) => e.id === a.meeting_id)
-                                ?.starts_at
-                                ? date(
-                                    s.meetings.find(
-                                      (e) => e.id === a.meeting_id,
-                                    )!.starts_at,
-                                  )
-                                : ""}
-                            </small>
-                          </td>
-                          <td>{memberName(a.member_id)}</td>
-                          <td>{labels[a.status]}</td>
-                          <td>{a.note}</td>
-                          <td>
-                            {admin && (
-                              <button
-                                className="button secondary"
-                                onClick={() =>
-                                  setEdit({ kind: "attendance", data: a })
-                                }
-                              >
-                                Popravi
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+                    {attendanceRows.rows.map(({ record: a, meeting }) => (
+                      <tr key={a.id}>
+                        <td>
+                          {meeting?.title || "Zgodovinski sestanek"}
+                          <small>
+                            {meeting ? `${date(meeting.starts_at)} · ${meeting.series || "Brez serije"}` : "Datum in serija nista dostopna"}
+                          </small>
+                        </td>
+                        <td>{memberName(a.member_id)}</td>
+                        <td><span className="status-badge" data-status={a.status}>{labels[a.status]}</span></td>
+                        <td>{a.note}</td>
+                        <td>
+                          {admin && (
+                            <button
+                              className="button secondary"
+                              onClick={() =>
+                                setEdit({ kind: "attendance", data: a })
+                              }
+                            >
+                              Popravi
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
+              {!attendanceRows.error && !attendanceRows.rows.length && <Empty>Ni shranjenih zapisov prisotnosti za izbrane filtre.</Empty>}
             </>
           )}
           {(view === "analytics" || view === "members") && admin && (
@@ -1262,11 +1296,14 @@ export default function OrganizationApp({
                       obdobja. Dnevna razporeditev teh ur ni znana.
                     </p>
                   )}
+                  <p className="notice">Zaključki uporabljajo zadnji zabeleženi prehod naloge v Done. Prisotnost = (Present + Remote) / (Present + Remote + Unexcused); Excused in manjkajoče evidence so prikazane ločeno. Tedenski cilj se nanaša na tekoči teden, odprte naloge na trenutno stanje.</p>
+                  {metrics.overlapEntries > 0 && <p className="error-banner" role="alert">Iz vsot je izključenih {metrics.overlapEntries} dnevnih zapisov, ki se prekrivajo s tedenskim seštevkom. Skrbnik naj preveri izvor evidenc.</p>}
                   {project && (
                     <p className="notice">
                       Tedenski napredek vključuje vse projekte. Ure v obdobju
                       izključujejo zgodovinske tedenske seštevke brez podatka o
-                      projektu.
+                      projektu. Sestanki nimajo projektne povezave, zato stopnja
+                      prisotnosti pri projektnem filtru ni na voljo.
                     </p>
                   )}
                   <div className="stats-grid">
@@ -1276,6 +1313,8 @@ export default function OrganizationApp({
                     />
                     <Stat label="Ure ta teden" value={n(metrics.weeklyHours)} />
                     <Stat label="Pod tedenskim ciljem" value={metrics.behind} />
+                    <Stat label="Brez evidence ta teden" value={metrics.unknownWeekly} />
+                    <Stat label="Manjkajoče evidence prisotnosti" value={metrics.missingAttendance} />
                     <Stat
                       label="Zaključene naloge v obdobju"
                       value={metrics.completed}
@@ -1290,7 +1329,7 @@ export default function OrganizationApp({
                     />
                   </div>
                   <Card title="Člani in prispevek">
-                    <div className="org-table-wrap">
+                    <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                       <table>
                         <thead>
                           <tr>
@@ -1313,7 +1352,7 @@ export default function OrganizationApp({
                               </td>
                               <td>{r.tier}</td>
                               <td>{n(Number(r.weekly_hours))} h</td>
-                              <td>{n(r.weekly)} h</td>
+                              <td>{r.weeklyRecorded ? n(r.weekly) + " h" : "Ni podatkov"}</td>
                               <td>{n(r.hours)} h</td>
                               <td>{r.completed}</td>
                               <td>{percent(r.attendanceRate)}</td>
@@ -1339,13 +1378,13 @@ export default function OrganizationApp({
                             )}
                             value={w.hours}
                           />
-                          <strong>{n(w.hours)} h</strong>
+                          <strong>{n(w.hours)} h · {w.completed} zaključenih</strong>
                         </div>
                       ))}
                     </div>
                   </Card>
                   <Card title="Primerjava razredov">
-                    <div className="org-table-wrap">
+                    <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                       <table>
                         <thead>
                           <tr>
@@ -1398,38 +1437,8 @@ export default function OrganizationApp({
           {view === "settings" && (
             <>
               <Card title="Moj profil">
-                <p>
-                  {actor.email} · {actor.role}
-                </p>
-                {me ? (
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      void action("profile", "PATCH", {
-                        name: new FormData(e.currentTarget).get("name"),
-                      });
-                    }}
-                  >
-                    <label>
-                      Ime
-                      <input
-                        name="name"
-                        required
-                        maxLength={160}
-                        defaultValue={me.name}
-                      />
-                    </label>
-                    <p>
-                      {me.tier} · {n(Number(me.weekly_hours))} h na teden ·{" "}
-                      {me.series}
-                    </p>
-                    <button className="button primary" disabled={busy}>
-                      Shrani profil
-                    </button>
-                  </form>
-                ) : (
-                  <p>Upravljalski račun nima izmišljenega članskega profila.</p>
-                )}
+                <p>Oglej si podatke svojega računa, članstvo in prikazno ime.</p>
+                <a className="button secondary" href="#profile">Odpri moj profil</a>
               </Card>
               <Card title="Ohranjeni delovni prostori">
                 <p>
@@ -1496,7 +1505,7 @@ export default function OrganizationApp({
                     >
                       Naloži dostope
                     </button>
-                    <div className="org-table-wrap">
+                    <div className="org-table-wrap" tabIndex={0} role="region" aria-label="Tabela podatkov — vodoravno pomikanje">
                       <table>
                         <thead>
                           <tr>
@@ -1689,6 +1698,10 @@ function Editor({
   const d = (edit.data || {}) as unknown as Record<string, unknown>,
     kind = edit.kind;
   const val = (key: string, fallback = "") => String(d[key] ?? fallback);
+  const assignees = admin ? s.members : [...new Map([
+    ...s.members.filter(m => m.id === d.assignee_id),
+    ...(s.taskDirectory || []).filter(m => m.project_id === val("project_id")),
+  ].map(m => [m.id,m])).values()];
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget),
@@ -1699,6 +1712,7 @@ function Editor({
     if (data.assignee_id === "") data.assignee_id = null;
     if (data.due_date === "") data.due_date = null;
     if (edit.data) data.id = edit.data.id;
+    if (kind === "tasks" && edit.data) data.expected_updated_at = d.updated_at;
     await save(data);
   }
   const options = (values: string[]) =>
@@ -1710,6 +1724,7 @@ function Editor({
   return (
     <dialog
       className="dialog"
+      aria-labelledby="org-editor-title"
       ref={dialog}
       onCancel={(e) => {
         if (busy) e.preventDefault();
@@ -1718,7 +1733,7 @@ function Editor({
     >
       <div className="dialog-inner">
         <div className="org-actions">
-          <h2>
+          <h2 id="org-editor-title">
             {edit.data ? "Uredi" : "Dodaj"}{" "}
             {kind === "projects"
               ? "projekt"
@@ -1776,12 +1791,13 @@ function Editor({
             )}
             {kind === "tasks" && (
               <>
-                {admin && (
+                {(
                   <>
                     <label>
                       Naslov naloge
                       <input
                         name="title"
+                        disabled={!admin}
                         required
                         maxLength={200}
                         defaultValue={val("title")}
@@ -1791,6 +1807,7 @@ function Editor({
                       Projekt
                       <select
                         name="project_id"
+                        disabled={!admin}
                         required
                         defaultValue={val("project_id")}
                       >
@@ -1808,8 +1825,8 @@ function Editor({
                         name="assignee_id"
                         defaultValue={val("assignee_id")}
                       >
-                        <option value="">Nedodeljeno</option>
-                        {s.members.map((m) => (
+                        <option value="" disabled={!admin}>Nedodeljeno</option>
+                        {assignees.map((m) => (
                           <option key={m.id} value={m.id}>
                             {m.name}
                           </option>

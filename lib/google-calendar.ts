@@ -3,10 +3,9 @@ import {
   SERIES,
   TZ,
   midnightInLjubljana,
-  isAdmin,
   type Identity,
 } from "./organization.ts";
-import { HttpError, allRows, serviceClient } from "./org-server.ts";
+import { HttpError, allRows, serviceClient, requireAdmin } from "./org-server.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 type GoogleEvent = {
   id?: string;
@@ -288,6 +287,7 @@ export async function syncCalendar(
   from: string,
   to: string,
 ) {
+  requireAdmin(actor);
   const settings = await client
     .from("org_settings")
     .select("calendar_id")
@@ -304,51 +304,24 @@ export async function syncCalendar(
   );
   const admin = serviceClient(),
     members = await allRows(admin, "members");
-  for (const event of result.events) {
+  const events = result.events.map(event => {
     const { participantEmails, ...row } = event;
-    const saved = await admin
-      .from("org_meetings")
-      .upsert(row, { onConflict: "calendar_id,google_event_id" })
-      .select("id")
-      .single();
-    if (saved.error)
-      throw new HttpError(
-        503,
-        "Koledar je prebran, shranjevanje referenc pa ni uspelo. Ponovi sinhronizacijo.",
-      );
-    const assigned = members.filter(
-      (m) =>
-        participantEmails.includes(String(m.email).toLowerCase()) ||
-        event.description.toLowerCase().includes(String(m.name).toLowerCase()),
+    const assigned = members.filter((m) =>
+      participantEmails.includes(String(m.email).trim().toLowerCase()),
     );
-    const removal = await admin
-      .from("org_meeting_members")
-      .delete()
-      .eq("meeting_id", saved.data.id);
-    if (removal.error)
-      throw new HttpError(503, "Udeležencev ni mogoče osvežiti.");
-    if (assigned.length) {
-      const inserted = await admin
-        .from("org_meeting_members")
-        .insert(
-          assigned.map((m) => ({ meeting_id: saved.data.id, member_id: m.id })),
-        );
-      if (inserted.error)
-        throw new HttpError(503, "Udeležencev ni mogoče shraniti.");
-    }
-  }
-  for (const id of result.cancelled) {
-    const change = await admin
-      .from("org_meetings")
-      .update({ cancelled: true, synced_at: new Date().toISOString() })
-      .eq("calendar_id", calendarId)
-      .eq("google_event_id", id);
-    if (change.error) throw new HttpError(503, "Odpovedi ni mogoče shraniti.");
-  }
+    if (!assigned.length) result.warnings.push("Dogodek brez prepoznanih e-poštnih naslovov: obstoječa dodelitev udeležencev je ohranjena.");
+    return { ...row, member_ids: assigned.length ? assigned.map(m => m.id) : null };
+  });
+  const saved = await admin.rpc("org_apply_calendar", {
+    p_calendar_id: calendarId,
+    p_events: events,
+    p_cancelled: result.cancelled,
+  });
+  if (saved.error) throw new HttpError(503, "Koledar ni shranjen. Preveri migracijo za atomsko sinhronizacijo in ponovi osvežitev.");
   return {
     synced: result.events.length,
     cancelled: result.cancelled.length,
     warnings: result.warnings,
-    requestedBy: isAdmin(actor.role) ? "admin" : "member",
+    requestedBy: "admin",
   };
 }

@@ -133,3 +133,39 @@ test("weekly aggregates preserve 70+ hours without inventing daily entries", () 
     1,
   );
 });
+
+test("destination preflight skips exact repeats and blocks changed weekly totals/corrected attendance", async () => {
+  const { preflightImport } = await import("../lib/imports.ts");
+  const weekly = planImport("weekly-hours", [{ email: members[0].email, week_start: "2026-10-19", through_date: "2026-10-23", hours: 73 }], members).rows;
+  const repeat = preflightImport("weekly-hours", weekly, [{ ...weekly[0], hours: "73.00" }]);
+  assert.equal(repeat.unchanged, 1);
+  assert.equal(repeat.rows.length, 0);
+  assert.equal(repeat.conflicts.length, 0);
+  assert.equal(preflightImport("weekly-hours", weekly, [{ ...weekly[0], hours: 70 }]).conflicts.length, 1);
+  const attendance = { meeting_id: "meeting", member_id: members[0].id, status: "present", note: "", import_key: "key" };
+  const corrected = preflightImport("attendance", [attendance], [{ ...attendance, status: "excused" }]);
+  assert.equal(corrected.conflicts.length, 1);
+  assert.equal(corrected.rows.length, 0);
+});
+
+test("destination preflight blocks both overlap directions, unknown projects and unkeyed daily duplicates", async () => {
+  const { preflightImport } = await import("../lib/imports.ts");
+  const weekly = { member_id: members[0].id, week_start: "2026-10-19", through_date: "2026-10-23", hours: 73 };
+  const work = { member_id: members[0].id, date: "2026-10-20", hours: 1, project_id: null, description: "", import_key: "work" };
+  assert.equal(preflightImport("work", [work], [], { weeklyHours: [weekly] }).conflicts.length, 1);
+  assert.equal(preflightImport("weekly-hours", [weekly], [], { work: [work] }).conflicts.length, 1);
+  assert.equal(preflightImport("weekly-hours", [weekly], [], { work: [{ ...work, deleted: true }] }).rows.length, 1);
+  assert.equal(preflightImport("work", [{ ...work, project_id: "missing" }], [], { projects: [] }).conflicts.length, 1);
+  assert.equal(preflightImport("work", [work], [{ ...work, import_key: null }]).unchanged, 1);
+  assert.equal(preflightImport("work", [work], [{ ...work, deleted: true }]).conflicts.length, 1);
+});
+
+test("destination preflight preserves projects with the same normalized name and flags ambiguity", async () => {
+  const { preflightImport } = await import("../lib/imports.ts");
+  const row = { name: "Source project", description: "Original", status: "active", import_key: "project" };
+  assert.equal(preflightImport("projects", [row], [{ ...row, description: "Corrected" }]).conflicts.length, 1);
+  assert.equal(preflightImport("projects", [row], [{ ...row }, { ...row, import_key: "other" }]).conflicts.length, 1);
+  assert.equal(preflightImport("projects", [row], [{ ...row, name: " source PROJECT " }]).conflicts.length, 1);
+  const duplicateNames = planImport("projects", [row, { ...row, name: "source PROJECT", description: "Different source" }], members);
+  assert.equal(duplicateNames.conflicts.length, 1);
+});

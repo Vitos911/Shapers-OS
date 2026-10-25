@@ -4,12 +4,15 @@ Slovenski delovni prostor za projekte, naloge, prostovoljske ure in udeležbo. G
 
 ## Lokalni zagon
 
+Integracijski kandidat, točen obseg funkcij, migracije in preostali produkcijski pogoji: [release-integration.md](docs/release-integration.md). Lokalni testi in fixture browser testi ne pomenijo preverjene produkcijske izdaje.
+
 Node.js 22.18+ in pnpm 11.25.0. Ustvari `.env.local` po `.env.example` in nastavi svoj projekt. Datoteka in `.private/` morata ostati zunaj Gita.
 
 ```bash
 corepack enable
 pnpm install --frozen-lockfile
 pnpm test
+pnpm test:db
 pnpm typecheck
 pnpm lint
 pnpm build
@@ -20,25 +23,33 @@ Odpri `http://localhost:3000`. Za razvoj uporabi `pnpm dev`. Preverjanje strežn
 
 ## Funkcije
 
-- MEMBER: lastni profil, dodeljene naloge, lastne ure, tedenski cilji, relevantni sestanki in udeležba.
+- MEMBER: lastni profil, naloge dostopnih projektov, urejanje lastnih nalog, lastne ure, tedenski cilji, relevantni sestanki in udeležba.
 - ADMIN: člani, projekti, članstva projektov, naloge/dodelitve, popravljanje udeležbe in organizacijska analitika.
 - SUPERADMIN: zaupani dostopi/vloge, izključitev računa, povabila že odobrenim naslovom in nastavitve.
-- Prehodi nalog, zaključki in pomembne spremembe imajo shranjeno zgodovino; član ne more spremeniti prioritete, dodelitve ali vloge.
+- Prehodi nalog, zaključki in pomembne spremembe imajo shranjeno zgodovino. Po predlagani migraciji član ureja status, opis, prioriteto, rok in dovoljeno dodelitev svoje naloge znotraj projekta; vlog ne more spreminjati.
 - Google Calendar API je izključno za branje. Manjkajoča povezava je vidna kot napaka konfiguracije; ICS ni predstavljen kot živi koledar.
 - Stari JSON delovni prostori in izrecni lokalni način so ohranjeni na `/legacy`. Niso vir organizacijskih statistik; podatki se ne pretvarjajo ali brišejo samodejno.
 
 ## Vzpostavitev in dokumentacija
 
+- [Aktualni pregled projekta in produkcijske vrzeli](docs/PROJECT_STATUS.md)
+- [Sodelovanje, veji in PR pravila](CONTRIBUTING.md)
+- [Lastništvo in načrt do 25. 10. ob 14.00](docs/DEVELOPMENT_PLAN.md)
+- [Skupne podatkovne pogodbe](docs/DATA_CONTRACTS.md)
+Ta veja zahteva pregledano podatkovno spremembo pred namestitvijo aplikacije. SQL še ni bil izveden v Supabase. [Popravki P0, preverjanja, vrstni red izdaje in povrnitev](docs/hackathon-rollout.md) opisujejo tudi meje lokalnih testov. Obstoječa javna aplikacija Sites ostaja ločena in nespremenjena.
+
 - [Infrastruktura: od prazne baze do produkcije](docs/infrastructure.md)
 - [Google Calendar: uvoz, readonly dostop in udeležba](docs/google-calendar.md)
 - [Google prijava: Cloud Console, Supabase, callback in demo povezave](docs/google-auth.md)
 - [Varnost, RBAC in definicije meritev](docs/backend-security.md)
+- [Ask Shaper: nastavitev, varnost, obseg in preverjanje AI asistenta](docs/ask-shaper.md)
 - [Dokazi preverjanja in preostale omejitve](docs/verification.md)
 - [Prejšnji JSON prostori](docs/supabase.md)
 - [Oblikovne odločitve](docs/design.md)
 - [Osebni Google koledar in samodejno branje prihodnjih dogodkov](docs/personal-calendar.md)
+- [Izbirni strežniški Slack servis in zaščiten ročni preizkus](docs/slack.md)
 
-V obstoječem projektu je ohranjenih vseh 20 članskih UUID-jev in oba prejšnja delovna prostora. Povezanih je 20 sandbox Auth računov. Zgodovinske ure so 120 tedenskih seštevkov (1.705,5 h), ne izmišljeni dnevni vnosi. 258 zapisov udeležbe čaka na prave Google reference. Imena desetih projektov v dostopnih virih niso bila podana, zato projekti niso izmišljeni.
+V obstoječem projektu je ohranjenih vseh 20 članskih UUID-jev in oba prejšnja delovna prostora. Povezanih je 20 sandbox Auth računov. Zgodovinske ure so 120 tedenskih seštevkov (1.705,5 h), ne izmišljeni dnevni vnosi. Vseh 258 zgodovinskih zapisov udeležbe je uvoženih in povezanih z obstoječimi sinhroniziranimi sestanki; [poročilo uvoza](docs/attendance-import.md) loči ta nabor od poznejših ročnih zapisov. Imena desetih projektov v dostopnih virih niso bila podana, zato projekti niso izmišljeni.
 
 Demo gesla so naključna, različna za vsak račun in samo v lokalni ignorirani `.private/demo-credentials.json`. Ne objavljaj je. Demo obrazec odpreš na prijavni strani; za ADMIN uporabi `ana.kovac@sandbox.example`, za MEMBER `ziga.krajnc@sandbox.example` z ustreznim zasebnim geslom. Realni SUPERADMIN mora najprej potrditi svojo e-pošto; noben realni račun ni samodejno potrjen in nobeno povabilo ni bilo poslano.
 

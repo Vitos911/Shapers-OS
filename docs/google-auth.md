@@ -2,9 +2,11 @@
 
 ## Stanje
 
-Nadaljnja nadgradnja: osebni Google koledar je opisan v [personal-calendar.md](personal-calendar.md). Google ponudnik je bil pozneje omogočen in uporabnik je potrdil uspešno prijavo; spodnja prvotna omejitev je zgodovinski zapis. OAuth zdaj zahteva tudi readonly koledarski obseg, provider poverilnice pa se hranijo samo v ločenem šifriranem HttpOnly piškotku, ne v browser session handoffu. Preostali opis prvotnega toka spodaj ne pomeni, da se koledarski token še vedno zavrže.
+Google ponudnik je omogočen. Produkcijski naslov je `https://shapers-os.vercel.app`; APP_URL, Supabase Site URL in dovoljeni callback so usklajeni. Osnovna prijava zahteva samo identiteto. Osebni Google koledar ima ločeno izrecno privolitev, opisano v [personal-calendar.md](personal-calendar.md). Google omejitve testnih uporabnikov za občutljivi Calendar scope zato ne blokirajo osnovne prijave. Provider poverilnice koledarja se hranijo samo v ločenem šifriranem HttpOnly piškotku, ne v browser session handoffu.
 
-Google OAuth 2.0 prek Supabase Auth je implementiran. Obstoječi e-poštni implicit flow, demo gesla, Supabase session storage in /legacy ostajajo ohranjeni. Google ponudnik je ob preverjanju izklopljen (`external.google=false`), zato uspešna živa Google prijava in produkcijski callback še nista preverjena. Lastnik je izrecno odobril svoj realni račun za SUPERADMIN; ne nastane dodaten izmišljeni član.
+Google OAuth 2.0 prek Supabase Auth je implementiran. Obstoječi e-poštni implicit flow, demo gesla, Supabase session storage in /legacy ostajajo ohranjeni. Lastnik je izrecno odobril svoj realni račun za SUPERADMIN; ne nastane dodaten izmišljeni član.
+
+Živo preverjeno 2026-10-24: `vito.bajt@gmail.com` → Google → Supabase PKCE callback → `/auth/complete` → prijavljen produkcijski pregled z obstoječo vlogo SUPERADMIN. Predhodno združeni Calendar scope je vrnil Googlovo 403; osnovni tok po ločitvi deluje. Vercel objava `dpl_6wMXXaWstvTqYDkf3P54x4Dyqqg4` je READY, commit `ad71d9c693feca7850e10d66c81e45c7740525bb`. 55 testov, lint in produkcijski build/TypeScript PASS; prvi omejeni Windows build EPERM, ponovitev z dovoljenim gostiteljskim dostopom PASS. Naknadno ob 16:39 je uporabnik potrdil vnos med preizkuševalce; živa ponovna povezava in branje 31 osebnih dogodkov ter ročna osvežitev PASS. Živa obnova po dejanskem izteku access tokena ostaja NOT_VERIFIED. Ločen organizacijski Calendar ostaja nenastavljen. Vercel je povezan z `Vitos911/Shapers-OS`, samodejna produkcijska veja ostaja `main`; ta popravek je objavljen iz ločene veje in pred naslednjo objavo iz main potrebuje vključitev prek PR.
 
 ## Google Cloud Console
 
@@ -27,7 +29,7 @@ Google OAuth 2.0 prek Supabase Auth je implementiran. Obstoječi e-poštni impli
 
    ```text
    http://localhost:3000/auth/callback?flow=*
-   https://YOUR-EXACT-PRODUCTION-HOST/auth/callback?flow=*
+   https://shapers-os.vercel.app/auth/callback?flow=*
    ```
 
    Za 127.0.0.1 ali zasebni Codespace dodaj njegov točen izvor z istim callback vzorcem. Ne uporabljaj wildcard gostitelja. Ohrani prejšnje `/` in `/legacy` redirect vnose ter e-poštno predlogo. Naključni flow parameter se preveri proti šifriranemu piškotku.

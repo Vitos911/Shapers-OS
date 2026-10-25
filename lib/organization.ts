@@ -34,6 +34,7 @@ export type OrgTask = {
   due_date: string | null;
   archived: boolean;
   completed_at: string | null;
+  updated_at: string;
 };
 export type WorkEntry = {
   id: string;
@@ -81,7 +82,9 @@ export type TaskHistory = {
   old_status: string | null;
   new_status: string;
   occurred_at: string;
-  changes: { after?: { project_id?: string } };
+  actor_id?: string | null;
+  actor_name?: string | null;
+  changes: { before?: Partial<OrgTask> | null; after?: Partial<OrgTask> };
 };
 export type Snapshot = {
   identity: Identity;
@@ -94,11 +97,12 @@ export type Snapshot = {
   attendance: Attendance[];
   history: TaskHistory[];
   projectMembers: { project_id: string; member_id: string }[];
+  taskDirectory: { id: string; name: string; project_id: string }[];
   meetingMembers: { meeting_id: string; member_id: string }[];
   settings: { name: string; calendar_id: string; timezone: string };
   calendar: { configured: boolean; syncReady: boolean };
 };
-export const TASK_STATUSES = ["todo", "in_progress", "in_review", "done"];
+export const TASK_STATUSES = ["backlog", "todo", "in_progress", "done"];
 export const PRIORITIES = ["low", "medium", "high", "urgent"];
 export const SERIES = [
   "Summer School",
@@ -198,20 +202,24 @@ export function analytics(
   s: Snapshot,
   f: AnalyticsFilter,
   today = ljubljanaDate(),
+  now = Date.now(),
 ) {
   const included = s.members.filter(
     (m) => (!f.member || m.id === f.member) && (!f.tier || m.tier === f.tier),
   );
   const ids = new Set(included.map((m) => m.id));
   const inRange = (d: string) => d >= f.from && d <= f.to;
+  const historical = (s.weeklyHours || []).filter((h) => ids.has(h.member_id));
+  const covered = (e: WorkEntry) => historical.some(h => h.member_id === e.member_id && e.date >= h.week_start && e.date <= h.through_date);
+  const overlapEntries = s.work.filter(e => !e.deleted && ids.has(e.member_id) && inRange(e.date) && covered(e)).length;
   const entries = s.work.filter(
     (e) =>
       !e.deleted &&
+      !covered(e) &&
       ids.has(e.member_id) &&
       (!f.project || e.project_id === f.project),
   );
   const work = entries.filter((e) => inRange(e.date));
-  const historical = (s.weeklyHours || []).filter((h) => ids.has(h.member_id));
   const includedHistorical = historical.filter(
     (h) => !f.project && h.week_start >= f.from && h.through_date <= f.to,
   );
@@ -228,22 +236,28 @@ export function analytics(
       (!f.project || t.project_id === f.project) &&
       ((!f.member && !f.tier) || (!!t.assignee_id && ids.has(t.assignee_id))),
   );
-  const completions = s.history.filter(
+  const latestCompletion = new Map<string, TaskHistory>();
+  for (const h of s.history) {
+    if (h.new_status === "done" && h.old_status !== "done" &&
+        (!latestCompletion.has(h.task_id) || h.occurred_at > latestCompletion.get(h.task_id)!.occurred_at)) latestCompletion.set(h.task_id, h);
+  }
+  const completions = [...latestCompletion.values()].filter(
     (h) =>
       h.new_status === "done" &&
       h.old_status !== "done" &&
-      !!h.member_id &&
-      ids.has(h.member_id) &&
+      ((!f.member && !f.tier) || (!!h.member_id && ids.has(h.member_id))) &&
       inRange(ljubljanaDate(new Date(h.occurred_at))) &&
       (!f.project || h.changes.after?.project_id === f.project),
   );
   const eligible = s.meetings.filter(
     (e) =>
       !e.cancelled &&
+      !e.all_day &&
+      !f.project &&
       e.ends_at <
         new Date(midnightInLjubljana(addDays(f.to, 1))).toISOString() &&
       inRange(ljubljanaDate(new Date(e.starts_at))) &&
-      Date.parse(e.ends_at) <= Date.now(),
+      Date.parse(e.ends_at) <= now,
   );
   const week = weekStart(today),
     weekEnd = addDays(week, 7);
@@ -265,11 +279,17 @@ export function analytics(
       (a) => a.status === "present" || a.status === "remote",
     ).length;
     const excused = attendance.filter((a) => a.status === "excused").length;
+    const unexcused = attendance.filter((a) => a.status === "unexcused").length;
+    const missing = meetings.length - attendance.length;
+    const weeklyEntries = s.work.filter(e => !e.deleted && !covered(e) && e.member_id === m.id && e.date >= week && e.date < weekEnd);
+    const weeklyHistorical = historical.filter(h => h.member_id === m.id && h.week_start === week);
+    const weeklyRecorded = weeklyEntries.length > 0 || weeklyHistorical.length > 0;
     const weekly =
       s.work
         .filter(
           (e) =>
             !e.deleted &&
+            !covered(e) &&
             e.member_id === m.id &&
             e.date >= week &&
             e.date < weekEnd,
@@ -296,16 +316,22 @@ export function analytics(
       eligible: meetings.length,
       excused,
       present,
+      unexcused,
+      missing,
+      weeklyRecorded,
       attendanceRate:
-        meetings.length - excused > 0
-          ? present / (meetings.length - excused)
+        present + unexcused > 0
+          ? present / (present + unexcused)
           : null,
       active: hours > 0 || completed > 0 || present > 0,
     };
   });
-  const denominator = rows.reduce((n, r) => n + r.eligible - r.excused, 0);
+  const denominator = rows.reduce((n, r) => n + r.present + r.unexcused, 0);
   return {
     rows,
+    overlapEntries,
+    missingAttendance: rows.reduce((n, r) => n + r.missing, 0),
+    unknownWeekly: rows.filter(r => !r.weeklyRecorded).length,
     partialWeeks,
     totalMembers: included.length,
     activeMembers: rows.filter((r) => r.active).length,
@@ -313,8 +339,13 @@ export function analytics(
       work.reduce((n, e) => n + Number(e.hours), 0) +
       includedHistorical.reduce((n, h) => n + Number(h.hours), 0),
     weeklyHours: rows.reduce((n, r) => n + r.weekly, 0),
-    behind: rows.filter((r) => r.weekly < Number(r.weekly_hours)).length,
+    behind: rows.filter((r) => r.weeklyRecorded && r.weekly < Number(r.weekly_hours)).length,
     completed: new Set(completions.map((h) => h.task_id)).size,
+    recentCompletions: [...completions].sort((a,b) => b.occurred_at.localeCompare(a.occurred_at)).slice(0,8),
+    projects: s.projects.filter(p => !f.project || p.id === f.project).map(p => {
+      const related = tasks.filter(t => t.project_id === p.id);
+      return {id:p.id,name:p.name,total:related.length,done:related.filter(t => t.status === "done").length};
+    }),
     open: tasks.filter((t) => t.status !== "done").length,
     overdue: tasks.filter(
       (t) => t.status !== "done" && t.due_date && t.due_date < today,
@@ -322,10 +353,11 @@ export function analytics(
     attendanceRate: denominator
       ? rows.reduce((n, r) => n + r.present, 0) / denominator
       : null,
-    weekly: Array.from({ length: 6 }, (_, i) => {
-      const start = addDays(weekStart(f.to), (i - 5) * 7);
+    weekly: Array.from({ length: Math.max(0, Math.round((Date.parse(weekStart(f.to)) - Date.parse(weekStart(f.from))) / (7 * 86400000)) + 1) }, (_, i) => {
+      const start = addDays(weekStart(f.from), i * 7);
       return {
         week: start,
+        completed: completions.filter(h => weekStart(ljubljanaDate(new Date(h.occurred_at))) === start).length,
         hours:
           entries
             .filter(

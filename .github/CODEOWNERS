@@ -1,0 +1,45 @@
+# A = Vitos911; B = vasjabajt-bot (both have repository write access).
+# Required owner reviews still need an active GitHub ruleset.
+* @Vitos911
+
+/components/organization-app.tsx @Vitos911
+/components/dashboard/ @Vitos911
+/components/tasks/ @Vitos911
+/components/projects/ @Vitos911
+/components/hours/ @vasjabajt-bot
+/components/attendance/ @vasjabajt-bot
+/components/admin/ @vasjabajt-bot
+/components/personal-calendar.tsx @vasjabajt-bot
+/lib/google-calendar.ts @vasjabajt-bot
+/lib/personal-calendar.ts @vasjabajt-bot
+/app/api/personal-calendar/ @vasjabajt-bot
+/tests/personal-calendar.test.mjs @vasjabajt-bot
+/tests/calendar-seed.test.mjs @vasjabajt-bot
+/docs/google-calendar.md @vasjabajt-bot
+/docs/personal-calendar.md @vasjabajt-bot
+
+# Shared: one active author and peer review. GitHub requests one listed owner;
+# it does not require BOTH, so the PR process must enforce the other developer.
+/app/globals.css @Vitos911 @vasjabajt-bot
+/app/layout.tsx @Vitos911 @vasjabajt-bot
+/app/page.tsx @Vitos911 @vasjabajt-bot
+/app/auth/ @Vitos911 @vasjabajt-bot
+/components/cloud-app.tsx @Vitos911 @vasjabajt-bot
+/components/auth-complete.tsx @Vitos911 @vasjabajt-bot
+/lib/google-auth.ts @Vitos911 @vasjabajt-bot
+/lib/organization.ts @Vitos911 @vasjabajt-bot
+/lib/org-server.ts @Vitos911 @vasjabajt-bot
+/lib/org-validation.ts @Vitos911 @vasjabajt-bot
+/app/api/org/ @Vitos911 @vasjabajt-bot
+/supabase/ @Vitos911 @vasjabajt-bot
+/tests/organization.test.mjs @Vitos911 @vasjabajt-bot
+/tests/google-auth.test.mjs @Vitos911 @vasjabajt-bot
+/package.json @Vitos911 @vasjabajt-bot
+/pnpm-lock.yaml @Vitos911 @vasjabajt-bot
+/.github/ @Vitos911 @vasjabajt-bot
+/.env.example @Vitos911 @vasjabajt-bot
+/AGENTS.md @Vitos911 @vasjabajt-bot
+/CONTRIBUTING.md @Vitos911 @vasjabajt-bot
+/docs/DEVELOPMENT_PLAN.md @Vitos911 @vasjabajt-bot
+/docs/DATA_CONTRACTS.md @Vitos911 @vasjabajt-bot
+/docs/infrastructure.md @Vitos911 @vasjabajt-bot
