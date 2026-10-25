@@ -29,6 +29,10 @@ Odpri `http://localhost:3000`. Za razvoj uporabi `pnpm dev`. Preverjanje strežn
 
 ## Vzpostavitev in dokumentacija
 
+- [Aktualni pregled projekta in produkcijske vrzeli](docs/PROJECT_STATUS.md)
+- [Sodelovanje, veji in PR pravila](CONTRIBUTING.md)
+- [Lastništvo in načrt do 25. 10. ob 14.00](docs/DEVELOPMENT_PLAN.md)
+- [Skupne podatkovne pogodbe](docs/DATA_CONTRACTS.md)
 - [Infrastruktura: od prazne baze do produkcije](docs/infrastructure.md)
 - [Google Calendar: uvoz, readonly dostop in udeležba](docs/google-calendar.md)
 - [Google prijava: Cloud Console, Supabase, callback in demo povezave](docs/google-auth.md)
