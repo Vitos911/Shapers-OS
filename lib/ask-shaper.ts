@@ -188,9 +188,9 @@ function providerConfig(env: NodeJS.ProcessEnv) {
   const genericKey = env.SHAPER_AI_API_KEY?.trim();
   const provider = requested || (genericKey
     ? (genericKey.startsWith("gsk_") ? "groq" : "openai")
-    : env.DEEPSEEK_API_KEY?.trim() ? "deepseek" : env.GROQ_API_KEY?.trim() ? "groq" : "openai");
-  const key = genericKey || (provider === "deepseek" ? env.DEEPSEEK_API_KEY?.trim()
-    : provider === "groq" ? env.GROQ_API_KEY?.trim() : undefined);
+    : (env.DEEPSEEK_API_KEY?.trim() || env.DEEPSEEK_API?.trim()) ? "deepseek" : (env.GROQ_API_KEY?.trim() || env.GROQ_API?.trim()) ? "groq" : "openai");
+  const key = genericKey || (provider === "deepseek" ? (env.DEEPSEEK_API_KEY?.trim() || env.DEEPSEEK_API?.trim())
+    : provider === "groq" ? (env.GROQ_API_KEY?.trim() || env.GROQ_API?.trim()) : undefined);
   if (!key) throw new HttpError(503, "Ask Shaper še ni konfiguriran. Nastavi SHAPER_AI_API_KEY ali ustrezen ključ ponudnika.");
   if ((provider === "openai" && key.startsWith("gsk_")) ||
       (provider === "groq" && !key.startsWith("gsk_")) ||
