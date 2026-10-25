@@ -1,5 +1,7 @@
 # Backend security and metric definitions
 
+Review branch update: [hackathon-rollout.md](hackathon-rollout.md) supersedes the task-edit and analytics rules below after the proposed migration. The existing production schema has not been changed by this branch. The earlier text is the baseline record.
+
 ## Trust boundaries
 
 Every organization API request validates the bearer token through Supabase Auth `getUser()`, requires a verified, nonanonymous email, and resolves access from `org_private.access` against the actual `auth.users` record. Headers such as `x-user-id`, JWT email claims and editable `user_metadata.role` cannot grant a role. PostgreSQL policies repeat the checks; hiding a button is not authorization. Disabled trusted access invalidates organization access even while an old JWT has not expired.

@@ -24,6 +24,9 @@ Ta razdelek je aktualni pregled na izhodišču `0f574c4`; spodnji zapisi so ohra
 - NOT VERIFIED: prava Google privolitev/SMTP/Production login, živo branje skupnega Calendar in šestih serij, uvoz prisotnosti, write/reload/admin correction na odobrenem testnem okolju, nov mobilni prehod vseh pogledov. Obstoječa mutacijska skripta z cleanup in rollback SQL suite v tem pregledu nista ponovno izvedeni. Ni produkcijske objave, merge v main ali spremembe Vercel zaščite. Rezultat CI in Preview je vedno vezan na točen SHA, ne samodejno na prihodnje popravke.
 
 Podrobnosti: [pregled](PROJECT_STATUS.md), [razvojni načrt](DEVELOPMENT_PLAN.md), [infrastruktura](infrastructure.md).
+## Current review branch
+
+The verification below predates this branch and is retained as repository history, not rerun production evidence. See [hackathon-rollout.md](hackathon-rollout.md) for the current local checks, proposed SQL and outstanding production tests. This review reran the 50-test baseline and added regression coverage. No production writes or migration applications were performed by this branch.
 
 ## Google login follow-up
 

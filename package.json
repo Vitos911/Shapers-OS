@@ -14,7 +14,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "lint": "eslint .",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
-    "check": "pnpm test && pnpm typecheck && pnpm lint && pnpm build"
+    "check": "pnpm test && pnpm typecheck && pnpm lint && pnpm build",
+    "test:db": "node scripts/test-database.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
