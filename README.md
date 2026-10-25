@@ -72,4 +72,3 @@ pnpm start
 Pred zagonom ustavi prejšnji razvojni strežnik na vratih 3000. Strežniške spremenljivke nastavi tudi v Codespacu; lokalna `.env.local` se namerno ne prenese z Gitom. Supabase Auth Site URL in dovoljene redirect URL-je prilagodi dejanskemu `*-3000.app.github.dev` naslovu. `*.github.dev` brez vrat je urejevalnik, ne aplikacija. Objavljena koda na GitHub še ne pomeni posodobljenega ali preverjenega Codespace strežnika.
 
 Nikoli ne dodajaj dejanskih ključev, poverilnic ali `.env.local` v commit. Edina različicena env datoteka je `.env.example` s praznimi vrednostmi/oznakami.
-
