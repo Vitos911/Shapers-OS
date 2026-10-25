@@ -4,6 +4,8 @@ Slovenski delovni prostor za projekte, naloge, prostovoljske ure in udeležbo. G
 
 ## Lokalni zagon
 
+Integracijski kandidat, točen obseg funkcij, migracije in preostali produkcijski pogoji: [release-integration.md](docs/release-integration.md). Lokalni testi in fixture browser testi ne pomenijo preverjene produkcijske izdaje.
+
 Node.js 22.18+ in pnpm 11.25.0. Ustvari `.env.local` po `.env.example` in nastavi svoj projekt. Datoteka in `.private/` morata ostati zunaj Gita.
 
 ```bash

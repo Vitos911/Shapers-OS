@@ -14,8 +14,9 @@
     "typecheck": "next typegen && tsc --noEmit",
     "lint": "eslint .",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
-    "check": "pnpm test && pnpm typecheck && pnpm lint && pnpm build",
-    "test:db": "node scripts/test-database.mjs"
+    "check": "pnpm test && pnpm test:db && pnpm typecheck && pnpm lint && pnpm build",
+    "test:db": "node scripts/test-database.mjs",
+    "test:browser": "node scripts/check-release-browser.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
@@ -31,6 +32,7 @@
     "@types/react-dom": "^19.0.0",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.3",
+    "playwright": "1.62.1",
     "typescript": "^5.9.0"
   }
 }

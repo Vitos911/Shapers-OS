@@ -96,7 +96,7 @@ export async function collectEvidence(client: SupabaseClient, identity: Identity
   const scope = (q: Query, column = "member_id") => memberId ? q.eq(column, memberId) : q;
   const snapshot: Snapshot = {
     identity, members: [], projects: [], tasks: [], work: [], weeklyHours: [], meetings: [], attendance: [], history: [],
-    projectMembers: [], meetingMembers: [], settings: { name: "", calendar_id: "", timezone: "Europe/Ljubljana" },
+    projectMembers: [], taskDirectory: [], meetingMembers: [], settings: { name: "", calendar_id: "", timezone: "Europe/Ljubljana" },
     calendar: { configured: false, syncReady: false },
   };
   const facts: string[] = [];
@@ -154,10 +154,10 @@ export async function collectEvidence(client: SupabaseClient, identity: Identity
     }
     if (meetingIds.length) snapshot.attendance = await load("org_attendance", "id,meeting_id,member_id,status", q => scope(q).in("meeting_id", meetingIds)) as unknown as Snapshot["attendance"];
     const metric = analytics(snapshot, { from, to }, today, now.getTime());
-    const denominator = metric.rows.reduce((n, r) => n + r.eligible - r.excused, 0);
+    const denominator = metric.rows.reduce((n, r) => n + r.present + r.unexcused, 0);
     const present = metric.rows.reduce((n, r) => n + r.present, 0);
-    facts.push(`Udeležba${plan.series ? ` (${plan.series})` : ""}: ${metric.attendanceRate === null ? "— (ni dovolj podatkov)" : number(metric.attendanceRate * 100) + " %"}; prisoten/na daljavo: ${present}; upravičene udeležbe brez opravičenih: ${denominator}.`);
-    facts.push("Manjkajoč zapis šteje kot odsotnost. Odpovedani in nedokončani sestanki so izključeni. Upoštevana je upravičenost članov do sestanka; podatki so iz zadnje sinhronizacije.");
+    facts.push(`Udeležba${plan.series ? ` (${plan.series})` : ""}: ${metric.attendanceRate === null ? "— (ni dovolj podatkov)" : number(metric.attendanceRate * 100) + " %"}; prisoten/na daljavo: ${present}; zabeležene udeležbe brez opravičenih: ${denominator}; manjkajoči zapisi: ${metric.missingAttendance}.`);
+    facts.push("Manjkajoč zapis je neznana udeležba in ne šteje kot odsotnost. Opravičeni, odpovedani in nedokončani sestanki so izključeni iz deleža. Upoštevana je upravičenost članov do sestanka; podatki so iz zadnje sinhronizacije.");
   }
   return { facts, sources: [...sources], period: `${from}–${to} (Europe/Ljubljana)` };
 }
@@ -175,7 +175,11 @@ export function createBudget() {
     u.count++; u.daily++; total++; users.set(id, u);
   };
 }
-const reserve = createBudget();
+export async function reserveSharedBudget(client: Pick<SupabaseClient, "rpc">) {
+  const { data, error } = await client.rpc("org_reserve_ai_budget");
+  if (error || typeof data !== "boolean") throw new HttpError(503, "Skupna omejitev AI porabe še ni pripravljena. Skrbnik naj preveri migracijo shared_ai_budget.");
+  if (!data) throw new HttpError(429, "Omejitev zahtev Ask Shaper je dosežena. Poskusi pozneje.");
+}
 
 function providerConfig(env: NodeJS.ProcessEnv) {
   const requested = env.SHAPER_AI_PROVIDER?.trim().toLowerCase();
@@ -238,7 +242,8 @@ export async function askShaper(request: Request, deps: { authenticate?: Authent
     const env = deps.env || process.env;
     const config = providerConfig(env);
     const now = (deps.now || (() => new Date()))();
-    (deps.budget || reserve)(identity.user_id, now.getTime());
+    if (deps.budget) deps.budget(identity.user_id, now.getTime());
+    else await reserveSharedBudget(client);
     const fetcher = deps.fetcher || fetch;
     const plan = validatePlan(await completion(config, fetcher, planner, { question: body.question.trim(), today: ljubljanaDate(now) }, planSchema), identity);
     if (plan.intent === "unsupported") return response({ answer: "Ask Shaper odgovarja na eno vprašanje o nalogah, urah, tedenskem cilju, organizacijskih sestankih ali udeležbi. Navedi temo in obdobje; podatkov ne spreminjam.", sources: [], period: null, ai: true });

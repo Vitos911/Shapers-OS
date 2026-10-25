@@ -4,7 +4,7 @@ import { dashboardTasks, dashboardMeetings } from "../components/dashboard/dashb
 import { analytics, ljubljanaDate, weekStart } from "../lib/organization.ts";
 
 const task = (id, fields = {}) => ({ id, title: id, assignee_id: "me", status: "todo", priority: "medium", due_date: null, archived: false, ...fields });
-const snapshot = (fields = {}) => ({ identity: { role: "MEMBER", member_id: "me" }, members: [], tasks: [], meetings: [], work: [], weeklyHours: [], history: [], attendance: [], meetingMembers: [], ...fields });
+const snapshot = (fields = {}) => ({ identity: { role: "MEMBER", member_id: "me" }, members: [], projects: [], tasks: [], meetings: [], work: [], weeklyHours: [], history: [], attendance: [], meetingMembers: [], ...fields });
 
 test("dashboard orders own open tasks by overdue, urgent, dated, then undated without mutating snapshot", () => {
   const s = snapshot({ tasks: [task("undated"), task("due-soon", { due_date: "2026-10-25" }), task("urgent", { priority: "urgent" }), task("overdue", { due_date: "2026-10-23" }), task("later", { due_date: "2026-10-30" }), task("foreign", { assignee_id: "other" }), task("archived", { archived: true }), task("done", { status: "done" })] });

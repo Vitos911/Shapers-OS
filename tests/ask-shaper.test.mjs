@@ -270,7 +270,8 @@ test("attendance uses eligible finished meetings, remote/present, missing and ex
     org_attendance: [{ id: "a1", meeting_id: "community", member_id: "m1", status: "remote" }, { id: "a2", meeting_id: "tech", member_id: "m1", status: "present" }, { id: "a3", meeting_id: "excused", member_id: "m1", status: "excused" }],
   });
   const evidence = await collectEvidence(db.client, identity, plan("attendance"), now);
-  assert.match(evidence.facts[0], /66,67 %.*na daljavo: 2.*opravičenih: 3/);
+  assert.match(evidence.facts[0], /100 %.*na daljavo: 2.*opravičenih: 2.*manjkajoči zapisi: 1/);
+  assert.match(evidence.facts[1], /ne šteje kot odsotnost/);
   const zero = await collectEvidence(db.client, identity, plan("attendance", { series: "Shape Talks" }), now);
   assert.match(zero.facts[0], /— \(ni dovolj podatkov\)/);
 });

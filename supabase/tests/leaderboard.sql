@@ -11,9 +11,13 @@ insert into auth.users(id,email,email_confirmed_at,is_anonymous) values(pg_temp.
 select set_config('request.jwt.claims',jsonb_build_object('sub',pg_temp.lb_id('user'),'role','authenticated')::text,true);
 insert into public.org_projects(id,name) values(pg_temp.lb_id('project'),'Leaderboard rollback test');
 insert into public.org_tasks(id,project_id,title,assignee_id,due_date) values(pg_temp.lb_id('task'),pg_temp.lb_id('project'),'Leaderboard rollback task',pg_temp.lb_id('member'),'2026-10-23');
+-- Separate time boundaries even on millisecond-resolution local PostgreSQL engines.
+select pg_sleep(0.01);
 insert into lb_times values('before',clock_timestamp());
+select pg_sleep(0.01);
 update public.org_tasks set due_date='2026-11-06',status='done' where id=pg_temp.lb_id('task');
 update public.members set tier='Core',weekly_hours=70 where id=pg_temp.lb_id('member');
+select pg_sleep(0.01);
 select pg_temp.lb_assert((select r->>'tier'='Impact' from jsonb_array_elements(public.org_leaderboard_source((select at from lb_times where key='before'))->'members') r where r->>'id'=pg_temp.lb_id('member')::text),'historical tier survives later changes');
 select pg_temp.lb_assert((select r->>'due_date'='2026-10-23' and r->>'status'='todo' from jsonb_array_elements(public.org_leaderboard_source((select at from lb_times where key='before'))->'tasks') r where r->>'id'=pg_temp.lb_id('task')::text),'historical deadline and status survive edits');
 select pg_temp.lb_assert((select r->>'tier'='Core' and not r ? 'email' and not r ? 'auth_user_id' from jsonb_array_elements(public.org_leaderboard_source()->'members') r where r->>'id'=pg_temp.lb_id('member')::text),'current source updates and excludes account identities');
@@ -28,8 +32,11 @@ update public.org_meetings set series='Different Series' where id=pg_temp.lb_id(
 insert into public.org_meeting_members(meeting_id,member_id) values(pg_temp.lb_id('meeting'),pg_temp.lb_id('other'));
 select pg_temp.lb_assert(exists(select 1 from jsonb_array_elements(public.org_leaderboard_source()->'eligibility') r where r->>'meeting_id'=pg_temp.lb_id('meeting')::text and r->>'member_id'=pg_temp.lb_id('member')::text and (r->>'observed')::boolean),'required meeting uses member and meeting series at meeting start');
 select pg_temp.lb_assert(not exists(select 1 from jsonb_array_elements(public.org_leaderboard_source()->'eligibility') r where r->>'meeting_id'=pg_temp.lb_id('meeting')::text and r->>'member_id'=pg_temp.lb_id('other')::text),'late assignment cannot invent a past meeting requirement');
+select pg_sleep(0.01);
 insert into lb_times values('assigned',clock_timestamp());
+select pg_sleep(0.01);
 delete from public.org_meeting_members where meeting_id=pg_temp.lb_id('meeting');
+select pg_sleep(0.01);
 select pg_temp.lb_assert(exists(select 1 from jsonb_array_elements(public.org_leaderboard_source((select at from lb_times where key='assigned'))->'meetingMembers') r where r->>'meeting_id'=pg_temp.lb_id('meeting')::text),'deleted assignment remains visible historically');
 select pg_temp.lb_assert(not exists(select 1 from jsonb_array_elements(public.org_leaderboard_source()->'meetingMembers') r where r->>'meeting_id'=pg_temp.lb_id('meeting')::text),'deleted assignment tombstone affects current state');
 

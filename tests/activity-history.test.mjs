@@ -7,7 +7,7 @@ const now = new Date("2026-10-25T12:00:00Z");
 function snapshot(role = "MEMBER") {
   return { identity: { role, member_id: "me" }, members: [
     { id: "me", name: "Member", weekly_hours: 10 }, { id: "other", name: "Other", weekly_hours: 4 },
-  ], work: [], weeklyHours: [], meetings: [], attendance: [] };
+  ], projects: [], work: [], weeklyHours: [], meetings: [], attendance: [] };
 }
 
 test("task history derives creation and every tracked old/new field from the existing log", () => {

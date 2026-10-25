@@ -614,8 +614,8 @@ export default function OrganizationApp({
           </button>
         </div>
       </aside>
-      <AskShaper key={user.id} client={client} admin={admin} />
       <div className="main-shell" inert={menu}>
+        <AskShaper key={user.id} client={client} admin={admin} />
         <header className="topbar">
           <button
             className="button secondary org-menu"
@@ -716,7 +716,6 @@ export default function OrganizationApp({
               <PersonalCalendar key={user.id} client={client} />
             </>
           )}
-          {(view === "overview" || view === "meetings") && <PersonalCalendar key={user.id} client={client} />}
           {view === "projects" && (
             <>
               <div className="org-actions">

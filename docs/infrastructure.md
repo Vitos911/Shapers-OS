@@ -1,5 +1,7 @@
 # Infrastructure and reproducible setup
 
+For the integrated release, follow [release-integration.md](release-integration.md) as the current migration/cutover checklist. Historical evidence in this document does not prove the current integrated production flow.
+
 Next.js App Router runs UI and Node route handlers. Supabase provides Auth and Postgres. Browser requests carry the current Auth access token; each organization request calls Auth `getUser()` and trusted `org_context()`. Regular operations use the user's token and RLS, not the service key. Service access is limited to explicit provisioning/imports, approved invitations and validated Google synchronization.
 
 ## Fresh checkout and empty Supabase database
@@ -157,4 +159,4 @@ In another terminal, with demo accounts provisioned:
 node --env-file=.env.local scripts/check-organization.mjs
 ```
 
-The smoke test creates uniquely identified temporary project/task/work records and cleans up only its own records; run on the designated sandbox, not an unrelated production tenant. Run `supabase/tests/organization_rls.sql` in Supabase SQL Editor as one transaction: all fixtures roll back, including Auth test users. GitHub CI runs tests, lint and a credential-free build; it does not mutate your database or prove hosted Google access. An empty-database deployment has instructions but has not been separately executed against another project.
+The smoke test creates uniquely identified temporary project/task/work records and cleans up only its own records; it now refuses any hosted database, even behind a localhost app. Use only an isolated local Supabase instance. CI runs unit/PostgreSQL-engine checks, typecheck, lint, build and browser transport fixtures without hosted credentials. These tests never mutate the hosted database and do not prove hosted Google access. The complete migration chain is tested on a local engine in fresh and existing-production order; a separate hosted restore still needs verification.

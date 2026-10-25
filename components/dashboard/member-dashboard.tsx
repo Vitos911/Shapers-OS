@@ -15,7 +15,7 @@ const date = (value: string) => new Intl.DateTimeFormat("sl-SI", {
 const time = (value: string) => new Intl.DateTimeFormat("sl-SI", {
   hour: "2-digit", minute: "2-digit", timeZone: "Europe/Ljubljana",
 }).format(new Date(value));
-const statuses: Record<string, string> = { todo: "Začeti", in_progress: "V teku", in_review: "V pregledu" };
+const statuses: Record<string, string> = { backlog: "Čakalnica", todo: "Začeti", in_progress: "V teku", in_review: "V pregledu" };
 const priorities: Record<string, string> = { low: "Nizka", medium: "Srednja", high: "Visoka", urgent: "Nujna" };
 const attendance: Record<string, string> = { present: "Prisoten", remote: "Na daljavo", excused: "Opravičeno", unexcused: "Neopravičeno" };
 
