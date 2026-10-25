@@ -126,3 +126,19 @@ a.kpi:hover { border-color: var(--border-strong); background: var(--surface-subt
   .cardHeading > a { min-height: 44px; }
   .skeleton { grid-template-columns: 1fr; }
 }
+
+
+/* Semantic accents for scannable dashboard KPIs. */
+.kpi { border-top:4px solid #2563eb; box-shadow:0 4px 16px #172e5010; }
+.kpi:nth-child(1) { border-top-color:#16834d; background:linear-gradient(145deg,#effaf3,#fff 70%); }
+.kpi:nth-child(1) .kpiHeading svg { color:#16834d; }
+.kpi:nth-child(2) { border-top-color:#2563eb; background:linear-gradient(145deg,#eef4ff,#fff 70%); }
+.kpi:nth-child(3) { border-top-color:#d29a19; background:linear-gradient(145deg,#fff9e8,#fff 70%); }
+.kpi:nth-child(3) .kpiHeading svg { color:#9c6809; }
+.kpi:nth-child(4) { border-top-color:#ea6b20; background:linear-gradient(145deg,#fff0e6,#fff 70%); }
+.kpi:nth-child(4) .kpiHeading svg, .kpi:nth-child(4) .kpiValue { color:#a94710; }
+.streakWeeks [data-state="complete"] .streakWeekIcon { background:#e66a1e; border-color:#e66a1e; }
+.streakWeeks [data-state="pending"] .streakWeekIcon { color:#a94710; background:#fff2e7; border-color:#e66a1e; }
+.deadline[data-overdue="true"] { color:#ad2727; background:#fff1ef; border-radius:7px; padding:5px 8px; }
+.calendarIcon { background:#fff6e3; border-color:#eed5a3; }
+.calendarIcon strong { color:#80540c; }

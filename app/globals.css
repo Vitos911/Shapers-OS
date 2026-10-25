@@ -2024,3 +2024,93 @@ select option { background: var(--surface); color: var(--text); }
     --glass-overlay-blur: 0px;
   }
 }
+
+
+/* October 2026: readability and visual hierarchy refresh.
+   Presentation-only changes; data, role logic and interactivity are untouched. */
+:root {
+  --canvas: #f3f6fc;
+  --surface-subtle: #f3f6fc;
+  --surface-hover: #eaf0fa;
+  --text: #172c4c;
+  --muted: #4b5f7d;
+  --border: #dce4f0;
+  --border-strong: #b7c8df;
+  --blue: #1554e8;
+  --blue-hover: #103fc0;
+  --blue-soft: #e8efff;
+  --radius: 14px;
+  --radius-small: 9px;
+  --text-small: 13px;
+  --text-body: 15px;
+  --text-section: 20px;
+  --text-kpi: 34px;
+}
+body { font-size: 15px; }
+.sidebar { background: #ffffff; }
+.nav-heading { font-size: 11px; color: #516687; }
+.nav-link { color: #465d7e; font-size: 14px; }
+.nav-link.active { background: #e7efff; color: #134bc9; box-shadow: inset 3px 0 0 #1554e8; }
+.nav-link:hover { background: #edf3ff; }
+.topbar { background: #ffffff; }
+main { padding-bottom: 36px; }
+.page-heading p { font-size: 14px; }
+.eyebrow { font-size: 11px; color: #1652ce; letter-spacing: .08em; }
+.button { font-size: 14px; min-height: 44px; font-weight: 650; }
+.button.primary, .primary { box-shadow: 0 5px 14px rgb(21 84 232 / 14%); }
+.stat-card, .panel, .project-card, .org-panel, .org-meeting, .org-stat, .personal-calendar {
+  border-color: #d9e3f2;
+  border-radius: 15px;
+  box-shadow: 0 3px 14px rgb(20 47 93 / 4%);
+}
+.stat-card .spread > span:first-child { font-size: 13px; color: #405777; }
+.stat-card > strong { font-size: 34px; color: #152f52; }
+.stat-card > small { font-size: 12px; color: #536986; }
+.section-heading h2 { font-size: 18px; }
+.section-heading a { font-size: 13px; color: #2454ad; }
+.org-panel > p { font-size: 14px; }
+.org-stat strong { font-size: 34px; color: #152e50; }
+.org-stat span { font-size: 13px; color: #526784; }
+.org-table-wrap {
+  border: 1px solid #d7e1ef;
+  background: #fff;
+  box-shadow: 0 3px 16px rgb(20 47 93 / 4%);
+}
+.org-table-wrap table { font-size: 14px; }
+.org-table-wrap th {
+  background: #edf3fc;
+  color: #314969;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .015em;
+}
+.org-table-wrap td { color: #233a59; }
+.org-table-wrap td strong { font-weight: 700; color: #132d50; }
+.org-table-wrap tbody tr:nth-child(even) { background: #f8faff; }
+.org-table-wrap tbody tr:hover { background: #eaf2ff; }
+.org-table-wrap .button { font-size: 12px; }
+.org-filters { background: #edf3fc; border-color: #d6e1f2; border-radius: 13px; }
+label { font-size: 14px; color: #344d71; }
+input, select, textarea { color: #182f50; border-color: #b8c9e1; background-color: #fff; }
+input::placeholder, textarea::placeholder { color: #61748e; }
+.status-badge { font-size: 12px; font-weight: 650; border-radius: 7px; }
+.progress { height: 8px; border-radius: 999px; background: #e5ecf7; }
+.progress > span { border-radius: 999px; background: #1554e8; }
+.org-bars meter { height: 14px; }
+.org-meeting h3 { font-size: 18px; }
+.org-meeting p { font-size: 14px; }
+.org-meeting small { font-size: 12px; }
+.personal-calendar-heading p, .personal-calendar-privacy { font-size: 13px; }
+.personal-agenda h3 { font-size: 16px; }
+.personal-agenda p { font-size: 14px; }
+.info-banner { color: #184b9a; }
+@media (max-width: 700px) {
+  main { padding-left: 16px; padding-right: 16px; }
+  .org-table-wrap th, .org-table-wrap td { padding: 12px; }
+  .org-panel, .org-meeting { padding: 17px; }
+  .org-stat strong { font-size: 30px; }
+  .page-heading h1 { overflow-wrap: anywhere; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
