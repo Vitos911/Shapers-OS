@@ -42,6 +42,6 @@ export function WeeklyStreakCard({ streak }: { streak: WeeklyStreak }) {
         <Trophy size={15} aria-hidden="true" /><span><strong>{milestone.weeks}</strong> tednov</span><span className={styles.srWeekStatus}>{milestone.achieved ? "Doseženo v evidenci" : "Še ni doseženo"}</span>{milestone.achieved && <Check size={14} aria-hidden="true" />}
       </li>)}
     </ul>
-    <p className={styles.streakFootnote}>Iz zabeleženih ur po trenutnem članskem nivoju. Manjkajoče ure v zaključenem tednu prekinejo niz; tekoči teden ga ne prekine.</p>
+    <p className={styles.streakFootnote}>Iz zabeleženih ur po trenutnem tedenskem cilju člana. Manjkajoče ure v zaključenem tednu prekinejo niz; tekoči teden ga ne prekine.</p>
   </section>;
 }

@@ -52,6 +52,8 @@ try {
       if (url.pathname === "/api/ask-shaper") return route.fulfill({ status: 503, json: { error: "Browser fixture: AI is not configured" } });
       if (url.pathname === "/api/org/leaderboard") return route.fulfill({ json: await assembleLeaderboard(identity, week, now, repository) });
       if (url.pathname === "/api/org/snapshot") return route.fulfill({ json: snapshot });
+      if (url.pathname === "/api/org/work-timer") return route.fulfill({ json: { server_now: new Date().toISOString(), sessions: [], work: snapshot.work } });
+      if (url.pathname === "/api/org/work-audit") return route.fulfill({ json: [] });
       if (url.pathname === "/api/org/access" || url.pathname === "/api/org/audit") return route.fulfill({ json: [] });
       if (url.pathname.startsWith("/api/org/")) {
         const body = request.postDataJSON(); mutations.push({ path: url.pathname, body });
@@ -74,11 +76,19 @@ try {
     await page.reload();
     assert.equal(await page.getByRole("button", { name: "Zaključi nalogo: Release browser task", exact: true }).count(),0);
     await page.getByRole("button", { name: "Beleži ure", exact: true }).click();
-    const editor = page.getByRole("dialog", { name: "Dodaj delovne ure" });
-    await editor.getByLabel("Ure", { exact: true }).fill("1.5");
-    await editor.getByRole("button", { name: "Shrani v Supabase", exact: true }).click();
-    await editor.waitFor({ state: "hidden" });
-    assert.equal(snapshot.work[0].hours,1.5);
+    await page.getByRole("heading", { name: "Časovnik dela", exact: true }).waitFor();
+    await page.waitForURL("**/#hours");
+    if (role !== "MEMBER") await page.getByRole("button", { name: "Administrativni vnos za nazaj", exact: true }).waitFor();
+    assert.equal(await page.getByRole("button", { name: "Administrativni vnos za nazaj", exact: true }).count(), role === "MEMBER" ? 0 : 1);
+    if (role !== "MEMBER") {
+      await page.getByRole("button", { name: "Administrativni vnos za nazaj", exact: true }).click();
+      const editor = page.getByRole("dialog", { name: "Dodaj delovne ure" });
+      await editor.getByLabel("Ure", { exact: true }).fill("1.5");
+      await editor.getByLabel("Razlog administrativnega posega", { exact: true }).fill("Release transport fixture");
+      await editor.getByRole("button", { name: "Shrani v Supabase", exact: true }).click();
+      await editor.waitFor({ state: "hidden" });
+      assert.equal(snapshot.work[0].hours,1.5);
+    }
     for (const view of ["overview","tasks","projects","hours","meetings","attendance","profile","leaderboard","settings", ...(role === "MEMBER" ? [] : ["members","analytics"])]) {
       console.log(`Checking ${role}/${view}`);
       await page.goto(`${origin}/#${view}`);
@@ -108,7 +118,7 @@ try {
     await page.keyboard.press("Escape");
     await page.screenshot({path:fileURLToPath(new URL(`${role.toLowerCase()}-mobile.png`,output)),fullPage:false});
     assert.deepEqual(errors,[]);
-    checks.push({role,views:role==="MEMBER"?9:11,widths:[390,768,1440],taskSaveReload:true,hoursSave:true,history:true,aiFailure:true,mobileKeyboard:true,fixtureMutations:mutations.length});
+    checks.push({role,views:role==="MEMBER"?9:11,widths:[390,768,1440],taskSaveReload:true,hoursNavigation:true,adminHoursSave:role!=="MEMBER",history:true,aiFailure:true,mobileKeyboard:true,fixtureMutations:mutations.length});
     await context.close();
   }
   await writeFile(new URL("results.json",output),JSON.stringify({checks,mode:"browser transport fixtures",hostedWrites:0},null,2));

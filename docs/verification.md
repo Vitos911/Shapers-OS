@@ -72,3 +72,10 @@ Preverjeno: vseh 50 testov PASS, lint brez opozoril, TypeScript v produkcijskem 
 Lokalni produkcijski HTTP: dejanska Supabase MEMBER/ADMIN prijava → API vrne connected=false brez piškotka, brez izmišljenih dogodkov. Brez Bearer 401, tuj Origin 403. Dejanski OAuth začetek 200 z calendar.events.readonly in access_type=offline. V brskalniku uspešna obstoječa demo prijava in vidna nova kartica/privolitev; prikaz pri mobilni širini brez vodoravnega prelivanja.
 
 Meja živega preizkusa: trenutna stara prijava še nima koledarskega dovoljenja; uporabnik mora sam odobriti novo Google privolitev. Enable Google Calendar API in readonly scope v istem Google Cloud projektu po potrebi. GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET ob preverjanju nista bila nastavljena za server-side refresh; začetno branje po privolitvi je neodvisno od tega, po izteku pa je brez konfiguracije potreben reconnect. Živ seznam osebnih dogodkov in produkcijska domena ostajata NOT VERIFIED.
+
+## Live timer implementation — 25 October 2026
+
+Branch `feature/live-work-timer`: implementation, seven acceptance scenarios, actual
+local Next API + PostgreSQL permission tests, publication prerequisites and precise
+hosted limitations are recorded in [live-work-timer.md](live-work-timer.md). Historical
+source files and seed data are unchanged. Local checks do not claim a hosted deployment.

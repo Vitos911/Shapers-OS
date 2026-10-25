@@ -2,7 +2,7 @@
 
 import { ArrowRight, CalendarDays, Check, CheckSquare, ClipboardCheck, Clock3, Flame, Plus } from "lucide-react";
 import { ljubljanaDate, type OrgMember, type OrgTask, type Snapshot } from "@/lib/organization";
-import { weeklyStreak, WEEKLY_TARGETS } from "@/lib/weekly-streak";
+import { weeklyStreak } from "@/lib/weekly-streak";
 import { WeeklyStreakCard } from "./weekly-streak-card";
 import type { ReactNode } from "react";
 import { dashboardMeetings, dashboardTasks } from "./dashboard-data";
@@ -111,7 +111,7 @@ export default function MemberDashboard({ snapshot, now, busy, onLogHours, onCom
   return <div className={styles.dashboard}>
     <DashboardHero member={member} busy={busy} onLogHours={onLogHours} />
     <section className={styles.kpis} aria-label="Tedenski pregled">
-      <article className={styles.kpi}><div className={styles.kpiHeading}><span>Ure ta teden</span><Clock3 size={16} aria-hidden="true" /></div>{member ? <WeeklyHoursProgress hours={hours} goal={WEEKLY_TARGETS[member.tier] || 0} /> : <><strong className={styles.kpiValue}>—</strong><p>Članski profil ni povezan.</p></>}</article>
+      <article className={styles.kpi}><div className={styles.kpiHeading}><span>Ure ta teden</span><Clock3 size={16} aria-hidden="true" /></div>{member ? <WeeklyHoursProgress hours={hours} goal={Number(member.weekly_hours)} /> : <><strong className={styles.kpiValue}>—</strong><p>Članski profil ni povezan.</p></>}</article>
       <a className={styles.kpi} href="#tasks"><div className={styles.kpiHeading}><span>Odprte naloge</span><CheckSquare size={16} aria-hidden="true" /></div><strong className={styles.kpiValue}>{member ? tasks.length : "—"}</strong><p>{member ? "Tvoje dodeljene naloge" : "Članski profil ni povezan."}<ArrowRight size={14} aria-hidden="true" /></p></a>
       <a className={styles.kpi} href="#meetings"><div className={styles.kpiHeading}><span>Naslednji sestanek</span><CalendarDays size={16} aria-hidden="true" /></div>{nextMeeting ? <><strong className={styles.meetingValue}>{nextMeeting.title}</strong><p>{date(nextMeeting.starts_at)} · {nextMeeting.all_day ? "Celodnevno" : time(nextMeeting.starts_at)}</p></> : <><strong className={styles.kpiValue}>—</strong><p>{snapshot.calendar.configured ? "Ni shranjenih prihodnjih sestankov." : "Koledar še ni povezan."}</p></>}</a>
       <article className={styles.kpi}><div className={styles.kpiHeading}><span>Weekly streak</span><Flame size={16} aria-hidden="true" /></div><strong className={styles.kpiValue}>{streak ? <>{streak.current}<span> tednov</span></> : "—"}</strong><p>{streak ? "Zaporedni uspešni tedni" : "Osebni niz ni na voljo."}</p></article>

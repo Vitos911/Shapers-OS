@@ -7,8 +7,8 @@ type StreakSnapshot = Pick<Snapshot, "identity" | "members" | "work" | "weeklyHo
 /** Date-only work dates are Ljubljana calendar dates, not UTC instants. */
 export function weeklyStreak(snapshot: StreakSnapshot, now = new Date()) {
   const member = snapshot.members.find((m) => m.id === snapshot.identity.member_id);
-  const target = member && WEEKLY_TARGETS[member.tier];
-  if (!member || !target) return null;
+  const target = Number(member?.weekly_hours);
+  if (!member || !Object.hasOwn(WEEKLY_TARGETS, member.tier) || !Number.isFinite(target) || target <= 0) return null;
 
   const today = ljubljanaDate(now);
   const currentWeek = weekStart(today);

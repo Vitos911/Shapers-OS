@@ -8,9 +8,9 @@ const entry = (date, hours, fields = {}) => ({ id: date, member_id: "me", date, 
 const history = (week_start, hours, through_date = addDays(week_start, 6)) => ({ member_id: "me", week_start, through_date, hours });
 const snapshot = (fields = {}) => ({ identity: { member_id: "me" }, members: [{ id: "me", tier: "Impact", weekly_hours: 10 }], work: [], weeklyHours: [], ...fields });
 
-test("tier targets are GO! 4h, Impact 10h, Core 70h, independent of a stale weekly_hours value", () => {
-  for (const [tier, target] of [["GO!", 4], ["Impact", 10], ["Core", 70]]) {
-    const s = snapshot({ members: [{ id: "me", tier, weekly_hours: 1 }], work: [entry("2026-10-20", target - .25)] });
+test("weekly goals use the authoritative members.weekly_hours for every tier", () => {
+  for (const [tier, target] of [["GO!", 5], ["Impact", 12], ["Core", 65]]) {
+    const s = snapshot({ members: [{ id: "me", tier, weekly_hours: target }], work: [entry("2026-10-20", target - .25)] });
     assert.equal(weeklyStreak(s, now).target, target);
     assert.equal(weeklyStreak(s, now).current, 0);
     assert.equal(weeklyStreak(s, now).remaining, .25);
