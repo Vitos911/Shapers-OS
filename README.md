@@ -45,6 +45,7 @@ Ta veja zahteva pregledano podatkovno spremembo pred namestitvijo aplikacije. SQ
 - [Prejšnji JSON prostori](docs/supabase.md)
 - [Oblikovne odločitve](docs/design.md)
 - [Osebni Google koledar in samodejno branje prihodnjih dogodkov](docs/personal-calendar.md)
+- [Izbirni strežniški Slack servis in zaščiten ročni preizkus](docs/slack.md)
 
 V obstoječem projektu je ohranjenih vseh 20 članskih UUID-jev in oba prejšnja delovna prostora. Povezanih je 20 sandbox Auth računov. Zgodovinske ure so 120 tedenskih seštevkov (1.705,5 h), ne izmišljeni dnevni vnosi. Vseh 258 zgodovinskih zapisov udeležbe je uvoženih in povezanih z obstoječimi sinhroniziranimi sestanki; [poročilo uvoza](docs/attendance-import.md) loči ta nabor od poznejših ročnih zapisov. Imena desetih projektov v dostopnih virih niso bila podana, zato projekti niso izmišljeni.
 
