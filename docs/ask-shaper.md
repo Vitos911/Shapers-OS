@@ -4,9 +4,18 @@ Ask Shaper bere obstoječe organizacijske podatke iz Supabase z uporabnikovo sej
 
 ## Nastavitev ponudnika
 
-Na strežniku nastavi `SHAPER_AI_API_KEY` za OpenAI in po želji `SHAPER_AI_MODEL`. Privzeti model je `gpt-4.1-mini`; drug model mora podpirati Chat Completions, `json_schema` Structured Outputs, `temperature: 0` in `max_completion_tokens`. Nova imena v `.env.example` imajo prazne vrednosti. Ključ nima predpone `NEXT_PUBLIC_`, se ne shranjuje v bazo in ga klient ne prejme.
+Na strežniku nastavi skrivnost `SHAPER_AI_API_KEY` in izberi `SHAPER_AI_PROVIDER`: `groq` ali `openai`. Za Groq je podprt tudi običajni `GROQ_API_KEY`, kadar skupni ključ ni nastavljen. Če ponudnik ni izbran, Groq prepoznamo po `GROQ_API_KEY` ali predponi ključa; ostane združljivost s prejšnjo OpenAI nastavitvijo. Izrecno neusklajen ponudnik/ključ je zavrnjen pred omrežnim klicem, brez pošiljanja ključa drugemu ponudniku.
 
-Povezava uporablja pravi endpoint `https://api.openai.com/v1/chat/completions`, brez nove odvisnosti. Manjkajoč ključ vrne 503 z navodilom za nastavitev. Napake, timeout, zavrnitev, prekinjen ali neveljaven odgovor ponudnika vrnejo varno 502 brez izpisa ponudnikovega telesa ali poverilnic. Običajni pogledi aplikacije delujejo neodvisno od asistenta.
+| Ponudnik | Privzeti model | Fiksni endpoint |
+| --- | --- | --- |
+| Groq | `openai/gpt-oss-20b` | `https://api.groq.com/openai/v1/chat/completions` |
+| OpenAI | `gpt-4.1-mini` | `https://api.openai.com/v1/chat/completions` |
+
+`SHAPER_AI_MODEL` je neobvezen. Izbrani model mora podpirati Chat Completions in strogi `json_schema`; pri Groq sta privzeti GPT-OSS 20B in preizkušena konfiguracija GPT-OSS 120B podprta z `reasoning_effort: low` in `include_reasoning: false`. Groq ne prejme nepodprtega polja `store`; OpenAI še naprej prejme `store: false`. Endpointov ni mogoče nadomestiti s poljubnim URL-jem. Glej [Groq Structured Outputs](https://console.groq.com/docs/structured-outputs) in [Groq API Reference](https://console.groq.com/docs/api-reference).
+
+Nova imena v `.env.example` imajo prazne vrednosti. Ključ nima predpone `NEXT_PUBLIC_`, se ne shranjuje v bazo in ga klient ne prejme. Za lokalni demo je nastavljen samo v ignorirani `.env.local` z dovoljenji 600; ni del commita ali PR. Objavljen demo potrebuje isto skrivnost v svojem strežniškem okolju in ponoven zagon/preview build. Lokalna konfiguracija se ne prenese na Netlify ali drugo gostovanje.
+
+Manjkajoč ključ vrne 503 z navodilom za nastavitev. Napake, timeout, zavrnitev, prekinjen ali neveljaven odgovor ponudnika vrnejo varno 502 brez izpisa ponudnikovega telesa ali poverilnic. Običajni pogledi aplikacije delujejo neodvisno od asistenta.
 
 ## Podprta vprašanja
 
@@ -30,16 +39,15 @@ Naslednji sestanek je prvi prihodnji relevantni **organizacijski** sestanek v sh
 
 ## Omejitve porabe
 
-Največ dva plačljiva klica na vprašanje, največ 300 izhodnih tokenov na klic, 15 sekund na klic, brez samodejnih ponovitev in brez orodij modela. Vhod omejujejo dolžina vprašanja, fiksna navodila in največ 20 skrajšanih dokaznih postavk. Kvote se rezervirajo pred plačljivim klicem, tudi pri napakah: 6 vprašanj/minuto in 60/dan na uporabnika ter 1.000/dan na proces. 429 vsebuje `Retry-After`.
+Največ dva plačljiva klica na vprašanje, največ 300 izhodnih tokenov na OpenAI klic oziroma 768 na Groq klic (vključno z razmišljanjem), 15 sekund na klic, brez samodejnih ponovitev in brez orodij modela. Vhod omejujejo dolžina vprašanja, fiksna navodila in največ 20 skrajšanih dokaznih postavk. Kvote se rezervirajo pred plačljivim klicem, tudi pri napakah: 6 vprašanj/minuto in 60/dan na uporabnika ter 1.000/dan na proces. 429 vsebuje `Retry-After`.
 
-**Omejitev MVP:** kvote so v pomnilniku posameznega procesa in se ob restartu ponastavijo; več instanc jih ne deli. Zato niso trda organizacijska denarna omejitev v porazdeljeni/serverless produkciji. Pred takim zagonom nastavi ločen OpenAI projekt z ustreznimi ponudnikovimi omejitvami porabe ter po potrebi skupni števec na prehodu. Dodatna infrastruktura ali tabela za kvote v tem MVP ni uvedena. Strošek je odvisen od izbranega modela.
+**Omejitev MVP:** kvote so v pomnilniku posameznega procesa in se ob restartu ponastavijo; več instanc jih ne deli. Zato niso trda organizacijska denarna omejitev v porazdeljeni/serverless produkciji. Pred takim zagonom nastavi ločen projekt pri izbranem ponudniku z ustreznimi ponudnikovimi omejitvami porabe ter po potrebi skupni števec na prehodu. Dodatna infrastruktura ali tabela za kvote v tem MVP ni uvedena. Strošek je odvisen od izbranega modela.
 
 ## Preverjanje v tem okolju
 
-- `pnpm test`: ukaz uspe. Ker okolje blokira nekatere podprocese, so vse testne datoteke zagnane tudi neposredno z `node --experimental-strip-types tests/<datoteka>.test.mjs`: **70 posameznih testov uspe**, vključno z 20 novimi testi Ask Shaper.
-- `pnpm typecheck`: uspe. `pnpm lint`: uspe brez opozoril.
-- Običajni `pnpm build` prevede aplikacijo, a ga to okolje ustavi pri podprocesu TypeScript CLI: `Could not parse output from TypeScript's --showConfig`. Izolirana diagnostika pokaže blokiran `spawnSync` (EPERM) in prazen stdout asinhronega otroškega procesa.
-- Produkcijski build z začasnim uradno podprtim `experimental.useTypeScriptCli: false` uspe, vključno s preverjanjem tipov in vsemi potmi. Izvirni `next.config.ts` se nato obnovi; ta lokalni obvod ni del sprememb.
-- Testi uporabljajo pravi Supabase JS/PostgREST klient z nadomeščenim HTTP transportom ter nadomeščen transport OpenAI. Pokrivajo vse tri vloge, tuje/organizacijske zavrnitve, resnični `getCurrentUser()` za neveljavne/nepotrjene/preklicane dostope, 401/403, odsoten ključ, validacijo telesa, izračune, zgodovino zaključkov, DST, upravičenost do sestankov, ničelni imenovalec, prompt injection, zavrnjene izmišljene odgovore, napake ponudnika/baze, zgornjo mejo podatkov in kvote.
-- Lokalni HTTP smoke in vizualni pregled sta blokirana: `next start` ne more odpreti niti `0.0.0.0:3100` niti `127.0.0.1:3100` (`listen EPERM`). Strežnik zato ni ostal zagnan.
-- Ključ OpenAI v okolju ni nastavljen: **živi AI klic ni preverjen**. Živo branje z računi MEMBER/ADMIN in dejanski Supabase RLS v tej nalogi nista izvedena; dokaz zanju niso fixtures. Produkcijska baza ni spremenjena, migracije niso zagnane, koda ni združena v main in produkcijska objava ni sprožena. Vizualni pregled v pravem brskalniku ni izveden.
+- `pnpm test`, `pnpm typecheck` in `pnpm lint` uspejo. Vse testne datoteke so zagnane tudi neposredno: **77 posameznih testov uspe**, vključno s 27 testi Ask Shaper. Sedem dodatnih Groq preverja endpoint, strogo shemo, token cap, združljive parametre, prepoznavo ponudnika/alias, neusklajeno konfiguracijo, izolacijo MEMBER, izmišljene rezultate, izbiro modela in varno obravnavo napak.
+- Običajni `pnpm build` je uspešen s privzeto konfiguracijo Next.js in polnim preverjanjem tipov. Omrežno dovoljenje izvajalnega okolja je razrešilo prvotni lokalni EPERM; v `next.config.ts` ni obvoda. Prvotni OpenAI commit je uspešno prestal tudi GitHub Actions Build and test #17.
+- **Živi Groq je preverjen** z demo ključem: šest vprašanj, oba strukturirana AI koraka, HTTP 200 in pravilni slovenski odgovori. Primeri: 2,5 opravljenih ur, 1,5 h do cilja, zamujena DEMO naloga, prazen imenovalec prisotnosti, 3 h imenovanega člana prejšnji teden in organizacijski zaostanki. Podatki so bili izrecno sintetične fixtures, ne dejanski organizacijski rezultati. Ključ, surovi odgovori z razmišljanjem in občutljivi podatki niso shranjeni v poročilu ali repozitoriju.
+- Lokalni produkcijski strežnik se uspešno zažene. HTTP smoke potrdi `/` 200, `/api/health` 200 ter neprijavljen `POST /api/ask-shaper` 401. Vizualni pregled v brskalniku še ni izveden.
+- Testi uporabljajo pravi Supabase JS/PostgREST klient z nadomeščenim HTTP transportom. Živo branje z računi MEMBER/ADMIN in dejanski PostgreSQL RLS še nista preverjena. Živi OpenAI klic ni izveden; Groq je izbrani demo ponudnik.
+- Produkcijska baza ni spremenjena, migracije niso zagnane, koda ni združena v main in produkcijska objava ni sprožena. Nastavitev ključa na objavljenem demo gostovanju ostaja ločena od lokalne `.env.local`.
