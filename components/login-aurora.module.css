@@ -4,6 +4,18 @@
   background: #f5f8ff;
 }
 
+.workspace.workspace {
+  position: relative;
+  isolation: isolate;
+  background: #f5f8ff;
+}
+
+/* Stay behind every workspace view without changing navigation/modal stacking. */
+.workspace .workspaceAurora {
+  position: fixed;
+  z-index: -1;
+}
+
 /* Clip only decoration: tall forms and keyboard focus can still scroll naturally. */
 .aurora {
   position: absolute;

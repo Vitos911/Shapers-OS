@@ -17,6 +17,7 @@ import Leaderboard from "./leaderboard";
 import { ownProfile } from "@/lib/user-profile";
 import MemberDashboard, { DashboardSkeleton } from "./dashboard/member-dashboard";
 import shellStyles from "./dashboard/organization-shell.module.css";
+import auroraStyles from "./login-aurora.module.css";
 import polish from "./visual-polish.module.css";
 import { LiveWorkTimer } from "./hours/live-work-timer";
 import { WorkAudit } from "./hours/work-audit";
@@ -61,6 +62,16 @@ import {
   type WorkEntry,
   type Attendance,
 } from "@/lib/organization";
+
+function WorkspaceAurora() {
+  return (
+    <div className={`${auroraStyles.aurora} ${auroraStyles.workspaceAurora}`} aria-hidden="true">
+      <span className={`${auroraStyles.light} ${auroraStyles.blue}`} />
+      <span className={`${auroraStyles.light} ${auroraStyles.orange}`} />
+      <span className={`${auroraStyles.light} ${auroraStyles.purple}`} />
+    </div>
+  );
+}
 
 type View =
   | "overview"
@@ -335,7 +346,8 @@ export default function OrganizationApp({
   );
   if (!snapshot)
     return (
-      <div className={`cloud-entry ${polish.shell} ${polish.pending}`}>
+      <div className={`cloud-entry ${polish.shell} ${polish.pending} ${auroraStyles.workspace}`}>
+        <WorkspaceAurora />
         <section className="cloud-entry-card">
           <h1>Shapers OS</h1>
           {error ? (
@@ -570,7 +582,8 @@ export default function OrganizationApp({
       </article>
     ));
   return (
-    <div className={`app-shell ${shellStyles.shell} ${polish.shell}`} aria-busy={busy}>
+    <div className={`app-shell ${shellStyles.shell} ${polish.shell} ${auroraStyles.workspace}`} aria-busy={busy}>
+      <WorkspaceAurora />
       <a className="skip-link" href="#org-main">
         Preskoči na vsebino
       </a>
