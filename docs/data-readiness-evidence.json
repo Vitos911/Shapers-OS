@@ -1,0 +1,354 @@
+{
+  "checkedAt": "2026-10-25T10:02:18.459Z",
+  "timezone": "Europe/Ljubljana",
+  "sourceHashes": {
+    "members.json": "2d12606c5b2ea7bd1dde77d74838003180d44577d8bd9beb0c07dfa182d76182",
+    "weekly-hours.json": "952ddc5ed45abecf180eed641a58417c5da330a7c8d0ae491261162f46524aac",
+    "attendance-pending-calendar.json": "1a4458c86f249debb02157799ff54e382bc0320b045f192fffade8c807cbdf2f",
+    "meetings.ics": "d7411659e7f6397887a8d9b4ef357388ce0fb4ff0f43832d39c352e720e05897"
+  },
+  "databaseWrites": 0,
+  "roles": {
+    "ADMIN": {
+      "status": "PASS",
+      "sessions": 1
+    },
+    "MEMBER": {
+      "status": "PASS",
+      "sessions": 1
+    },
+    "SUPERADMIN": {
+      "status": "NOT VERIFIED",
+      "reason": "No authenticated session available"
+    }
+  },
+  "errors": [],
+  "anonymous": [
+    {
+      "table": "members",
+      "status": "PASS"
+    },
+    {
+      "table": "org_projects",
+      "status": "PASS"
+    },
+    {
+      "table": "org_tasks",
+      "status": "PASS"
+    },
+    {
+      "table": "org_work_entries",
+      "status": "PASS"
+    },
+    {
+      "table": "org_weekly_hours",
+      "status": "PASS"
+    },
+    {
+      "table": "org_meetings",
+      "status": "PASS"
+    },
+    {
+      "table": "org_attendance",
+      "status": "PASS"
+    },
+    {
+      "table": "org_task_history",
+      "status": "PASS"
+    },
+    {
+      "table": "org_project_members",
+      "status": "PASS"
+    },
+    {
+      "table": "org_meeting_members",
+      "status": "PASS"
+    }
+  ],
+  "checks": [
+    {
+      "area": "Members",
+      "check": "20 members",
+      "status": "PASS",
+      "actual": 20
+    },
+    {
+      "area": "Members",
+      "check": "Source identities, memberships and targets preserved",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Members",
+      "check": "GO!=4h; Impact=10h; Core=70h",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Members",
+      "check": "Every member has an Auth link",
+      "status": "PASS",
+      "actual": 20
+    },
+    {
+      "area": "Members",
+      "check": "No duplicate normalized emails or primary Auth links",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Projects",
+      "check": "10 demo projects available",
+      "status": "FAIL",
+      "actual": 9
+    },
+    {
+      "area": "Projects",
+      "check": "No duplicate project names (review candidates)",
+      "status": "FAIL",
+      "actual": 1
+    },
+    {
+      "area": "Projects",
+      "check": "Project memberships reference existing records",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Tasks",
+      "check": "Task foreign keys resolve",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Tasks",
+      "check": "Assigned task available",
+      "status": "PASS",
+      "actual": 1
+    },
+    {
+      "area": "Tasks",
+      "check": "Open and completed tasks available for demo",
+      "status": "FAIL",
+      "actual": "done"
+    },
+    {
+      "area": "Tasks",
+      "check": "History matches recorded before/after events",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Tasks",
+      "check": "Current status and completion timestamp have history",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Hours",
+      "check": "All 120 source totals and coverage dates match",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Hours",
+      "check": "Every member has all six source weeks",
+      "status": "PASS",
+      "actual": 6
+    },
+    {
+      "area": "Hours",
+      "check": "Valid members, projects, quarter-hours and dates",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Hours",
+      "check": "No daily/weekly double counting",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Hours",
+      "check": "No duplicate weeks or identical daily records (review candidates)",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Hours",
+      "check": "Dashboard analytics reconcile with stored totals",
+      "status": "PASS",
+      "actual": 1707.5
+    },
+    {
+      "area": "Attendance",
+      "check": "All 258 source records retain their status",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Attendance",
+      "check": "Attendance members and meetings resolve",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Attendance",
+      "check": "Recorded members are eligible for meetings",
+      "status": "FAIL",
+      "actual": 1
+    },
+    {
+      "area": "Attendance",
+      "check": "No presence recorded before a future meeting",
+      "status": "FAIL",
+      "actual": 1
+    },
+    {
+      "area": "Attendance",
+      "check": "No duplicate member/meeting records",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Calendar",
+      "check": "Meeting dates and durations valid",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Calendar",
+      "check": "Participant references resolve",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Calendar",
+      "check": "All six meeting series present",
+      "status": "PASS",
+      "actual": 6
+    },
+    {
+      "area": "Calendar",
+      "check": "No duplicate calendar/event identities",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Calendar",
+      "check": "No duplicate participant links",
+      "status": "PASS",
+      "actual": 0
+    },
+    {
+      "area": "Calendar",
+      "check": "Live Google API and current sync authorization",
+      "status": "NOT VERIFIED",
+      "actual": "Persisted references alone do not establish live Google access"
+    },
+    {
+      "area": "Calendar",
+      "check": "All 55 ICS times and participant sets preserved",
+      "status": "PASS",
+      "actual": 0
+    }
+  ],
+  "totals": {
+    "members": 20,
+    "projects": 9,
+    "tasks": 1,
+    "history": 3,
+    "weeklyRecords": 120,
+    "historicalHours": 1705.5,
+    "dailyHours": 2,
+    "weeklyHours": 203.5,
+    "meetings": 55,
+    "attendance": 260,
+    "participants": 430
+  },
+  "memberScope": [
+    {
+      "role": true,
+      "profile": true,
+      "ownHours": true,
+      "ownTasks": true,
+      "ownHistory": true,
+      "ownAttendance": true,
+      "ownAssignments": true,
+      "visibleProjects": true,
+      "eligibleMeetings": true
+    }
+  ],
+  "tiers": {
+    "GO!": {
+      "members": 10,
+      "hours": 213.5,
+      "currentWeekHours": 21.5
+    },
+    "Impact": {
+      "members": 7,
+      "hours": 368.5,
+      "currentWeekHours": 42.5
+    },
+    "Core": {
+      "members": 3,
+      "hours": 1125.5,
+      "currentWeekHours": 139.5
+    }
+  },
+  "ics": {
+    "events": 55,
+    "duplicateUids": 0,
+    "unmatchedEvents": 0,
+    "mismatchedParticipantSets": 0,
+    "note": "ICS uses Members in DESCRIPTION; no ATTENDEE invitations. Database/source agreement does not verify live Google authorization."
+  },
+  "appSnapshots": [
+    {
+      "role": "ADMIN",
+      "status": "PASS",
+      "calendarConfigured": false,
+      "calendarSyncReady": false
+    },
+    {
+      "role": "MEMBER",
+      "status": "PASS",
+      "calendarConfigured": false,
+      "calendarSyncReady": false
+    }
+  ],
+  "appRoleBoundaries": [
+    {
+      "role": "ADMIN",
+      "resource": "access",
+      "status": "PASS",
+      "httpStatus": 403
+    },
+    {
+      "role": "ADMIN",
+      "resource": "audit",
+      "status": "PASS",
+      "httpStatus": 403
+    },
+    {
+      "role": "MEMBER",
+      "resource": "access",
+      "status": "PASS",
+      "httpStatus": 403
+    },
+    {
+      "role": "MEMBER",
+      "resource": "audit",
+      "status": "PASS",
+      "httpStatus": 403
+    }
+  ],
+  "summary": {
+    "Members": "PASS",
+    "Projects": "FAIL",
+    "Tasks": "FAIL",
+    "Hours": "PASS",
+    "Attendance": "FAIL",
+    "Calendar": "NOT VERIFIED"
+  }
+}

@@ -176,7 +176,9 @@ export function planImport(
         ? `${row.meeting_id}/${row.member_id}`
         : kind === "weekly-hours"
           ? `${row.member_id}/${row.week_start}`
-          : null;
+          : kind === "projects"
+            ? String(row.name).trim().toLowerCase()
+            : null;
     if (target) {
       if (
         targets.has(target) &&
@@ -185,10 +187,56 @@ export function planImport(
         conflicts.push({
           row: i + 1,
           error:
-            "Conflicting values for the same member/meeting or member/week",
+            "Conflicting values for the same member/meeting, member/week or project name",
         });
       targets.add(target);
     }
   }
   return { rows: planned, conflicts };
+}
+
+// Compare against the destination before the first write. Ignore-on-conflict
+// alone hides changed source values and cannot detect daily/weekly overlap.
+export function preflightImport(
+  kind: string,
+  rows: Record<string, unknown>[],
+  existing: Record<string, unknown>[],
+  related: {
+    projects?: Record<string, unknown>[];
+    work?: Record<string, unknown>[];
+    weeklyHours?: Record<string, unknown>[];
+  } = {},
+) {
+  const pending: Record<string, unknown>[] = [];
+  const conflicts: { row: number; error: string }[] = [];
+  let unchanged = 0;
+  const target = (r: Record<string, unknown>) =>
+    kind === "attendance" ? `${r.meeting_id}/${r.member_id}` :
+    kind === "weekly-hours" ? `${r.member_id}/${r.week_start}` :
+    kind === "projects" ? String(r.name).trim().toLowerCase() :
+    kind === "work" ? JSON.stringify([r.member_id, r.date, r.project_id || null, Number(r.hours), r.description || ""]) : r.import_key;
+  rows.forEach((row, i) => {
+    const matches = existing.filter((r) => r.import_key === row.import_key || target(r) === target(row));
+    if (matches.length) {
+      const identical = matches.length === 1 && matches[0].deleted !== true && Object.entries(row).every(([key, value]) =>
+        key === "import_key" || (key === "hours" ? Number(matches[0][key]) === Number(value) : matches[0][key] === value),
+      );
+      if (identical) unchanged++;
+      else conflicts.push({ row: i + 1, error: "Existing destination differs or is ambiguous; preserved, review source manually" });
+      return;
+    }
+    if (kind === "work" && row.project_id && !related.projects?.some((p) => p.id === row.project_id)) {
+      conflicts.push({ row: i + 1, error: "Work references an unknown project" });
+      return;
+    }
+    const overlaps = kind === "weekly-hours"
+      ? related.work?.some((w) => !w.deleted && w.member_id === row.member_id && String(w.date) >= String(row.week_start) && String(w.date) <= String(row.through_date))
+      : kind === "work" && related.weeklyHours?.some((h) => h.member_id === row.member_id && String(row.date) >= String(h.week_start) && String(row.date) <= String(h.through_date));
+    if (overlaps) {
+      conflicts.push({ row: i + 1, error: "Daily work overlaps a weekly source total; double counting blocked" });
+      return;
+    }
+    pending.push(row);
+  });
+  return { rows: pending, unchanged, conflicts };
 }
