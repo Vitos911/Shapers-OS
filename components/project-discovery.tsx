@@ -24,6 +24,83 @@ const events: Record<string, string> = {
   request_cancelled: "Preklicano",
 };
 
+export function ClaimableTasks({
+  snapshot: s,
+  busy,
+  action,
+}: {
+  snapshot: Snapshot;
+  busy: boolean;
+  action: Action;
+}) {
+  const tasks = s.tasks.filter(
+    (t) =>
+      t.claimable &&
+      !t.assignee_id &&
+      !t.archived &&
+      t.status === "todo" &&
+      s.projects.some(
+        (p) =>
+          p.id === t.project_id && ["planning", "active"].includes(p.status),
+      ),
+  );
+  return (
+    <section
+      className={`panel ${styles.section}`}
+      aria-labelledby="claimable-title"
+    >
+      <div className={styles.heading}>
+        <div>
+          <span className="eyebrow">Prispevaj k skupnemu cilju</span>
+          <h2 id="claimable-title">Na voljo za prevzem</h2>
+        </div>
+        <span className="status-badge">{tasks.length} nalog</span>
+      </div>
+      <p className={styles.muted}>
+        Prevzameš lahko izrecno odprto nalogo v projektu, katerega član si.
+      </p>
+      {tasks.length ? (
+        <ul className={styles.list}>
+          {tasks.map((t) => (
+            <li key={t.id}>
+              <div>
+                <strong>{t.title}</strong>
+                <small>
+                  {s.projects.find((p) => p.id === t.project_id)?.name} ·{" "}
+                  {t.due_date ? `Rok: ${t.due_date}` : "Brez roka"}
+                </small>
+                <p>{t.description}</p>
+              </div>
+              <button
+                className="button secondary"
+                disabled={
+                  busy ||
+                  !s.identity.member_id ||
+                  !s.projectMembers.some(
+                    (m) =>
+                      m.project_id === t.project_id &&
+                      m.member_id === s.identity.member_id,
+                  )
+                }
+                onClick={() =>
+                  void action("claim-task", "POST", { task_id: t.id })
+                }
+              >
+                Prevzemi nalogo
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={styles.empty}>
+          Trenutno ni razpoložljivih nalog v tvojih projektih.{" "}
+          <a href="#projects">Razišči projekte</a>.
+        </p>
+      )}
+    </section>
+  );
+}
+
 export function MyProjects({ snapshot: s }: { snapshot: Snapshot }) {
   const mine = s.projects.filter((p) =>
     s.projectMembers.some(

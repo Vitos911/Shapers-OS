@@ -36,6 +36,10 @@ export function fields(
       goal: (v) => text(v, 2000),
     },
     tasks: {
+      claimable: (v) => {
+        if (typeof v !== "boolean") throw new InputError("Neveljavno stanje prevzema.");
+        return v;
+      },
       project_id: uuid,
       title: (v) => text(v, 200, true),
       description: (v) => text(v, 5000),

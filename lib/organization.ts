@@ -37,6 +37,7 @@ export type OrgTask = {
   due_date: string | null;
   archived: boolean;
   completed_at: string | null;
+  claimable?: boolean;
   updated_at: string;
 };
 export type WorkEntry = {

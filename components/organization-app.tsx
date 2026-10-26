@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import ProjectDiscovery, { MyProjects } from "./project-discovery";
+import ProjectDiscovery, { ClaimableTasks, MyProjects } from "./project-discovery";
 import TopNavigation from "./top-navigation";
 import PersonalCalendar from "./personal-calendar";
 import UserProfile from "./user-profile";
@@ -596,6 +596,7 @@ export default function OrganizationApp({
                 onComplete={(task) => { void action("tasks", "PATCH", { id: task.id, status: "done" }); }}
               />
               <MyProjects snapshot={s} />
+              <ClaimableTasks snapshot={s} busy={busy} action={action} />
 
               {admin && metrics && <>
                 {filters}
@@ -626,6 +627,7 @@ export default function OrganizationApp({
           {view === "projects" && <ProjectDiscovery snapshot={s} busy={busy} action={action} edit={(data) => setEdit({ kind: "projects", data })} />}
           {view === "tasks" && (
             <>
+              <ClaimableTasks snapshot={s} busy={busy} action={action} />
               <div className="org-actions">
                 <label>Iskanje nalog<input type="search" value={taskSearch} onChange={e => setTaskSearch(e.target.value)} /></label>
                 {admin && (
@@ -1491,6 +1493,7 @@ function Editor({
       data: Record<string, unknown> = {};
     for (const [k, v] of f.entries()) data[k] = String(v);
     if ("hours" in data) data.hours = Number(data.hours);
+    if (kind === "tasks" && admin && "claimable" in data) data.claimable = data.claimable === "true";
     if (data.project_id === "") data.project_id = null;
     if (data.assignee_id === "") data.assignee_id = null;
     if (data.due_date === "") data.due_date = null;
@@ -1623,6 +1626,7 @@ function Editor({
                         ))}
                       </select>
                     </label>
+                    {s.collaboration?.ready !== false && <label>Prevzem naloge<select name="claimable" defaultValue={val("claimable", "false")}><option value="false">Ni na voljo za prevzem</option><option value="true">Na voljo za prevzem (nedodeljena, Začeti)</option></select></label>}
                     <label>
                       Prednost
                       <select

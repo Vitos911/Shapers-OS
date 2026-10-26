@@ -7,14 +7,15 @@ import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
+import { fileURLToPath } from 'node:url';
 import { timerDatabase, uid, mid } from '../tests/fixtures/work-timer-db.mjs';
 import { analytics, ljubljanaDate, weekStart } from '../lib/organization.ts';
 const {db,as,state}=await timerDatabase();
 const origin='http://127.0.0.1:3251', errors=[], commands=[], checks=[];
 const users=Object.fromEntries([1,2,3,4,5].map(n=>[n,{id:uid(n),email:`timer${n}@fixture.invalid`,aud:'authenticated',role:'authenticated',email_confirmed_at:new Date().toISOString(),created_at:new Date().toISOString(),app_metadata:{provider:'email',providers:['email']},user_metadata:{},identities:[]} ]));
 const token=n=>`eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({sub:uid(n),exp:Math.floor(Date.now()/1000)+3600,aud:'authenticated',role:'authenticated'})).toString('base64url')}.fixture`;
-const rpcArgs={org_context:[],org_task_directory:[],org_work_state:[],org_work_timer:['p_action','p_session_id','p_expected_version','p_project_id','p_description'],org_admin_work:['p_id','p_member_id','p_date','p_hours','p_description','p_project_id','p_reason','p_expected_updated_at','p_deleted'],org_leaderboard_source:['as_of']};
-const tables=new Set(['members','org_projects','org_tasks','org_work_entries','org_weekly_hours','org_meetings','org_attendance','org_task_history','org_project_members','org_meeting_members','org_settings','org_audit','org_leaderboard_weeks']);
+const rpcArgs={org_project_membership:["p_project","p_action","p_member"],org_claim_task:["p_task"],org_context:[],org_task_directory:[],org_work_state:[],org_work_timer:['p_action','p_session_id','p_expected_version','p_project_id','p_description'],org_admin_work:['p_id','p_member_id','p_date','p_hours','p_description','p_project_id','p_reason','p_expected_updated_at','p_deleted'],org_leaderboard_source:['as_of']};
+const tables=new Set(['members','org_projects','org_tasks','org_work_entries','org_weekly_hours','org_meetings','org_attendance','org_task_history','org_project_members','org_meeting_members','org_settings','org_audit','org_leaderboard_weeks','org_project_join_requests','org_project_membership_history']);
 let queue=Promise.resolve();
 const adapter=createServer(async(req,res)=>{
   res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Headers','authorization,apikey,content-type,x-client-info,x-supabase-api-version');res.setHeader('Access-Control-Allow-Methods','GET,POST,PATCH,OPTIONS');
@@ -34,6 +35,9 @@ const adapter=createServer(async(req,res)=>{
         return as(n,sql,args);
       };
       if(path==='/rest/v1/shapers_workspaces'&&req.method==='GET') {send([]);return;}
+      if(path.startsWith('/rest/v1/rpc/') && ['org_project_directory','org_project_progress'].includes(resource)) {
+        send((await query(`select * from public.${resource}()`)).rows); return;
+      }
       if(path.startsWith('/rest/v1/rpc/') && rpcArgs[resource]) {
         const keys=Object.keys(body);assert.ok(keys.every(k=>rpcArgs[resource].includes(k)));
         const result=await query(`select public.${resource}(${keys.map((k,i)=>`${k}=>$${i+1}`).join(',')}) result`,keys.map(k=>body[k]));
@@ -122,7 +126,7 @@ try {
   assert.equal((await fetch(origin+'/api/org/work-timer')).status,401);
   checks.push('MEMBER backdated POST/PATCH and direct table write denied; forged start time and unauthenticated API denied');
   for(const width of [390,768,1440]) {await page.setViewportSize({width,height:950});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`MEMBER width ${width}`);}
-  await page.screenshot({path:new URL('member.png',output).pathname});await context.close();
+  await page.screenshot({path:fileURLToPath(new URL('member.png',output))});await context.close();
   ({context,page}=await login(2));
   await page.getByRole('button',{name:'Administrativni vnos za nazaj',exact:true}).click();
   let editor=page.getByRole('dialog',{name:'Dodaj delovne ure',exact:true});
@@ -143,7 +147,31 @@ try {
   assert.ok(Math.abs(metrics.rows[0].weekly-(2.25+Number(finished.duration_seconds)/3600))<0.00001);
   checks.push('ADMIN backdated UI save/reload, SUPERADMIN correction, immutable audit with actors/reasons/before/after, exact weekly analytics');
   for(const width of [390,768,1440]) {await page.setViewportSize({width,height:950});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`ADMIN width ${width}`);}
-  await page.screenshot({path:new URL('admin.png',output).pathname});await context.close();
+  await page.screenshot({path:fileURLToPath(new URL('admin.png',output))});await context.close();
+  // New collaboration uses the actual Next API and the same isolated PostgreSQL/RLS engine.
+  const project=(await as(2,"insert into org_projects(name,status,visibility,join_policy,goal) values('Browser collaboration','active','organization','open','Deliver a workshop') returning id")).rows[0].id;
+  const secret=(await as(2,"insert into org_projects(name,status) values('Private collaboration','active') returning id")).rows[0].id;
+  const available=(await as(2,"insert into org_tasks(project_id,title,status,claimable) values($1,'Claim through actual API','todo',true) returning id",[project])).rows[0].id;
+  assert.equal((await api(3,'snapshot')).body.projects.some(p=>p.id===secret),false);
+  assert.equal((await api(3,'membership','POST',{project_id:secret,action:'join'})).status,403);
+  ({context,page}=await login(3));await page.goto(origin+'/#projects');
+  const card=page.getByRole('article').filter({has:page.getByRole('heading',{name:'Browser collaboration',exact:true})});
+  await card.getByRole('button',{name:'Pridruži se',exact:true}).click();
+  await card.getByRole('button',{name:'Zapusti projekt',exact:true}).waitFor();
+  await page.reload();await card.getByRole('button',{name:'Zapusti projekt',exact:true}).waitFor();
+  assert.equal((await db.query('select count(*)::int n from org_project_members where project_id=$1 and member_id=$2',[project,mid(3)])).rows[0].n,1);
+  await page.goto(origin+'/#tasks');await page.getByRole('button',{name:'Prevzemi nalogo',exact:true}).click();
+  await page.getByText('Sprememba je shranjena v Supabase.',{exact:true}).waitFor();await page.reload();
+  const claimed=(await api(3,'snapshot')).body.tasks.find(t=>t.id===available);assert.equal(claimed.assignee_id,mid(3));assert.equal(claimed.claimable,false);
+  assert.equal((await api(3,'membership','POST',{project_id:project,action:'leave'})).status,409);
+  assert.equal((await api(4,'claim-task','POST',{task_id:available})).status,403);
+  await page.goto(origin+'/#projects');assert.equal(await card.getByRole('button',{name:'Zapusti projekt',exact:true}).isDisabled(),true);
+  assert.equal((await api(3,'tasks','PATCH',{id:available,status:'done',expected_updated_at:claimed.updated_at})).status,200);
+  await page.reload();await card.getByRole('button',{name:'Zapusti projekt',exact:true}).click();await card.getByRole('button',{name:'Pridruži se',exact:true}).waitFor();
+  assert.equal((await db.query('select count(*)::int n from org_project_members where project_id=$1 and member_id=$2',[project,mid(3)])).rows[0].n,0);
+  assert.equal((await db.query('select count(*)::int n from org_project_membership_history where project_id=$1 and member_id=$2',[project,mid(3)])).rows[0].n,2);
+  await context.close();
+  checks.push('actual Next API + SQL/RLS: private join denied; join/save/reload; claim/save/reload; foreign claim denied; leave blocked until task done; self-leave persists with history');
   assert.ok(commands.length>=5);assert.ok(commands.every(c=>!('started_at'in c)&&!('hours'in c)&&!('stopped_at'in c)));assert.deepEqual(errors,[]);
   const report={mode:'production Next build + Chromium + PGlite PostgreSQL; local synthetic Auth/PostgREST transport',checks,widths:[390,768,1440],hostedWrites:0};
   await writeFile(new URL('results.json',output),JSON.stringify(report,null,2));console.log(JSON.stringify(report));

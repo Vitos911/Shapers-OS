@@ -172,3 +172,31 @@ test("ADMIN and SUPERADMIN approve requests; legacy membership API routes throug
       assert.ok(calls.every((c) => c.path.endsWith("/org_project_membership")));
     });
 });
+test("task claim endpoint sends only validated task ID and translates competing claim into 409", async () => {
+  await scenario("MEMBER", async (request, calls) => {
+    assert.equal((await request("claim-task", { task_id: two })).status, 200);
+    assert.deepEqual(calls[0].body, { p_task: two });
+    assert.equal(
+      (await request("claim-task", { task_id: two, assignee_id: one })).status,
+      400,
+    );
+    assert.equal((await request("claim-task", { task_id: "bad" })).status, 400);
+    assert.equal(calls.length, 1);
+  });
+  await scenario(
+    "MEMBER",
+    async (request) => {
+      assert.equal((await request("claim-task", { task_id: two })).status, 409);
+    },
+    { code: "23514", message: "Internal constraint detail must not leak" },
+  );
+  await scenario(
+    "MEMBER",
+    async (request) => {
+      const response = await request("claim-task", { task_id: two });
+      assert.equal(response.status, 403);
+      assert.ok(!(await response.text()).includes("Internal"));
+    },
+    { code: "42501", message: "Internal private project title" },
+  );
+});

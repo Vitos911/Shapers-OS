@@ -267,6 +267,13 @@ async function mutate(request: Request, context: Context, partial: boolean) {
       if (changed.error) throw new HttpError(changed.error.code === "42501" ? 403 : 409, changed.error.message.includes("Pred izstopom") ? "Pred izstopom predaj ali zaključi odprte naloge." : "Članstva ni mogoče spremeniti. Preveri dostop, način pridružitve in status projekta.");
       return response({ status: changed.data });
     }
+    if (resource === "claim-task") {
+      if (partial || Object.keys(body).some(k => k !== "task_id")) throw new HttpError(400, "Neveljaven prevzem.");
+      if (!identity.member_id) throw new HttpError(403, "Potreben je članski profil.");
+      const claimed = await client.rpc("org_claim_task", { p_task: uuid(body.task_id) });
+      if (claimed.error) throw new HttpError(claimed.error.code === "42501" ? 403 : 409, "Naloge ni mogoče prevzeti. Preveri članstvo in osveži seznam; morda je že prevzeta.");
+      return response({ claimed: claimed.data });
+    }
     const table = tables[resource];
     if (!table) throw new HttpError(404, "Neznan vir.");
     if (resource === "projects" || resource === "settings")
@@ -279,6 +286,7 @@ async function mutate(request: Request, context: Context, partial: boolean) {
     if (expected_updated_at !== undefined && (resource !== "tasks" || !partial)) throw new HttpError(400, "Neveljaven pogoj posodobitve.");
     if (resource === "tasks" && partial && (typeof expected_updated_at !== "string" || !Number.isFinite(Date.parse(expected_updated_at)))) throw new HttpError(400, "Osveži nalogo pred urejanjem.");
     const data = fields(resource, input, partial);
+    if (resource === "tasks" && "claimable" in data) requireRole(identity);
     if (resource === "tasks" && !partial && "archived" in data)
       throw new HttpError(400, "Arhiviranje zahteva obstoječo nalogo.");
     if (resource === "profile") {
