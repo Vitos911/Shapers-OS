@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import Workspace from "./workspace";
+import { GlassCard } from "./ui/glass";
 import OrganizationApp from "./organization-app";
 import BrandLogo from "./brand-logo";
 import Link from "next/link";
@@ -31,7 +32,7 @@ function CloudFrame({
   aurora?: boolean;
 }) {
   return (
-    <div className={`cloud-entry${aurora ? ` ${styles.frame}` : ""}`}>
+    <div className={`cloud-entry liquid-glass${aurora ? ` ${styles.frame}` : ""}`}>
       {aurora && (
         <div className={styles.aurora} aria-hidden="true">
           <span className={`${styles.light} ${styles.blue}`} />
@@ -42,9 +43,9 @@ function CloudFrame({
       <Link className="brand brand-logo-link" href="/">
         <BrandLogo />
       </Link>
-      <section className={`cloud-entry-card${aurora ? ` ${styles.card}` : ""}`}>
+      <GlassCard className={`cloud-entry-card${aurora ? ` ${styles.card}` : ""}`}>
         {children}
-      </section>
+      </GlassCard>
       <p className="cloud-entry-footer">Prostor za skupen učinek.</p>
     </div>
   );

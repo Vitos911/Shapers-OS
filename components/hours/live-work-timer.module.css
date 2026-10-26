@@ -12,3 +12,15 @@
 .actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; }
 .warning { color:#854300; background:#fff6e8; border-radius:8px; padding:12px; }
 @media(max-width:650px) { .form { grid-template-columns:minmax(0,1fr); } .actions>* { flex:1 1 150px; min-height:44px; } .form button { min-height:44px; } }
+.timer { padding: clamp(22px,3vw,34px); border-radius: 28px; margin-bottom: 24px; }
+.timer .clock { color: var(--navy); font-size: clamp(40px, 6vw, 76px); font-weight: 650; letter-spacing: -.025em; line-height: 1.25; margin: 18px 0 10px; }
+.status { background: rgb(240 245 255 / 85%); color: #445775; }
+.status[data-state="running"] { background: #e7f7ed; color: #137346; border-color: #acd5ba; }
+.status[data-state="paused"] { background: #fff3dc; color: #82500b; border-color: #e6c98e; }
+.form { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 16px; margin-top: 26px; }
+.form label { color: var(--muted); }
+.timer small { color: var(--muted); font-size: 12px; max-width: 100ch; }
+.timer .form input, .timer .form select { background: var(--glass-bg-strong); border-radius: var(--radius-small); color: var(--navy); }
+.warning { color: #82500b; background: #fff4e1; border: 1px solid #ebd4a8; border-radius: 14px; }
+@media(max-width: 850px) { .form { grid-template-columns: 1fr 1fr; } .form > button { grid-column: 1 / -1; justify-self: start; } }
+@media(max-width: 600px) { .form { grid-template-columns: 1fr; } .form > button { justify-self: stretch; } .timer { padding: 22px; border-radius: 24px; } }

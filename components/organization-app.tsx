@@ -10,6 +10,7 @@ import {
 } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import ProjectDiscovery, { ClaimableTasks, MyProjects } from "./project-discovery";
+import { GlassCard, GlassInput, GlassModal } from "./ui/glass";
 import TopNavigation from "./top-navigation";
 import PersonalCalendar from "./personal-calendar";
 import UserProfile from "./user-profile";
@@ -154,10 +155,10 @@ const time = (v: string) =>
 const percent = (v: number | null) => (v === null ? "Ni podatkov" : n(v * 100) + " %");
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="panel org-panel">
+    <GlassCard className="panel org-panel">
       <h2>{title}</h2>
       {children}
-    </section>
+    </GlassCard>
   );
 }
 function Empty({ children }: { children: ReactNode }) {
@@ -550,7 +551,7 @@ export default function OrganizationApp({
       </article>
     ));
   return (
-    <div className={`app-shell ${shellStyles.shell} ${polish.shell} ${auroraStyles.workspace}`} aria-busy={busy}>
+    <div data-liquid-workspace="" className={`app-shell liquid-glass ${shellStyles.shell} ${polish.shell} ${auroraStyles.workspace}`} aria-busy={busy}>
       <WorkspaceAurora />
       <a className="skip-link" href="#org-main">
         Preskoči na vsebino
@@ -1510,7 +1511,7 @@ function Editor({
       </option>
     ));
   return (
-    <dialog
+    <GlassModal
       className="dialog"
       aria-labelledby="org-editor-title"
       ref={dialog}
@@ -1551,7 +1552,7 @@ function Editor({
               <>
                 <label>
                   Ime projekta
-                  <input
+                  <GlassInput
                     name="name"
                     required
                     maxLength={160}
@@ -1588,7 +1589,7 @@ function Editor({
                   <>
                     <label>
                       Naslov naloge
-                      <input
+                      <GlassInput
                         name="title"
                         disabled={!admin}
                         required
@@ -1638,7 +1639,7 @@ function Editor({
                     </label>
                     <label>
                       Rok
-                      <input
+                      <GlassInput
                         name="due_date"
                         type="date"
                         defaultValue={val("due_date")}
@@ -1666,10 +1667,10 @@ function Editor({
               <>
                 {!edit.data && <label>Član<select name="member_id" defaultValue={s.identity.member_id || ""} required><option value="">Izberi člana</option>{s.members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select></label>}
                 <label>Razlog administrativnega posega<textarea name="reason" maxLength={2000} required /></label>
-                {edit.data && <label><input type="checkbox" name="deleted" defaultChecked={!!d.deleted} /> Odstrani iz seštevkov (revizijska sled ostane)</label>}
+                {edit.data && <label><GlassInput type="checkbox" name="deleted" defaultChecked={!!d.deleted} /> Odstrani iz seštevkov (revizijska sled ostane)</label>}
                 <label>
                   Datum
-                  <input
+                  <GlassInput
                     name="date"
                     type="date"
                     max={ljubljanaDate()}
@@ -1679,7 +1680,7 @@ function Editor({
                 </label>
                 <label>
                   Ure
-                  <input
+                  <GlassInput
                     name="hours"
                     type="number"
                     min="0"
@@ -1768,6 +1769,6 @@ function Editor({
           </fieldset>
         </form>
       </div>
-    </dialog>
+    </GlassModal>
   );
 }

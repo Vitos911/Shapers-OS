@@ -26,3 +26,6 @@
 .form input:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
 @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } .card { padding: 22px; } .hero { padding: 24px; gap: 18px; align-items: flex-start; } .avatar { flex-basis: 64px; width: 64px; height: 64px; font-size: 23px; border-radius: var(--radius); } }
 @media (max-width: 420px) { .hero { flex-direction: column; } .details > div { grid-template-columns: 1fr; gap: 5px; } }
+.hero, .card { background: var(--glass-reflection), var(--glass-bg); border-color: var(--glass-border); border-radius: var(--glass-radius); box-shadow: var(--glass-inset), var(--glass-shadow); -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur)); }
+.avatar { background: rgb(249 225 234 / 85%); color: #a52b43; border: 1px solid #fff; box-shadow: var(--glass-inset); }
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) { .hero, .card { -webkit-backdrop-filter: none; backdrop-filter: none; } }

@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import type { Identity, OrgProject, WorkState } from "../../lib/organization";
+import { GlassBadge, GlassButton, GlassCard, GlassInput } from "../ui/glass";
 import styles from "./live-work-timer.module.css";
 
 type Request = (resource: string, method?: string, body?: unknown, signal?: AbortSignal) => Promise<unknown>;
@@ -69,23 +70,23 @@ export function LiveWorkTimer({ identity, projects, request, onState, onSaved }:
     const form = new FormData(event.currentTarget);
     void command("start", { project_id: form.get("project_id") || null, description: form.get("description") || "" });
   }
-  return <section className={`card ${styles.timer}`} aria-labelledby="live-work-title" aria-busy={busy}>
+  return <GlassCard className={`card ${styles.timer}`} aria-labelledby="live-work-title" aria-busy={busy}>
     <div className={styles.heading}><div><span className={styles.eyebrow}>DELOVNA SEJA</span><h2 id="live-work-title">Časovnik dela</h2></div>
-      <span className={styles.status}>{session?.state === "running" ? "● Delo poteka" : session ? "Ⅱ Premor" : "Pripravljeno"}</span></div>
+      <GlassBadge className={styles.status} data-state={session?.state || "ready"}>{session?.state === "running" ? "● Delo poteka" : session ? "Ⅱ Premor" : "Pripravljeno"}</GlassBadge></div>
     <div className={styles.clock} role="timer" aria-label="Pretečeni čas dela">{clock}</div>
     <p>{session ? `Začetek: ${new Intl.DateTimeFormat("sl-SI", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Ljubljana" }).format(new Date(session.started_at))} · ${session.description || "Brez opisa"}` : "Začni, ko začneš delati. Premori se ne štejejo v opravljene ure."}</p>
     {!identity.member_id ? <p>Za časovnik potrebuješ povezan članski profil.</p> : session ? <div className={styles.actions}>
-      {session.state === "running" ? <button className="button secondary" disabled={disabled} onClick={() => void command("pause")}>PAUSE · Premor</button> : <button className="button primary" disabled={disabled} onClick={() => void command("resume")}>RESUME · Nadaljuj</button>}
-      <button className="button primary" disabled={disabled} onClick={() => void command("stop")}>STOP · Zaključi delo</button>
+      {session.state === "running" ? <GlassButton className="button secondary" disabled={disabled} onClick={() => void command("pause")}>PAUSE · Premor</GlassButton> : <GlassButton className="button primary" disabled={disabled} onClick={() => void command("resume")}>RESUME · Nadaljuj</GlassButton>}
+      <GlassButton className="button primary" disabled={disabled} onClick={() => void command("stop")}>STOP · Zaključi delo</GlassButton>
     </div> : <form onSubmit={start} className={styles.form}>
       <label>Projekt (neobvezno)<select name="project_id" disabled={disabled}><option value="">Brez projekta</option>{projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-      <label>Opis dela<input name="description" maxLength={2000} disabled={disabled} placeholder="Na čem delaš?" /></label>
-      <button className="button primary" disabled={disabled}>START · Začni delo</button>
+      <label>Opis dela<GlassInput name="description" maxLength={2000} disabled={disabled} placeholder="Na čem delaš?" /></label>
+      <GlassButton className="button primary" disabled={disabled}>START · Začni delo</GlassButton>
     </form>}
     {(!connected || uncertain) && <p role="status" className={styles.warning}>{!connected ? "Povezava je prekinjena. Zadnja potrjena seja ostane shranjena na strežniku; prikaz je začasen. Ukazi bodo na voljo po ponovni povezavi." : "Preverjam stanje na strežniku. Dokler stanje ni potrjeno, ukazi niso na voljo."}</p>}
     {error && <p role="alert" className={styles.warning}>{error}</p>}
-    {uncertain && connected && <button className="button secondary" disabled={busy} onClick={() => void read()}>Ponovno preveri stanje</button>}
+    {uncertain && connected && <GlassButton className="button secondary" disabled={busy} onClick={() => void read()}>Ponovno preveri stanje</GlassButton>}
     {notice && <p role="status">{notice}</p>}
     <small>Aktivni čas se v seštevkih prikazuje začasno. Ob zaključku ga nadomesti trajna evidenca. Ročne popravke lahko z razlogom opravi administrator.</small>
-  </section>;
+  </GlassCard>;
 }

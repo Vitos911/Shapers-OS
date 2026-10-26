@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./liquid-glass.css";
 
 export const metadata: Metadata = {
   title: "Shapers OS · Skupaj ustvarjamo spremembe",

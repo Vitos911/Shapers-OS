@@ -162,3 +162,8 @@
     flex-wrap: wrap;
   }
 }
+.project { padding: 26px; }
+.goal { border-radius: 0 14px 14px 0; background: rgb(250 226 234 / 65%); }
+.mine li { background: rgb(255 255 255 / 48%); border-color: var(--glass-border); border-radius: 14px; box-shadow: var(--glass-inset); }
+.handoff { background: #fff4df; border: 1px solid #e9ce9c; border-radius: 12px; }
+@media (max-width: 700px) { .project { padding: 20px; } }
