@@ -27,6 +27,7 @@ await mkdir(output, { recursive: true });
 const now = new Date(), today = ljubljanaDate(now), week = weekStart(today);
 const uuid = n => `10000000-0000-4000-8000-${String(n).padStart(12,"0")}`;
 const checks = [];
+const widths = [375,768,1024,1440,1920];
 try {
   for (const role of ["MEMBER", "ADMIN", "SUPERADMIN"]) {
     const identity = { user_id: uuid(1), member_id: uuid(2), email: "browser@fixture.invalid", role };
@@ -98,9 +99,15 @@ try {
         await page.getByText("Podrobnosti in zgodovina", { exact:true }).click();
         await page.getByRole("heading", { name:"Activity Timeline · zgodovina naloge", exact:true }).waitFor();
       }
-      for(const width of [390,768,1440]) {
+      for(const width of widths) {
         await page.setViewportSize({ width, height:1000 });
+        await page.evaluate(() => window.scrollTo({top:0,behavior:"instant"}));
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth),`${role}/${view}/${width} overflow`);
+        const dock=page.locator('.liquid-glass > header');
+        const geometry=await dock.evaluate(el=>{const r=el.getBoundingClientRect(),s=getComputedStyle(el);return{left:r.left,width:r.width,radius:parseFloat(s.borderRadius),filter:s.backdropFilter};});
+        assert.ok(geometry.left>=10 && geometry.width<=width-20, 'Floating dock must have visible side margins');
+        assert.ok(geometry.radius>=22,'Dock must retain its capsule material');
+        if(width===375 || width===1440) await page.screenshot({path:fileURLToPath(new URL(`glass-${role.toLowerCase()}-${view}-${width}.png`,output)),fullPage:true});
       }
     }
     await page.goto(origin);
@@ -118,7 +125,17 @@ try {
     await page.keyboard.press("Escape");
     await page.screenshot({path:fileURLToPath(new URL(`${role.toLowerCase()}-mobile.png`,output)),fullPage:false});
     assert.deepEqual(errors,[]);
-    checks.push({role,views:role==="MEMBER"?9:11,widths:[390,768,1440],taskSaveReload:true,hoursNavigation:true,adminHoursSave:role!=="MEMBER",history:true,aiFailure:true,mobileKeyboard:true,fixtureMutations:mutations.length});
+    await page.goto(`${origin}/#overview`);await page.getByRole('heading',{name:'Časovnik dela',exact:true}).waitFor();
+    await page.emulateMedia({contrast:'more',reducedMotion:'reduce'});
+    const opaque=await page.locator('.glass-card').first().evaluate(el=>({color:getComputedStyle(el).backgroundColor,filter:getComputedStyle(el).backdropFilter}));
+    assert.equal(opaque.color,'rgb(255, 255, 255)');assert.equal(opaque.filter,'none');
+    await page.emulateMedia({contrast:'no-preference',reducedMotion:'reduce'});
+    if(role==='MEMBER') {
+      const cdp=await context.newCDPSession(page);await cdp.send('Emulation.setCPUThrottlingRate',{rate:4});
+      const started=Date.now();await page.getByRole('button',{name:'Odpri navigacijo',exact:true}).click();await page.getByRole('navigation',{name:'Glavna navigacija'}).waitFor();await page.keyboard.press('Escape');
+      checks.push({cpuThrottle:4,mobileDockInteractionMs:Date.now()-started,simulationOnly:true});await cdp.send('Emulation.setCPUThrottlingRate',{rate:1});await cdp.detach();
+    }
+    checks.push({role,views:role==="MEMBER"?9:11,widths,increasedContrast:true,taskSaveReload:true,hoursNavigation:true,adminHoursSave:role!=="MEMBER",history:true,aiFailure:true,mobileKeyboard:true,fixtureMutations:mutations.length});
     await context.close();
   }
   await writeFile(new URL("results.json",output),JSON.stringify({checks,mode:"browser transport fixtures",hostedWrites:0},null,2));

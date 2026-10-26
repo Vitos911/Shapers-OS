@@ -154,3 +154,39 @@ a.kpi:hover { border-color: var(--border-strong); background: var(--surface-subt
 .progress strong { color: #15803d; }
 .progress progress::-webkit-progress-value { background: var(--hours); }
 .progress progress::-moz-progress-bar { background: var(--hours); }
+/* Shared material, with semantic tints confined to the metric they describe. */
+.glass, .kpis .kpi {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  background: var(--glass-reflection), var(--glass-bg);
+  box-shadow: var(--glass-inset), var(--glass-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.12);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.12);
+}
+.hero { padding: 8px 4px 26px; }
+.kpis { gap: 18px; }
+.kpis .kpi { --kpi-accent: var(--accent-blue); --kpi-tint: rgb(224 234 255 / 60%); padding: 22px; min-height: 184px; border-top: 2px solid var(--kpi-accent); background: linear-gradient(145deg, var(--kpi-tint), transparent 76%), var(--glass-bg); }
+.kpis .kpi:nth-child(1) { --kpi-accent: var(--accent-green); --kpi-tint: rgb(220 249 233 / 65%); }
+.kpis .kpi:nth-child(3) { --kpi-accent: var(--accent-orange); --kpi-tint: rgb(255 239 211 / 70%); }
+.kpis .kpi:nth-child(4) { --kpi-accent: var(--accent-purple); --kpi-tint: rgb(237 224 255 / 65%); }
+.kpis .kpi .kpiHeading svg { color: var(--kpi-accent); }
+.kpis .kpi:nth-child(4) .kpiValue { color: #6b3bbb; }
+.kpiValue, .numbers > div:first-child dd { font-size: 34px; }
+.kpiHeading { color: #485c77; font-size: 13px; }
+.kpi > p { color: var(--muted); font-size: 12px; }
+.numbers dt { font-size: 12px; }
+.numbers dd { font-size: 14px; }
+.meetingValue { font-size: 17px; }
+.card { padding: 24px; }
+.quickActions > * { border-color: var(--glass-border); background: rgb(255 255 255 / 62%); border-radius: 14px; box-shadow: var(--glass-inset); min-height: 48px; }
+.quickActions > *:hover { background: rgb(255 255 255 / 88%); }
+.streakWeeks [data-state="complete"] .streakWeekIcon { background: #8051ce; border-color: #8051ce; }
+.streakWeeks [data-state="pending"] .streakWeekIcon { background: #f3ecff; color: #6b3bbb; border-color: #9470d5; }
+.streakWeeks [aria-current="date"] time { color: #6b3bbb; }
+.streakMilestones [data-achieved="true"] { color: #6b3bbb; background: #f2eaff; border-color: #d1b8f2; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .kpis .kpi { transition: transform 180ms var(--glass-easing), box-shadow 180ms var(--glass-easing); }
+  .kpis .kpi:hover { transform: translateY(-2px); box-shadow: var(--glass-inset), 0 12px 32px #23396e14; }
+}
+@media (max-width: 700px) { .kpis { grid-template-columns: 1fr; gap: 14px; } .kpis .kpi { min-height: 166px; } .card { padding: 20px; } }
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) { .glass, .kpis .kpi { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; } }

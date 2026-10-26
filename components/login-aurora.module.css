@@ -1,13 +1,13 @@
 .frame.frame {
   position: relative;
   isolation: isolate;
-  background: #f5f8ff;
+  background: var(--ambient-background, #f5f8ff);
 }
 
 .workspace.workspace {
   position: relative;
   isolation: isolate;
-  background: #f5f8ff;
+  background: var(--ambient-background, #f5f8ff);
 }
 
 /* Stay behind every workspace view without changing navigation/modal stacking. */
@@ -32,10 +32,10 @@
 
 .frame .card {
   min-width: 0;
-  background: #ffffff;
-  border: 1px solid #dce6f6;
+  background: var(--glass-bg-strong, #fff);
+  border: 1px solid var(--glass-border, #dce6f6);
   border-radius: 24px;
-  box-shadow: 0 16px 48px -16px #243f7024, 0 2px 8px #243f7006;
+  box-shadow: var(--glass-inset), var(--glass-shadow);
 }
 
 .light {
@@ -102,3 +102,6 @@
     transform: none;
   }
 }
+
+/* The ambient material now uses static radial gradients rather than animated blobs. */
+.light { display: none; animation: none; filter: none; }

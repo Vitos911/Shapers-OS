@@ -191,3 +191,21 @@
 .tableWrap tbody [data-own="true"] { background:#e3edff; }
 .achievements [data-earned="true"] { background:#eaf8ef; color:#17643d; border-color:#8bc8a3; }
 .achievements [data-earned="true"][data-badge="on-fire"], .achievements [data-earned="true"][data-badge="unstoppable"] { background:#ffeddc; color:#a6470d; border-color:#e9a66e; }
+.card { background: var(--glass-reflection), var(--glass-bg); border-color: var(--glass-border); box-shadow: var(--glass-inset), var(--glass-shadow); -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur)); }
+.card .performance article { background: rgb(255 255 255 / 46%); border-color: var(--glass-border); border-radius: 18px; box-shadow: var(--glass-inset); }
+.card .performance [data-stat="rank"] { background: linear-gradient(140deg, #fff5daaa, #ffffff55); }
+.card .performance [data-stat="streak"] { background: linear-gradient(140deg, #f1e7ffaa, #ffffff55); }
+.card .fire { color: #6b3bbb; }
+.card .fire svg { animation: none; filter: none; }
+.card [data-stat="streak"] progress::-webkit-progress-value, .card .streakDetails progress::-webkit-progress-value { background: var(--accent-purple); }
+.card [data-stat="streak"] progress::-moz-progress-bar, .card .streakDetails progress::-moz-progress-bar { background: var(--accent-purple); }
+.card .podium li { border-radius: 20px; box-shadow: var(--glass-inset); }
+.card .podium li[data-place="1"] { background: linear-gradient(155deg, #ffedbdc7, #ffffff66); }
+.card .podium li[data-place="2"] { background: linear-gradient(155deg, #e3eaf5cc, #ffffff66); }
+.card .podium li[data-place="3"] { background: linear-gradient(155deg, #f7d9c5bb, #ffffff66); }
+.card .tableWrap { background: rgb(255 255 255 / 40%); border-color: var(--glass-border); border-radius: 16px; }
+.card .tableWrap th { background: rgb(235 241 253 / 88%); }
+.card .tableWrap td { border-color: var(--border); }
+.card .achievements li { border-color: var(--glass-border); background: rgb(255 255 255 / 35%); border-radius: 16px; }
+.card .achievements [data-earned="true"] { background: rgb(239 231 255 / 80%); border-color: #cbb8eb; color: #6b3bbb; }
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) { .card { -webkit-backdrop-filter: none; backdrop-filter: none; } }

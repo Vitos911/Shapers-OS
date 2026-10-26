@@ -1,0 +1,165 @@
+/* One material system, scoped to the organization app and auth surface.
+   Opaque values are the baseline; blur-capable browsers progressively enhance it. */
+.liquid-glass,
+.liquid-glass.app-shell[data-liquid-workspace] {
+  --glass-bg: #f8faff;
+  --glass-bg-strong: #fcfdff;
+  --glass-border: rgb(255 255 255 / 88%);
+  --glass-blur: 20px;
+  --glass-card-blur: 20px;
+  --glass-radius: 22px;
+  --glass-shadow: 0 8px 32px rgb(35 57 110 / 8%), 0 2px 8px rgb(35 57 110 / 4%);
+  --glass-inset: inset 0 1px 0 rgb(255 255 255 / 90%), inset 0 -1px 0 rgb(255 255 255 / 28%);
+  --glass-reflection: linear-gradient(135deg, rgb(255 255 255 / 48%), rgb(255 255 255 / 0%) 54%);
+  --glass-panel: var(--glass-bg);
+  --glass-overlay: var(--glass-bg-strong);
+  --glass-nav: var(--glass-bg-strong);
+  --brand-red: #c7354d;
+  --navy: #192c50;
+  --accent-blue: #466bff;
+  --accent-green: #16b968;
+  --accent-orange: #f59e0b;
+  --accent-purple: #9955ff;
+  --brand: var(--brand-red);
+  --brand-soft: rgb(199 53 77 / 9%);
+  --tasks: var(--accent-blue);
+  --hours: var(--accent-green);
+  --gamification: var(--accent-purple);
+  --warning-accent: var(--accent-orange);
+  --text: var(--navy);
+  --muted: #50617c;
+  --blue: #3154c9;
+  --blue-soft: rgb(70 107 255 / 9%);
+  --success: #137346;
+  --success-soft: #eaf8ef;
+  --warning: #83520c;
+  --danger: #b42640;
+  --surface: var(--glass-bg);
+  --surface-subtle: rgb(242 246 255 / 80%);
+  --surface-hover: rgb(233 239 253 / 90%);
+  --border: rgb(119 143 185 / 23%);
+  --border-strong: #a3b4cf;
+  --radius: var(--glass-radius);
+  --radius-small: 12px;
+  --shadow-dialog: 0 24px 80px rgb(31 49 93 / 19%);
+  --ambient-background: radial-gradient(ellipse at 0% 0%, #d9e9ff 0, transparent 45%), radial-gradient(ellipse at 50% 45%, #e9e3ff 0, transparent 54%), radial-gradient(ellipse at 100% 55%, #ffe7d6 0, transparent 45%), radial-gradient(ellipse at 80% 100%, #f8deeb 0, transparent 48%), #f7f9ff;
+  --glass-easing: cubic-bezier(0.22, 1, 0.36, 1);
+  color: var(--navy);
+  background: var(--ambient-background);
+  background-attachment: fixed;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .liquid-glass,
+  .liquid-glass.app-shell[data-liquid-workspace] {
+    --glass-bg: rgb(255 255 255 / 58%);
+    --glass-bg-strong: rgb(255 255 255 / 82%);
+  }
+}
+
+.liquid-glass :is(.glass-surface, .glass-card, .glass-modal),
+.liquid-glass.app-shell :is(.panel, .org-table-wrap, .personal-calendar) {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  background: var(--glass-reflection), var(--glass-bg);
+  box-shadow: var(--glass-inset), var(--glass-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.12);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.12);
+  color: var(--navy);
+}
+/* A material is blurred once, at its outer boundary. */
+.liquid-glass :is(.glass-card, .panel) :is(.glass-card, .panel) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: rgb(255 255 255 / 50%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 65%);
+}
+.liquid-glass.app-shell .org-main {
+  padding-bottom: 110px;
+  scroll-margin-top: 120px;
+}
+.liquid-glass.app-shell .org-main > .page-heading {
+  padding: 24px 28px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.liquid-glass.app-shell :is(h1, h2, h3, strong) { color: var(--navy); }
+.liquid-glass.app-shell .eyebrow { color: #9f2a40; }
+.liquid-glass.app-shell :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea),
+.liquid-glass .glass-input {
+  min-height: 44px;
+  border: 1px solid #abbcd5;
+  border-radius: var(--radius-small);
+  background: var(--glass-bg-strong);
+  box-shadow: inset 0 1px 2px rgb(255 255 255 / 80%);
+  color: var(--navy);
+}
+.liquid-glass :is(input, textarea)::placeholder { color: #596b86; opacity: 1; }
+.liquid-glass.app-shell :is(.button, .glass-button), .liquid-glass .glass-button {
+  min-height: 44px;
+  border: 1px solid var(--glass-border);
+  border-radius: 13px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 65%), 0 2px 5px rgb(35 57 110 / 4%);
+  transition: background-color 180ms var(--glass-easing), border-color 180ms var(--glass-easing), box-shadow 180ms var(--glass-easing);
+}
+.liquid-glass.app-shell :is(.button.secondary, .glass-button:not(.primary)) { background: rgb(255 255 255 / 65%); color: var(--navy); }
+.liquid-glass.app-shell .button.primary, .liquid-glass .glass-button.primary {
+  color: #fff;
+  border-color: #b83249;
+  background: linear-gradient(165deg, #d03e56, #b82c44);
+  box-shadow: inset 0 1px 0 #ffffff40, 0 5px 14px #a2223a24;
+}
+.liquid-glass.app-shell .button.primary:hover:enabled { background: linear-gradient(165deg, #c5354e, #a8223a); }
+.liquid-glass :is(.glass-badge, .status-badge) { border: 1px solid rgb(255 255 255 / 65%); border-radius: 999px; padding: 4px 9px; }
+.liquid-glass.app-shell .org-filters { padding: 18px; background: rgb(255 255 255 / 38%); border-color: var(--glass-border); border-radius: 18px; }
+.liquid-glass.app-shell .org-table-wrap table { background: transparent; font-variant-numeric: tabular-nums; }
+.liquid-glass.app-shell .org-table-wrap :is(th, td) { border-bottom: 1px solid rgb(109 136 175 / 17%); }
+.liquid-glass.app-shell .org-table-wrap th { background: rgb(235 241 253 / 87%); color: #344c72; }
+.liquid-glass.app-shell .org-table-wrap tbody tr:nth-child(even) { background: rgb(255 255 255 / 28%); }
+.liquid-glass.app-shell .org-table-wrap tbody tr:hover { background: rgb(227 237 255 / 72%); }
+.liquid-glass.app-shell .dialog, .liquid-glass .glass-modal {
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border);
+  border-radius: 26px;
+  box-shadow: var(--glass-inset), var(--shadow-dialog);
+}
+.liquid-glass dialog::backdrop { background: rgb(25 44 80 / 24%); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); }
+.liquid-glass.app-shell :is(.info-banner, .error-banner) { border-radius: 14px; line-height: 1.6; }
+.liquid-glass.app-shell .info-banner { background: rgb(233 241 255 / 92%); color: #274d8f; border-color: #afc7ef; }
+.liquid-glass.app-shell .error-banner { background: #fff0f3; color: #99243a; border-color: #e6a6b3; }
+.liquid-glass :focus-visible { outline: 3px solid #345bd9; outline-offset: 3px; }
+.liquid-glass :is(button:disabled, input:disabled, select:disabled) { cursor: not-allowed; }
+.liquid-glass.app-shell .page-footer { margin-bottom: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .liquid-glass dialog[open] { animation: glass-appear 230ms var(--glass-easing); }
+  @keyframes glass-appear { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+}
+@media (max-width: 700px) {
+  .liquid-glass { background-attachment: scroll; }
+  .liquid-glass.app-shell .org-main { padding: 20px 16px 100px; }
+  .liquid-glass.app-shell .org-main > .page-heading { padding: 10px 4px 18px; }
+  .liquid-glass.app-shell :is(input, select, textarea) { font-size: 16px; }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .liquid-glass,
+  .liquid-glass.app-shell[data-liquid-workspace] {
+    --glass-bg: #fff;
+    --glass-bg-strong: #fff;
+    --glass-border: #7387a7;
+    --glass-blur: 0px;
+    --glass-card-blur: 0px;
+    --glass-shadow: none;
+    --glass-reflection: none;
+    --surface-subtle: #f1f4fa;
+    --surface-hover: #e6edf9;
+    --ambient-background: #f3f6fc;
+  }
+  .liquid-glass :is(.glass-surface, .glass-card, .glass-modal, dialog),
+  .liquid-glass.app-shell :is(.panel, .org-table-wrap, .personal-calendar),
+  .liquid-glass dialog::backdrop {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
