@@ -34,7 +34,7 @@
 .shell :global(.sidebar-bottom) { padding: 24px 4px 0; }
 .shell :global(.sidebar-bottom > small) { display: block; margin-bottom: 12px; font-size: 12px; overflow-wrap: anywhere; }
 .shell :global(.sidebar-bottom .button) { width: 100%; }
-.shell :global(.main-shell) { margin-left: 232px; width: calc(100% - 232px); }
+.shell :global(.main-shell) { margin-left: 0; width: 100%; }
 .shell :global(.topbar) { height: auto; min-height: 68px; padding: 12px 32px; background: var(--polish-glass); gap: 16px; }
 .shell :global(.topbar > span) { min-width: 0; flex: 1; overflow-wrap: anywhere; font-size: 13px; color: var(--muted); }
 .shell :global(.topbar > .button) { flex-shrink: 0; }

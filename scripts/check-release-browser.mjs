@@ -113,8 +113,8 @@ try {
     assert.equal(await page.getByRole("button", { name:"Ask Shaper", exact:true }).evaluate(el=>el===document.activeElement),true);
     await page.setViewportSize({width:390,height:900});
     await page.getByRole("button", { name:"Odpri navigacijo", exact:true }).click();
-    await page.getByRole("dialog", {name:"Navigacija organizacije"}).waitFor();
-    assert.equal(await page.locator(".main-shell").evaluate(el=>el.inert),true);
+    await page.getByRole("navigation", {name:"Glavna navigacija"}).waitFor();
+    assert.equal(await page.getByRole("button", {name:"Zapri navigacijo",exact:true}).getAttribute("aria-expanded"),"true");
     await page.keyboard.press("Escape");
     await page.screenshot({path:fileURLToPath(new URL(`${role.toLowerCase()}-mobile.png`,output)),fullPage:false});
     assert.deepEqual(errors,[]);

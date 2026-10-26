@@ -24,3 +24,29 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:browser
+  collaboration-sql:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: isolated-test-only
+          POSTGRES_DB: shapers_evolution_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+      - run: npm install --prefix "$RUNNER_TEMP/shapers-sql" pg@8.16.3
+      - run: node scripts/check-project-collaboration.mjs
+        env:
+          COLLABORATION_DATABASE_URL: postgres://postgres:isolated-test-only@127.0.0.1:5432/shapers_evolution_test
+          PG_MODULE: ${{ runner.temp }}/shapers-sql/node_modules/pg/lib/index.js

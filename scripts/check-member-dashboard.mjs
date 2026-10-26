@@ -67,16 +67,12 @@ try {
         await trigger.click();
         await visible(page.getByRole("navigation", { name: "Glavna navigacija" }));
         assert.equal(await trigger.getAttribute("aria-expanded"), "true");
-        await page.keyboard.press("Shift+Tab");
-        assert.equal(await page.evaluate(() => document.activeElement?.textContent?.trim()), "Odjava");
-        await page.keyboard.press("Tab");
-        assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("aria-label")), "Zapri navigacijo");
         await page.keyboard.press("Escape");
         assert.equal(await trigger.getAttribute("aria-expanded"), "false");
         assert.equal(await trigger.evaluate((el) => el === document.activeElement), true);
         await trigger.click();
-        await page.getByRole("navigation", { name: "Glavna navigacija" }).getByRole("link", { name: "Moje naloge", exact: true }).click();
-        await visible(page.getByRole("heading", { name: "Moje naloge", exact: true }));
+        await page.getByRole("navigation", { name: "Glavna navigacija" }).getByRole("link", { name: "Naloge", exact: true }).click();
+        await visible(page.getByRole("heading", { name: "Naloge", exact: true }));
         await page.goto(origin);
         await visible(page.locator("#dashboard-welcome"));
       }
@@ -89,13 +85,13 @@ try {
     assert.equal((await (await refreshed).json()).identity.member_id, me.id);
     await page.reload();
     await visible(page.locator("#dashboard-welcome"));
-    for (const [link, heading] of [["Moje naloge", "Moje naloge"], ["Sestanki", "Sestanki"], ["Moja prisotnost", "Prisotnost"]]) {
+    for (const [link, heading] of [["Moje naloge", "Naloge"], ["Sestanki", "Sestanki"], ["Moja prisotnost", "Prisotnost"]]) {
       await page.getByRole("region", { name: "Hitri dostop" }).getByRole("link", { name: link, exact: true }).click();
       await visible(page.getByRole("heading", { name: heading, exact: true }));
       await page.goto(origin);
       await visible(page.locator("#dashboard-welcome"));
     }
-    checks.push(`${role}: real login, snapshot, own hours, role navigation, reload; 390/768/1440; mobile focus trap/Escape/navigation; hours form opened`);
+    checks.push(`${role}: real login, snapshot, own hours, role navigation, reload; 390/768/1440; mobile disclosure/Escape/navigation; hours form opened`);
 
     if (role === "MEMBER") {
       await context.unroute("**/api/org/**");

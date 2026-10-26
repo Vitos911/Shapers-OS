@@ -5,7 +5,7 @@ import { PGlite } from "@electric-sql/pglite";
 
 const directory = new URL("../supabase/migrations/", import.meta.url);
 const files = (await readdir(directory)).filter(name => name.endsWith(".sql")).sort();
-const pending = new Set(["20261024144936", "20261025085526", "20261025102503", "20261025102948", "20261025120000"]);
+const pending = new Set(["20261024144936", "20261025085526", "20261025102503", "20261025102948", "20261025120000", "20261025195203", "20261025195204"]);
 const signatures = [];
 for (const path of ["fresh", "existing-production-order"]) {
   const db = new PGlite();
@@ -38,7 +38,7 @@ for (const path of ["fresh", "existing-production-order"]) {
       (select jsonb_agg(jsonb_build_object('name',policyname,'qual',qual,'check',with_check) order by policyname)
        from pg_policies where schemaname='public' and tablename='org_tasks') as task_policies`);
     signatures.push(signature.rows);
-    for (const suite of ["history_audit.sql", "release_integration.sql", "leaderboard.sql", "leaderboard_v2.sql"]) {
+    for (const suite of ["history_audit.sql", "release_integration.sql", "leaderboard.sql", "leaderboard_v2.sql", "project_collaboration.sql"]) {
       try { await db.exec(await readFile(new URL(`../supabase/tests/${suite}`, import.meta.url), "utf8")); }
       catch (error) { throw new Error(`${path}: ${suite}: ${error.message}; ${error.where || ""}`, { cause: error }); }
     }

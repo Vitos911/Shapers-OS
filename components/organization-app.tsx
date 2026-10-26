@@ -9,9 +9,9 @@ import {
   type ReactNode,
 } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import Link from "next/link";
+import ProjectDiscovery, { ClaimableTasks, MyProjects } from "./project-discovery";
+import TopNavigation from "./top-navigation";
 import PersonalCalendar from "./personal-calendar";
-import BrandLogo from "./brand-logo";
 import UserProfile from "./user-profile";
 import Leaderboard from "./leaderboard";
 import { ownProfile } from "@/lib/user-profile";
@@ -35,10 +35,8 @@ import {
   CalendarDays,
   Users,
   Settings2,
-  LogOut,
-  RefreshCw,
   Plus,
-  Menu,
+  RefreshCw,
   X,
   BarChart3,
   ClipboardCheck,
@@ -98,10 +96,10 @@ type Access = {
 };
 const nav = [
   ["overview", "Pregled", LayoutDashboard],
-  ["leaderboard", "Leaderboard", Trophy],
-  ["tasks", "Moje naloge", CheckSquare],
+  ["leaderboard", "Lestvica", Trophy],
+  ["tasks", "Naloge", CheckSquare],
   ["projects", "Projekti", FolderKanban],
-  ["hours", "Prostovoljske ure", Clock3],
+  ["hours", "Ure", Clock3],
   ["meetings", "Sestanki", CalendarDays],
   ["attendance", "Prisotnost", ClipboardCheck],
   ["members", "Člani", Users],
@@ -188,7 +186,6 @@ export default function OrganizationApp({
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
-    [menu, setMenu] = useState(false),
     [edit, setEdit] = useState<Edit | null>(null),
     [access, setAccess] = useState<Access[]>([]);
   const [project, setProject] = useState(""),
@@ -206,34 +203,6 @@ export default function OrganizationApp({
     [attendanceTo, setAttendanceTo] = useState(""),
     [attendancePast, setAttendancePast] = useState(false);
   const [now, setNow] = useState(() => Date.now());
-  const navigation = useRef<HTMLElement>(null);
-  const menuButton = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (!menu) return;
-    const previousOverflow = document.body.style.overflow;
-    const trigger = menuButton.current;
-    document.body.style.overflow = "hidden";
-    const panel = navigation.current;
-    const controls = () => Array.from(panel?.querySelectorAll<HTMLElement>("a[href], button:not(:disabled)") || []);
-    controls()[0]?.focus();
-    const keydown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { event.preventDefault(); setMenu(false); }
-      if (event.key === "Tab") {
-        const items = controls(), first = items[0], last = items.at(-1);
-        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
-        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
-      }
-    };
-    const resize = () => { if (window.innerWidth > 1000) setMenu(false); };
-    document.addEventListener("keydown", keydown);
-    window.addEventListener("resize", resize);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", keydown);
-      window.removeEventListener("resize", resize);
-      trigger?.focus();
-    };
-  }, [menu]);
   async function signOut() {
     try {
       await onSignOut();
@@ -305,7 +274,6 @@ export default function OrganizationApp({
     const read = () => {
       const hash = location.hash.slice(1);
       setView(nav.some((v) => v[0] === hash) ? (hash as View) : "overview");
-      setMenu(false);
     };
     read();
     window.addEventListener("hashchange", read);
@@ -587,95 +555,13 @@ export default function OrganizationApp({
       <a className="skip-link" href="#org-main">
         Preskoči na vsebino
       </a>
-      {menu && (
-        <button
-          className="sidebar-backdrop"
-          aria-label="Zapri navigacijo"
-          onClick={() => setMenu(false)}
-        />
-      )}
-      <aside ref={navigation} id="org-navigation" className={"sidebar" + (menu ? " is-open" : "")} aria-label="Navigacija organizacije" role={menu ? "dialog" : undefined} aria-modal={menu || undefined}>
-        <button className={shellStyles.close} aria-label="Zapri navigacijo" onClick={() => setMenu(false)}><X size={20} /></button>
-        <Link className="brand brand-logo-link" href="/">
-          <BrandLogo />
-          <span className={shellStyles.wordmark}>Shapers <span>OS</span></span>
-        </Link>
-        <div className="org-hub">
-          <strong>{s.settings.name}</strong>
-          <small>{actor.role}</small>
-        </div>
-        <nav aria-label="Glavna navigacija">
-          <span className={shellStyles.navHeading}>Delovni prostor</span>
-          {nav
-            .filter((v) => v[0] !== "profile" && (admin || !["analytics", "members"].includes(v[0])))
-            .map(([id, label, Icon]) => (
-              <a
-                className={"nav-link" + (view === id ? " active" : "")}
-                aria-current={view === id ? "page" : undefined}
-                key={id}
-                href={"#" + id}
-                onClick={() => setMenu(false)}
-              >
-                <Icon size={18} aria-hidden="true" />
-                {label}
-              </a>
-            ))}
-        </nav>
-        <div className="sidebar-bottom">
-          <a className={shellStyles.footerProfile} href="#profile" aria-label="Moj profil" aria-current={view === "profile" ? "page" : undefined}>
-            <span className={shellStyles.avatar} aria-hidden="true">{profile?.initials || "?"}</span>
-            <span><strong>{profile?.name || actor.email}</strong><span>{me ? `Shapers ${me.tier}` : actor.role}</span></span>
-          </a>
-          <small>{user.email}</small>
-          <button className="button secondary" onClick={() => void signOut()}>
-            <LogOut size={16} />
-            Odjava
-          </button>
-        </div>
-      </aside>
-      <div className="main-shell" inert={menu}>
+      <TopNavigation snapshot={s} view={view} name={profile?.name || actor.email} initials={profile?.initials || "?"} busy={busy} signOut={() => void signOut()} refresh={() => {
+        setBusy(true);
+        void refresh().then(() => { setError(""); setNotice("Podatki so osveženi iz Supabase."); }).catch(e => setError(e.message)).finally(() => setBusy(false));
+      }} />
+      <div className="main-shell">
         <AskShaper key={user.id} client={client} admin={admin} />
-        <header className="topbar">
-          <button
-            className="button secondary org-menu"
-            ref={menuButton}
-            aria-label="Odpri navigacijo"
-            aria-expanded={menu}
-            aria-controls="org-navigation"
-            onClick={() => setMenu(!menu)}
-          >
-            <Menu size={18} />
-          </button>
-          <span className={shellStyles.breadcrumb}>
-            Shapers OS <span aria-hidden="true">/</span> <strong>{nav.find((v) => v[0] === view)?.[1]}</strong>
-          </span>
-          <span className={shellStyles.week}><CalendarDays size={14} aria-hidden="true" />Teden od {date(weekStart(ljubljanaDate(new Date(now))))}</span>
-          <button
-            className="button secondary"
-            aria-label="Osveži podatke iz baze"
-            disabled={busy}
-            onClick={async () => {
-              setBusy(true);
-              try {
-                await refresh();
-                setError("");
-                setNotice("Podatki so osveženi iz Supabase.");
-              } catch (e) {
-                setError((e as Error).message);
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            <RefreshCw size={15} />
-            Osveži iz baze
-          </button>
-          <a className={shellStyles.profile} href="#profile" aria-label="Odpri moj profil" aria-current={view === "profile" ? "page" : undefined}>
-            <span className={shellStyles.avatar} aria-hidden="true">{profile?.initials || "?"}</span>
-            <div><strong>{profile?.name || actor.email}</strong><small>{me ? `Shapers ${me.tier}` : "Moj profil"}</small></div>
-          </a>
-        </header>
-        <main id="org-main" className="org-main">
+        <main id="org-main" className="org-main" tabIndex={-1}>
           {view !== "overview" && <div className="page-heading">
             <span className="eyebrow">{String(nav.findIndex((v) => v[0] === view) + 1).padStart(2, "0")} — DELOVNI PROSTOR</span>
             <h1>
@@ -709,6 +595,8 @@ export default function OrganizationApp({
                 onLogHours={() => { location.hash = "hours"; }}
                 onComplete={(task) => { void action("tasks", "PATCH", { id: task.id, status: "done" }); }}
               />
+              <MyProjects snapshot={s} />
+              <ClaimableTasks snapshot={s} busy={busy} action={action} />
 
               {admin && metrics && <>
                 {filters}
@@ -736,110 +624,10 @@ export default function OrganizationApp({
               <PersonalCalendar key={user.id} client={client} />
             </>
           )}
-          {view === "projects" && (
-            <>
-              <div className="org-actions">
-                {admin && (
-                  <button
-                    className="button primary"
-                    disabled={busy}
-                    onClick={() => setEdit({ kind: "projects" })}
-                  >
-                    <Plus size={16} />
-                    Nov projekt
-                  </button>
-                )}
-              </div>
-              <div className="org-cards">
-                {s.projects.map((p) => (
-                  <Card key={p.id} title={p.name}>
-                    <span className="status-badge" data-status={p.status}>{labels[p.status]}</span>
-                    <p>{p.description || "Brez opisa."}</p>
-                    <small>
-                      Ustvarjeno {date(p.created_at)} · posodobljeno{" "}
-                      {date(p.updated_at)}
-                    </small>
-                    {admin && (
-                      <>
-                        <div className="org-actions">
-                          <button
-                            className="button secondary"
-                            onClick={() =>
-                              setEdit({ kind: "projects", data: p })
-                            }
-                          >
-                            Uredi projekt
-                          </button>
-                          <button
-                            className="button secondary"
-                            disabled={busy}
-                            onClick={() => {
-                              if (confirm(`Arhiviram projekt »${p.name}«?`))
-                                void action("projects", "PATCH", {
-                                  id: p.id,
-                                  status: "archived",
-                                });
-                            }}
-                          >
-                            Arhiviraj
-                          </button>
-                        </div>
-                        <h3>Člani projekta</h3>
-                        <ul>
-                          {s.projectMembers
-                            .filter((m) => m.project_id === p.id)
-                            .map((m) => (
-                              <li key={m.member_id}>
-                                {memberName(m.member_id)}{" "}
-                                <button
-                                  className="cloud-text-button"
-                                  disabled={busy}
-                                  onClick={() =>
-                                    void action("project-members", "POST", {
-                                      project_id: p.id,
-                                      member_id: m.member_id,
-                                      remove: true,
-                                    })
-                                  }
-                                >
-                                  Odstrani dodelitev
-                                </button>
-                              </li>
-                            ))}
-                        </ul>
-                        <form
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            void action("project-members", "POST", {
-                              project_id: p.id,
-                              member_id: new FormData(e.currentTarget).get(
-                                "member_id",
-                              ),
-                            });
-                          }}
-                        >
-                          <label>
-                            Dodeli člana
-                            <select name="member_id" required>
-                              {memberOptions}
-                            </select>
-                          </label>
-                          <button className="button secondary" disabled={busy}>
-                            Dodeli projektu
-                          </button>
-                        </form>
-                      </>
-                    )}
-                  </Card>
-                ))}
-              </div>
-              {!s.projects.length && (
-                <Empty>Ni projektov. Prvi projekt ustvari administrator.</Empty>
-              )}
-            </>
-          )}
+          {view === "projects" && <ProjectDiscovery snapshot={s} busy={busy} action={action} edit={(data) => setEdit({ kind: "projects", data })} />}
           {view === "tasks" && (
             <>
+              <ClaimableTasks snapshot={s} busy={busy} action={action} />
               <div className="org-actions">
                 <label>Iskanje nalog<input type="search" value={taskSearch} onChange={e => setTaskSearch(e.target.value)} /></label>
                 {admin && (
@@ -1705,6 +1493,7 @@ function Editor({
       data: Record<string, unknown> = {};
     for (const [k, v] of f.entries()) data[k] = String(v);
     if ("hours" in data) data.hours = Number(data.hours);
+    if (kind === "tasks" && admin && "claimable" in data) data.claimable = data.claimable === "true";
     if (data.project_id === "") data.project_id = null;
     if (data.assignee_id === "") data.assignee_id = null;
     if (data.due_date === "") data.due_date = null;
@@ -1777,6 +1566,11 @@ function Editor({
                     defaultValue={val("description")}
                   />
                 </label>
+                {s.collaboration?.ready !== false && <>
+                <label>Cilj projekta<textarea name="goal" maxLength={2000} defaultValue={val("goal")} /></label>
+                <label>Vidnost<select name="visibility" defaultValue={val("visibility", "private")}><option value="private">Zasebni — samo pooblaščeni</option><option value="organization">Viden članom organizacije</option></select></label>
+                <label>Pridružitev<select name="join_policy" defaultValue={val("join_policy", "closed")}><option value="closed">Samo s povabilom</option><option value="open">Odprta pridružitev</option><option value="approval">Z odobritvijo administratorja</option></select></label>
+                </>}
                 <label>
                   Status
                   <select
@@ -1832,6 +1626,7 @@ function Editor({
                         ))}
                       </select>
                     </label>
+                    {s.collaboration?.ready !== false && <label>Prevzem naloge<select name="claimable" defaultValue={val("claimable", "false")}><option value="false">Ni na voljo za prevzem</option><option value="true">Na voljo za prevzem (nedodeljena, Začeti)</option></select></label>}
                     <label>
                       Prednost
                       <select

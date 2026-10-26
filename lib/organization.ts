@@ -22,6 +22,9 @@ export type OrgProject = {
   status: string;
   created_at: string;
   updated_at: string;
+  visibility?: "private" | "organization";
+  join_policy?: "open" | "approval" | "closed";
+  goal?: string;
 };
 export type OrgTask = {
   id: string;
@@ -34,6 +37,7 @@ export type OrgTask = {
   due_date: string | null;
   archived: boolean;
   completed_at: string | null;
+  claimable?: boolean;
   updated_at: string;
 };
 export type WorkEntry = {
@@ -105,6 +109,7 @@ export type TaskHistory = {
   changes: { before?: Partial<OrgTask> | null; after?: Partial<OrgTask> };
 };
 export type Snapshot = {
+  collaboration?: { ready: boolean };
   identity: Identity;
   members: OrgMember[];
   projects: OrgProject[];
@@ -115,6 +120,10 @@ export type Snapshot = {
   attendance: Attendance[];
   history: TaskHistory[];
   projectMembers: { project_id: string; member_id: string }[];
+  projectDirectory?: { project_id: string; member_id: string; name: string }[];
+  projectProgress?: { project_id: string; total: number; done: number }[];
+  joinRequests?: { id: string; project_id: string; member_id: string; status: string }[];
+  membershipHistory?: { id: string; project_id: string; member_id: string; actor_id: string; action: string; occurred_at: string }[];
   taskDirectory: { id: string; name: string; project_id: string }[];
   meetingMembers: { meeting_id: string; member_id: string }[];
   settings: { name: string; calendar_id: string; timezone: string };

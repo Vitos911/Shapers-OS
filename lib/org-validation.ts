@@ -31,8 +31,15 @@ export function fields(
       name: (v) => text(v, 160, true),
       description: (v) => text(v, 5000),
       status: (v) => choice(v, ["planning", "active", "done", "archived"]),
+      visibility: (v) => choice(v, ["private", "organization"]),
+      join_policy: (v) => choice(v, ["open", "approval", "closed"]),
+      goal: (v) => text(v, 2000),
     },
     tasks: {
+      claimable: (v) => {
+        if (typeof v !== "boolean") throw new InputError("Neveljavno stanje prevzema.");
+        return v;
+      },
       project_id: uuid,
       title: (v) => text(v, 200, true),
       description: (v) => text(v, 5000),
