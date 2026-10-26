@@ -6,7 +6,14 @@
 }
 
 :root {
-  --canvas: #fff;
+  --canvas: #f7f8fa;
+  --brand: #bc3046;
+  --brand-soft: #fceef1;
+  --tasks: #2563eb;
+  --hours: #16a34a;
+  --gamification: #8b5cf6;
+  --warning-accent: #f59e0b;
+  --error: #dc2626;
   --surface: #fff;
   --surface-subtle: #f7f7f6;
   --surface-hover: #f0f1f3;
@@ -2114,3 +2121,14 @@ input::placeholder, textarea::placeholder { color: #61748e; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+/* Palette roles: brand for primary actions, semantic accents for data only. */
+.org-main .button.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+.org-main .button.primary:hover { background: #9f263a; }
+.org-main table tbody tr:hover { background: #f7f8fa; }
+.org-main table th { color: #4b5563; background: #f4f5f7; }
+.org-main progress { accent-color: var(--tasks); }
+.org-main .status-badge[data-status="done"] { color: #166534; background: #dcfce7; }
+.org-main .status-badge[data-status="active"], .org-main .status-badge[data-status="in_progress"] { color: #1d4ed8; background: #eff6ff; }
+.org-main .status-badge[data-status="planning"] { color: #854d0e; background: #fef9c3; }
+.org-main .status-badge[data-priority="urgent"] { color: #b91c1c; background: #fee2e2; }
+.org-main .status-badge[data-priority="high"] { color: #92400e; background: #fef3c7; }

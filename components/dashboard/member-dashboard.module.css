@@ -142,3 +142,15 @@ a.kpi:hover { border-color: var(--border-strong); background: var(--surface-subt
 .deadline[data-overdue="true"] { color:#ad2727; background:#fff1ef; border-radius:7px; padding:5px 8px; }
 .calendarIcon { background:#fff6e3; border-color:#eed5a3; }
 .calendarIcon strong { color:#80540c; }
+/* Data accents keep color meaningful while surfaces stay neutral. */
+.kpis > :nth-child(1) { border-top: 3px solid var(--hours); }
+.kpis > :nth-child(2) { border-top: 3px solid var(--tasks); }
+.kpis > :nth-child(3) { border-top: 3px solid var(--warning-accent); }
+.kpis > :nth-child(4) { border-top: 3px solid var(--gamification); }
+.kpis > :nth-child(1) .kpiHeading svg { color: #15803d; }
+.kpis > :nth-child(2) .kpiHeading svg { color: var(--tasks); }
+.kpis > :nth-child(4) .kpiHeading svg { color: #7c3aed; }
+.sectionLabel { color: var(--brand); }
+.progress strong { color: #15803d; }
+.progress progress::-webkit-progress-value { background: var(--hours); }
+.progress progress::-moz-progress-bar { background: var(--hours); }
