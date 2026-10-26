@@ -50,6 +50,14 @@ const adapter=createServer(async(req,res)=>{
           if(resource==='org_audit')sql+=" where entity='org_work_entries' order by occurred_at desc limit 100";
           send((await query(sql)).rows);return;
         }
+        if(resource==='org_tasks' && req.method==='PATCH') {
+          const keys=Object.keys(body);assert.ok(keys.every(k=>['status','description','priority','due_date','assignee_id','archived','claimable','title','project_id'].includes(k)));
+          const params=new URL(req.url,'http://local').searchParams;
+          const id=params.get('id')?.replace(/^eq\./,''), updated=params.get('updated_at')?.replace(/^eq\./,'');
+          const args=keys.map(k=>body[k]);args.push(id,updated);
+          const result=await query(`update public.org_tasks set ${keys.map((k,i)=>k+'=$'+(i+1)).join(',')} where id=$${keys.length+1} and updated_at=$${keys.length+2} returning *`,args);
+          send(result.rows[0] || {code:'PGRST116',message:'No matching row'},result.rows.length?200:406);return;
+        }
         if(resource==='org_work_entries' && req.method==='POST') {
           await query('insert into public.org_work_entries(member_id,date,hours) values($1,$2,$3)',[body.member_id,body.date,body.hours]);send({});return;
         }
