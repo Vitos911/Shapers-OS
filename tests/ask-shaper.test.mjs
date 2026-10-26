@@ -331,17 +331,17 @@ test("Groq uses its fixed endpoint, strict schema and provider-specific request 
   const d = deps(plan("hours"));
   const ai = provider(plan("hours"), undefined, true);
   d.options.fetcher = ai.fetcher;
-  d.options.env = { SHAPER_AI_PROVIDER: "groq", SHAPER_AI_API_KEY: "fixture-groq-key" };
+  d.options.env = { SHAPER_AI_PROVIDER: "groq", SHAPER_AI_API_KEY: "gsk_fixture_groq_key" };
   const result = await askShaper(request(), d.options), body = await result.json();
   assert.equal(result.status, 200);
   assert.match(body.answer, /2,5 h/);
   assert.equal(ai.calls.length, 2);
   assert.ok(ai.calls.every(c => c.model === "openai/gpt-oss-20b"));
-  assert.doesNotMatch(JSON.stringify(body), /fixture-groq-key/);
+  assert.doesNotMatch(JSON.stringify(body), /gsk_fixture_groq_key/);
 });
 
 test("Groq key prefix and conventional GROQ_API_KEY alias select Groq automatically", async () => {
-  for (const env of [{ SHAPER_AI_API_KEY: "gsk_fixture_only" }, { GROQ_API_KEY: "fixture-groq-key" }, { SHAPER_AI_PROVIDER: "groq", GROQ_API_KEY: "fixture-groq-key" }]) {
+  for (const env of [{ SHAPER_AI_API_KEY: "gsk_fixture_only" }, { GROQ_API_KEY: "gsk_fixture_groq_key" }, { SHAPER_AI_PROVIDER: "groq", GROQ_API_KEY: "gsk_fixture_groq_key" }]) {
     const d = deps(plan("hours"));
     d.options.env = env; d.options.fetcher = provider(plan("hours"), undefined, true).fetcher;
     assert.equal((await askShaper(request(), d.options)).status, 200);
@@ -365,14 +365,14 @@ test("unknown providers and mismatched key/provider fail before any network or d
 test("Groq preserves MEMBER isolation even with hostile planner output", async () => {
   const p = plan("hours", { scope: "member", memberName: "Član Dva" });
   const d = deps(p), ai = provider(p, undefined, true);
-  d.options.env = { GROQ_API_KEY: "fixture-groq-key" }; d.options.fetcher = ai.fetcher;
+  d.options.env = { GROQ_API_KEY: "gsk_fixture_groq_key" }; d.options.fetcher = ai.fetcher;
   assert.equal((await askShaper(request(), d.options)).status, 403);
   assert.equal(d.db.calls.length, 0); assert.equal(ai.calls.length, 1);
 });
 
 test("Groq cannot add invented numeric answers or omit required evidence", async () => {
   const d = deps(plan("hours"));
-  d.options.env = { GROQ_API_KEY: "fixture-groq-key" };
+  d.options.env = { GROQ_API_KEY: "gsk_fixture_groq_key" };
   d.options.fetcher = provider(plan("hours"), () => ({ lead: "result", evidenceIds: [], answer: "999 h" }), true).fetcher;
   const result = await askShaper(request(), d.options), body = await result.json();
   assert.equal(result.status, 502); assert.doesNotMatch(JSON.stringify(body), /999/);
@@ -380,7 +380,7 @@ test("Groq cannot add invented numeric answers or omit required evidence", async
 
 test("Groq supports an explicit compatible model override for both calls", async () => {
   const d = deps(plan("hours")), ai = provider(plan("hours"), undefined, true);
-  d.options.env = { GROQ_API_KEY: "fixture-groq-key", SHAPER_AI_MODEL: "openai/gpt-oss-120b" };
+  d.options.env = { GROQ_API_KEY: "gsk_fixture_groq_key", SHAPER_AI_MODEL: "openai/gpt-oss-120b" };
   d.options.fetcher = ai.fetcher;
   assert.equal((await askShaper(request(), d.options)).status, 200);
   assert.ok(ai.calls.every(c => c.model === "openai/gpt-oss-120b"));
@@ -388,8 +388,8 @@ test("Groq supports an explicit compatible model override for both calls", async
 
 test("Groq HTTP failures do not disclose provider bodies or credentials", async () => {
   const d = deps(plan("hours"));
-  d.options.env = { GROQ_API_KEY: "fixture-groq-key" };
-  d.options.fetcher = async () => new Response("fixture-groq-key private error", { status: 401 });
+  d.options.env = { GROQ_API_KEY: "gsk_fixture_groq_key" };
+  d.options.fetcher = async () => new Response("gsk_fixture_groq_key private error", { status: 401 });
   const result = await askShaper(request(), d.options), body = await result.json();
-  assert.equal(result.status, 502); assert.doesNotMatch(JSON.stringify(body), /fixture-groq-key|private error/);
+  assert.equal(result.status, 502); assert.doesNotMatch(JSON.stringify(body), /gsk_fixture_groq_key|private error/);
 });
