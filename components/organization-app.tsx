@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import ProjectDiscovery, { MyProjects } from "./project-discovery";
 import TopNavigation from "./top-navigation";
 import PersonalCalendar from "./personal-calendar";
 import UserProfile from "./user-profile";
@@ -594,6 +595,7 @@ export default function OrganizationApp({
                 onLogHours={() => { location.hash = "hours"; }}
                 onComplete={(task) => { void action("tasks", "PATCH", { id: task.id, status: "done" }); }}
               />
+              <MyProjects snapshot={s} />
 
               {admin && metrics && <>
                 {filters}
@@ -621,108 +623,7 @@ export default function OrganizationApp({
               <PersonalCalendar key={user.id} client={client} />
             </>
           )}
-          {view === "projects" && (
-            <>
-              <div className="org-actions">
-                {admin && (
-                  <button
-                    className="button primary"
-                    disabled={busy}
-                    onClick={() => setEdit({ kind: "projects" })}
-                  >
-                    <Plus size={16} />
-                    Nov projekt
-                  </button>
-                )}
-              </div>
-              <div className="org-cards">
-                {s.projects.map((p) => (
-                  <Card key={p.id} title={p.name}>
-                    <span className="status-badge" data-status={p.status}>{labels[p.status]}</span>
-                    <p>{p.description || "Brez opisa."}</p>
-                    <small>
-                      Ustvarjeno {date(p.created_at)} · posodobljeno{" "}
-                      {date(p.updated_at)}
-                    </small>
-                    {admin && (
-                      <>
-                        <div className="org-actions">
-                          <button
-                            className="button secondary"
-                            onClick={() =>
-                              setEdit({ kind: "projects", data: p })
-                            }
-                          >
-                            Uredi projekt
-                          </button>
-                          <button
-                            className="button secondary"
-                            disabled={busy}
-                            onClick={() => {
-                              if (confirm(`Arhiviram projekt »${p.name}«?`))
-                                void action("projects", "PATCH", {
-                                  id: p.id,
-                                  status: "archived",
-                                });
-                            }}
-                          >
-                            Arhiviraj
-                          </button>
-                        </div>
-                        <h3>Člani projekta</h3>
-                        <ul>
-                          {s.projectMembers
-                            .filter((m) => m.project_id === p.id)
-                            .map((m) => (
-                              <li key={m.member_id}>
-                                {memberName(m.member_id)}{" "}
-                                <button
-                                  className="cloud-text-button"
-                                  disabled={busy}
-                                  onClick={() =>
-                                    void action("project-members", "POST", {
-                                      project_id: p.id,
-                                      member_id: m.member_id,
-                                      remove: true,
-                                    })
-                                  }
-                                >
-                                  Odstrani dodelitev
-                                </button>
-                              </li>
-                            ))}
-                        </ul>
-                        <form
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            void action("project-members", "POST", {
-                              project_id: p.id,
-                              member_id: new FormData(e.currentTarget).get(
-                                "member_id",
-                              ),
-                            });
-                          }}
-                        >
-                          <label>
-                            Dodeli člana
-                            <select name="member_id" required>
-                              {memberOptions}
-                            </select>
-                          </label>
-                          <button className="button secondary" disabled={busy}>
-                            Dodeli projektu
-                          </button>
-                        </form>
-                      </>
-                    )}
-                  </Card>
-                ))}
-              </div>
-              {!s.projects.length && (
-                <Empty>Ni projektov. Prvi projekt ustvari administrator.</Empty>
-              )}
-            </>
-          )}
+          {view === "projects" && <ProjectDiscovery snapshot={s} busy={busy} action={action} edit={(data) => setEdit({ kind: "projects", data })} />}
           {view === "tasks" && (
             <>
               <div className="org-actions">
@@ -1662,6 +1563,11 @@ function Editor({
                     defaultValue={val("description")}
                   />
                 </label>
+                {s.collaboration?.ready !== false && <>
+                <label>Cilj projekta<textarea name="goal" maxLength={2000} defaultValue={val("goal")} /></label>
+                <label>Vidnost<select name="visibility" defaultValue={val("visibility", "private")}><option value="private">Zasebni — samo pooblaščeni</option><option value="organization">Viden članom organizacije</option></select></label>
+                <label>Pridružitev<select name="join_policy" defaultValue={val("join_policy", "closed")}><option value="closed">Samo s povabilom</option><option value="open">Odprta pridružitev</option><option value="approval">Z odobritvijo administratorja</option></select></label>
+                </>}
                 <label>
                   Status
                   <select

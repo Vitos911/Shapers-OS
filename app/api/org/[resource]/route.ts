@@ -9,7 +9,7 @@ import {
   serviceClient,
 } from "@/lib/org-server";
 import { fields, InputError, uuid } from "@/lib/org-validation";
-import { addDays, ljubljanaDate, type Snapshot } from "@/lib/organization";
+import { addDays, isAdmin, ljubljanaDate, type Snapshot } from "@/lib/organization";
 import { calendarConfigured, syncCalendar } from "@/lib/google-calendar";
 import { timerCommand, adminWorkCommand, workRpcError } from "@/lib/work-timer-server";
 import { isDate } from "@/lib/model";
@@ -83,13 +83,19 @@ export async function GET(request: Request, context: Context) {
         return result.data.work;
       }),
     );
+    const [directory, progress] = await Promise.all([client.rpc("org_project_directory"), client.rpc("org_project_progress")]);
+    const missing = directory.error?.code === "PGRST202" && progress.error?.code === "PGRST202";
+    if (!missing && (directory.error || progress.error)) throw new HttpError(503, "Projektni pregled ni na voljo. Preveri migracije.");
+    const [joinRequests, membershipHistory] = missing ? [[], []] : await Promise.all([
+      allRows(client, "org_project_join_requests"), allRows(client, "org_project_membership_history"),
+    ]);
     const setting = settings[0] || {
       name: "Shapers OS",
       calendar_id: "",
       timezone: "Europe/Ljubljana",
     };
-    const directory = await client.rpc("org_task_directory");
-    if (directory.error) throw new HttpError(503, "Imenik projekta ni pripravljen. Preveri organizacijsko migracijo.");
+    const taskDirectory = await client.rpc("org_task_directory");
+    if (taskDirectory.error) throw new HttpError(503, "Imenik projekta ni pripravljen. Preveri organizacijsko migracijo.");
     return response({
       identity,
       members,
@@ -101,7 +107,12 @@ export async function GET(request: Request, context: Context) {
       attendance,
       history,
       projectMembers,
-      taskDirectory: directory.data,
+      collaboration: { ready: !missing },
+      projectDirectory: directory.data || [],
+      projectProgress: progress.data || [],
+      joinRequests,
+      membershipHistory,
+      taskDirectory: taskDirectory.data,
       meetingMembers,
       settings: setting,
       calendar: {
@@ -233,22 +244,28 @@ async function mutate(request: Request, context: Context, partial: boolean) {
       )
         throw new HttpError(400, "Neveljavno članstvo.");
       requireRole(identity);
-      const project_id = uuid(body.project_id),
-        member_id = uuid(body.member_id);
-      const query =
-        body.remove === true
-          ? client
-              .from("org_project_members")
-              .delete()
-              .eq("project_id", project_id)
-              .eq("member_id", member_id)
-          : client
-              .from("org_project_members")
-              .insert({ project_id, member_id });
-      const changed = await query;
-      if (changed.error)
-        throw new HttpError(409, "Članstva projekta ni mogoče spremeniti.");
+      const changed = await client.rpc("org_project_membership", {
+        p_project: uuid(body.project_id), p_member: uuid(body.member_id), p_action: body.remove === true ? "remove" : "add",
+      });
+      if (changed.error?.code === "PGRST202") {
+        // Preserve the existing administrator API while the additive migration is pending.
+        const project_id = uuid(body.project_id), member_id = uuid(body.member_id);
+        const legacy = body.remove === true
+          ? await client.from("org_project_members").delete().eq("project_id", project_id).eq("member_id", member_id)
+          : await client.from("org_project_members").insert({ project_id, member_id });
+        if (legacy.error) throw new HttpError(409, "Članstva projekta ni mogoče spremeniti.");
+        return response({ saved: true });
+      }
+      if (changed.error) throw new HttpError(409, "Članstva ni mogoče spremeniti. Najprej predaj odprte naloge.");
       return response({ saved: true });
+    }
+    if (resource === "membership") {
+      if (partial || Object.keys(body).some(k => !["project_id", "member_id", "action"].includes(k)) || !["join","leave","approve","reject"].includes(String(body.action))) throw new HttpError(400, "Neveljavna sprememba članstva.");
+      if (["approve", "reject"].includes(String(body.action))) requireRole(identity);
+      if (!isAdmin(identity.role) && "member_id" in body) throw new HttpError(403, "Član spreminja le svoje članstvo.");
+      const changed = await client.rpc("org_project_membership", { p_project: uuid(body.project_id), p_action: body.action, p_member: "member_id" in body ? uuid(body.member_id) : null });
+      if (changed.error) throw new HttpError(changed.error.code === "42501" ? 403 : 409, changed.error.message.includes("Pred izstopom") ? "Pred izstopom predaj ali zaključi odprte naloge." : "Članstva ni mogoče spremeniti. Preveri dostop, način pridružitve in status projekta.");
+      return response({ status: changed.data });
     }
     const table = tables[resource];
     if (!table) throw new HttpError(404, "Neznan vir.");
