@@ -15,6 +15,7 @@ export default function TeamPresence({ userId }: {
 }) {
     const context = useWorkspace(), [people, setPeople] = useState<Person[]>([]), [known, setKnown] = useState(false), [busy, setBusy] = useState(false);
     const interaction = useRef(0);
+    const privacyRevision=useRef(0);
     const request = context?.request;
     useEffect(() => {
         if (!request)
@@ -24,12 +25,13 @@ export default function TeamPresence({ userId }: {
         interaction.current = Date.now();
         const interact = () => { interaction.current = Date.now(); };
         const update = async (disconnect = false) => {
+            const revision=privacyRevision.current;
             if (pending)
                 return;
             pending = true;
             try {
                 const data = await request("/api/workspaces/presence", { connection_id: connection, active: document.visibilityState === "visible" && Date.now() - interaction.current < 5 * 60000, disconnect }) as Person[];
-                if (!disposed) {
+                if (!disposed && revision===privacyRevision.current) {
                     setPeople(data);
                     setKnown(true);
                 }
@@ -54,14 +56,14 @@ export default function TeamPresence({ userId }: {
     if (!context)
         return null;
     const own = people.find(p => p.user_id === userId), online = known ? people.filter(p => p.status === "online").length : 0;
-    return <details className={`${styles.switcher} ${styles.presence}`}><summary aria-label="Povezanost ekipe"><span className={styles.avatarStack}>{people.filter(p => known && p.status === "online").slice(0, 3).map(p => <span className={styles.presenceAvatar} key={p.user_id} aria-hidden="true">{p.name.split(" ").map(n => n[0]).slice(0, 2).join("")}<i className={styles.dot} data-status="online"/></span>)}</span><span>{known ? `${online} na spletu` : "Prisotnost neznana"}</span></summary><div className={styles.popover}><strong>Povezanost ekipe</strong><p>Stanje povezave s to aplikacijo. Ne meri opravljenega dela. Po izgubi povezave lahko prikaz zamuja do 90 sekund.</p><ul>{people.map(p => <li key={p.user_id}><span>{p.name}</span><small><span className={styles.dot} data-status={known ? p.status : "unknown"}/>{labels[known ? p.status : "unknown"]}</small></li>)}</ul><label><input type="checkbox" checked={own?.hidden || false} disabled={busy || !known} onChange={async (e) => { setBusy(true); try {
-        await context.request("/api/workspaces", { action: "privacy", hidden: e.target.checked });
-        setPeople(previous => previous.map(p => p.user_id === userId ? { ...p, hidden: !own?.hidden, status: "unknown" } : p));
+    async function changePrivacy(hidden: boolean) {
+        const previousHidden=own?.hidden||false;
+        privacyRevision.current++;
+        setBusy(true);
+        setPeople(previous=>previous.map(p=>p.user_id===userId?{...p,hidden,status:"unknown"}:p));
+        try { await context!.request("/api/workspaces",{action:"privacy",hidden}); }
+        catch { setPeople(previous=>previous.map(p=>p.user_id===userId?{...p,hidden:previousHidden,status:"unknown"}:p));setKnown(false); }
+        finally { setBusy(false); }
     }
-    catch {
-        setKnown(false);
-    }
-    finally {
-        setBusy(false);
-    } }}/> Skrij mojo prisotnost</label><a href="#members">Vsi člani</a></div></details>;
+    return <details className={`${styles.switcher} ${styles.presence}`}><summary aria-label="Povezanost ekipe"><span className={styles.avatarStack}>{people.filter(p => known && p.status === "online").slice(0, 3).map(p => <span className={styles.presenceAvatar} key={p.user_id} aria-hidden="true">{p.name.split(" ").map(n => n[0]).slice(0, 2).join("")}<i className={styles.dot} data-status="online"/></span>)}</span><span>{known ? `${online} na spletu` : "Prisotnost neznana"}</span></summary><div className={styles.popover}><strong>Povezanost ekipe</strong><p>Stanje povezave s to aplikacijo. Ne meri opravljenega dela. Po izgubi povezave lahko prikaz zamuja do 90 sekund.</p><ul>{people.map(p => <li key={p.user_id}><span>{p.name}</span><small><span className={styles.dot} data-status={known ? p.status : "unknown"}/>{labels[known ? p.status : "unknown"]}</small></li>)}</ul><label><input type="checkbox" checked={own?.hidden || false} disabled={busy || !known || !own} onChange={e=>void changePrivacy(e.currentTarget.checked)}/> Skrij mojo prisotnost</label><a href="#members">Vsi člani</a></div></details>;
 }

@@ -198,9 +198,15 @@ second-developer review and authenticated staging acceptance remain release gate
   switching workspaces, creator ownership, task/project save and reload, MEMBER project
   creation, cross-tenant rejection, logout and 390/768/1440px overflow checks. Auth and
   public config transport are synthetic; this is not hosted Supabase/OAuth acceptance.
+- The extended two-client acceptance passed 279 SQL-backed HTTP requests, including
+  live presence from two browser contexts, suppression of hidden presence for another
+  client, and removal of private content on logout. The privacy control updates
+  immediately, rolls back on failure, and ignores older in-flight presence responses.
 - The independent PostgreSQL-session capacity race is included in the existing CI SQL
   job. Its GitHub result must be checked for the final PR head; local PGlite tests do not
   replace that concurrency result.
+  The initial upgrade commit `8624286` passed that job, including ten independent
+  task-claim races, a claim/leave race and simultaneous last-seat invitation acceptance.
 
 Design review used local screenshots of synthetic records, not production member data.
 The initial browser pass exposed a workspace deep-link reset and header overflow; both
