@@ -159,6 +159,27 @@ try {
   console.log(
     "PASS: concurrent claim and leave preserve membership with outstanding obligations",
   );
+  // New workspace capacity: two independent sessions compete for the final seat.
+  const workspace=(await first.query("select public.wemry_create_workspace('Capacity race') id")).rows[0].id;
+  await db.query("select set_config('request.headers',$1,false)",[JSON.stringify({'x-workspace-id':workspace})]);
+  const third=await connect('55555555-5555-4555-8555-555555555555');
+  const invites=[];
+  await first.query("select set_config('request.headers',$1,false)",[JSON.stringify({'x-workspace-id':workspace})]);
+  for(const email of ['two@race.invalid','admin@race.invalid'])invites.push((await first.query("select public.wemry_workspace_command('invite',$1::jsonb) result",[JSON.stringify({email})])).rows[0].result.token);
+  for(let n=0;n<48;n++){
+    const id=`66000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+    await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())',[id,`capacity${n}@race.invalid`]);
+    await db.query("insert into public.organization_members(organization_id,user_id,role) values($1,$2,'MEMBER')",[workspace,id]);
+  }
+  const results=await Promise.allSettled([
+    second.query("select public.wemry_workspace_command('accept',$1::jsonb)",[JSON.stringify({token:invites[0]})]),
+    third.query("select public.wemry_workspace_command('accept',$1::jsonb)",[JSON.stringify({token:invites[1]})]),
+  ]);
+  assert.equal(results.filter(r=>r.status==='fulfilled').length,1,'Only one invitation may take the final seat');
+  assert.equal(results.find(r=>r.status==='rejected').reason.code,'23514');
+  const capacity=(await db.query("select active_member_count,(select count(*)::int from public.organization_members where organization_id=$1 and membership_status='active') actual from public.organizations where id=$1",[workspace])).rows[0];
+  assert.deepEqual(capacity,{active_member_count:50,actual:50});
+  console.log('PASS: simultaneous invitation acceptance across two PostgreSQL sessions cannot exceed 50 active members');
 } finally {
   for (const client of clients) await client.end();
   await db.end();

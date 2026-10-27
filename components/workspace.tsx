@@ -138,7 +138,7 @@ function Dialog({
       <div className="dialog-inner">
         <header>
           <div>
-            <span className="eyebrow">SHAPERS OS</span>
+            <span className="eyebrow">WEMRYOS FOR BUSINESS</span>
             <h2 id="dialog-title">{title}</h2>
           </div>
           <button
@@ -726,7 +726,7 @@ export default function Workspace({
                 <div>
                   <span className="pill">
                     <Earth size={14} />
-                    SHAPERS SKUPNOST
+                    SKUPNOST
                   </span>
                   <h2>
                     Dobre ideje potrebujejo
@@ -1190,7 +1190,7 @@ export default function Workspace({
           )}
           <footer className="page-footer">
             <span>
-              shapers<span>OS</span> · Prostor za skupen učinek.
+              shapers<span>OS</span> · Your team. One workspace.
             </span>
             <span>Iz majhnih dejanj rastejo velike spremembe.</span>
           </footer>

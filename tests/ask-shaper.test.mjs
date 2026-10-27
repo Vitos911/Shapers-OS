@@ -160,7 +160,7 @@ test("unauthenticated 401 and unapproved 403 happen before model/data access", a
   assert.equal(unauth.status, 401);
   const denied = await askShaper(request(), { authenticate: async () => { throw new HttpError(403, "Račun nima aktivnega dostopa"); }, fetcher: () => assert.fail("must not call provider") });
   assert.equal(denied.status, 403);
-  const invalidRole = deps(plan("hours"), { ...identity, role: "OWNER" });
+  const invalidRole = deps(plan("hours"), { ...identity, role: "INVALID_ROLE" });
   assert.equal((await askShaper(request(), invalidRole.options)).status, 403);
   assert.equal(invalidRole.ai.calls.length, 0);
 });

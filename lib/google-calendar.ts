@@ -295,15 +295,15 @@ export async function syncCalendar(
   if (settings.error)
     throw new HttpError(503, "Nastavitev koledarja ni mogoče prebrati.");
   const calendarId =
-    process.env.GOOGLE_CALENDAR_ID || settings.data.calendar_id;
+    (actor.organization_id && actor.organization_id!=="00000000-0000-4000-8000-000000000001" ? "" : process.env.GOOGLE_CALENDAR_ID) || settings.data.calendar_id;
   // Full trusted fetch must succeed before any database writes. Attendance is never touched.
   const result = await fetchGoogleEvents(
     calendarId,
     midnightInLjubljana(from),
     midnightInLjubljana(to),
   );
-  const admin = serviceClient(),
-    members = await allRows(admin, "members");
+  const admin = serviceClient(actor.organization_id),
+    members = await allRows(admin, "members", actor.organization_id);
   const events = result.events.map(event => {
     const { participantEmails, ...row } = event;
     const assigned = members.filter((m) =>

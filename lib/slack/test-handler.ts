@@ -3,7 +3,7 @@ import { HttpError, jsonBody, requireAuth, requireRole } from "../org-server.ts"
 import type { Identity } from "../organization.ts";
 import { SlackError, type SlackService } from "./client.ts";
 
-export const TEST_MESSAGE = "Shapers OS: preverjanje Slack povezave. To je ročno sproženo testno sporočilo.";
+export const TEST_MESSAGE = "WemryOS for Business: preverjanje Slack povezave. To je ročno sproženo testno sporočilo.";
 type Options = {
   env?: NodeJS.ProcessEnv;
   authenticate?: (request: Request) => Promise<{ identity: Identity }>;

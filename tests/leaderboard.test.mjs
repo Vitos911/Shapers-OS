@@ -241,7 +241,10 @@ test("custom database target overrides tier default and invalid targets fail clo
   const s = source({ members: [{ ...member(), weekly_hours: 20 }], work: [work(10)] });
   assert.equal(scoreWeek(s, week, now)[0].metrics.target, 20);
   assert.equal(scoreWeek(s, week, now)[0].metrics.hoursPoints, 15);
-  for (const weekly_hours of [0, -1, null, "bad", Infinity]) assert.throws(() => scoreWeek(source({ members: [{ ...member(), weekly_hours }] }), week, now), /tedenski cilj/);
+  for (const weekly_hours of [-1, null, "bad", Infinity]) assert.throws(() => scoreWeek(source({ members: [{ ...member(), weekly_hours }] }), week, now), /tedenski cilj/);
+  const disabled=scoreWeek(source({members:[{...member(),tier:"Volunteer",weekly_hours:0}]}),week,now)[0];
+  assert.equal(disabled.metrics.hoursPoints,0);
+  assert.equal(disabled.metrics.applicablePoints,50);
 });
 
 test("duplicate work and meeting rows do not double count; hours-only with no meetings is 37.5", () => {

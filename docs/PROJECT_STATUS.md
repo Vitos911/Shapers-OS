@@ -1,5 +1,7 @@
 # ShapersOS: pregled dejanskega stanja
 
+Aktualna nadgradnja kode: [WemryOS for Business](wemryos-upgrade.md) na `feature/wemryos-platform-upgrade`. Spodnji pregled ostaja zgodovinski posnetek. Nova migracija ni uporabljena v produkciji; lokalni testi ne potrjujejo gostovane prijave ali produkcijskega prehoda.
+
 Pregled: 24. oktober 2026. Izhodišče: `0f574c43a322dd452e4dc588a07250118aedb56f` na lokalnem in oddaljenem `main`. Repozitorij je zaseben. To je posnetek stanja, ne potrdilo produkcijske pripravljenosti.
 
 ## Tehnologija in poti

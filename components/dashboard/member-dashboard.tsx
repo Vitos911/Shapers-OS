@@ -30,7 +30,7 @@ export function WeeklyHoursProgress({ hours, goal }: { hours: number; goal: numb
     {goal > 0 ? <div className={styles.progress}>
       <div><span>Napredek tega tedna</span><strong>{number(progress)} %</strong></div>
       <progress aria-label="Napredek tedenskih ur" value={progress} max={100} />
-    </div> : <p>Tedenski cilj še ni določen.</p>}
+    </div> : <p>Ta skupina nima obveznega tedenskega cilja.</p>}
   </div>;
 }
 
@@ -39,7 +39,7 @@ export function DashboardHero({ member, busy, onLogHours }: {
 }) {
   return <section className={styles.hero} aria-labelledby="dashboard-welcome">
     <div className={styles.heroContent}>
-      <div className={styles.heroMeta}><span className={styles.sectionLabel}>01 — Tvoj pregled</span><span>{member ? `Shapers ${member.tier}` : "Organizacija"}</span></div>
+      <div className={styles.heroMeta}><span className={styles.sectionLabel}>01 — Tvoj pregled</span><span>{member?.tier || "Delovni prostor"}</span></div>
       <h1 id="dashboard-welcome">Tvoj teden. Tvoj vpliv.</h1>
       <p className={styles.intro}>{member ? `Pozdravljen/a, ${member.name.split(" ")[0]}. ` : ""}Pregled nalog, ur in dogajanja v organizaciji.</p>
       {!member && <p className={styles.calendarNotice}>Ta račun nima članskega profila. Osebne ure in naloge so na voljo po povezavi s članom.</p>}
@@ -109,7 +109,7 @@ export default function MemberDashboard({ snapshot, now, busy, onLogHours, onCom
   const tasks = dashboardTasks(snapshot, today);
   const nextMeeting = dashboardMeetings(snapshot, now)[0];
   return <div className={styles.dashboard}>
-    <DashboardHero member={member} busy={busy} onLogHours={onLogHours} />
+    <DashboardHero member={member} busy={busy||snapshot.features?.weekly_hours_enabled===false} onLogHours={onLogHours} />
     <section className={styles.kpis} aria-label="Tedenski pregled">
       <article className={styles.kpi}><div className={styles.kpiHeading}><span>Ure ta teden</span><Clock3 size={16} aria-hidden="true" /></div>{member ? <WeeklyHoursProgress hours={hours} goal={Number(member.weekly_hours)} /> : <><strong className={styles.kpiValue}>—</strong><p>Članski profil ni povezan.</p></>}</article>
       <a className={styles.kpi} href="#tasks"><div className={styles.kpiHeading}><span>Odprte naloge</span><CheckSquare size={16} aria-hidden="true" /></div><strong className={styles.kpiValue}>{member ? tasks.length : "—"}</strong><p>{member ? "Tvoje dodeljene naloge" : "Članski profil ni povezan."}<ArrowRight size={14} aria-hidden="true" /></p></a>
@@ -117,8 +117,8 @@ export default function MemberDashboard({ snapshot, now, busy, onLogHours, onCom
       <article className={styles.kpi}><div className={styles.kpiHeading}><span>Weekly streak</span><Flame size={16} aria-hidden="true" /></div><strong className={styles.kpiValue}>{streak ? <>{streak.current}<span> tednov</span></> : "—"}</strong><p>{streak ? "Zaporedni uspešni tedni" : "Osebni niz ni na voljo."}</p></article>
     </section>
     <div className={styles.columns}><MyTasksCard snapshot={snapshot} today={today} busy={busy} onComplete={onComplete} /><UpcomingMeetingsCard snapshot={snapshot} now={now} /></div>
-    <QuickActions canLog={!!member} busy={busy} onLogHours={onLogHours} />
-    {streak && <WeeklyStreakCard streak={streak} />}
+    <QuickActions canLog={!!member&&snapshot.features?.weekly_hours_enabled!==false} busy={busy} onLogHours={onLogHours} />
+    {streak && snapshot.features?.gamification_enabled!==false && <WeeklyStreakCard streak={streak} />}
     {leaderboard}
   </div>;
 }

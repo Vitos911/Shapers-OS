@@ -14,8 +14,8 @@ const {db,as,state}=await timerDatabase();
 const origin='http://127.0.0.1:3251', errors=[], commands=[], checks=[];
 const users=Object.fromEntries([1,2,3,4,5].map(n=>[n,{id:uid(n),email:`timer${n}@fixture.invalid`,aud:'authenticated',role:'authenticated',email_confirmed_at:new Date().toISOString(),created_at:new Date().toISOString(),app_metadata:{provider:'email',providers:['email']},user_metadata:{},identities:[]} ]));
 const token=n=>`eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({sub:uid(n),exp:Math.floor(Date.now()/1000)+3600,aud:'authenticated',role:'authenticated'})).toString('base64url')}.fixture`;
-const rpcArgs={org_project_membership:["p_project","p_action","p_member"],org_claim_task:["p_task"],org_context:[],org_task_directory:[],org_work_state:[],org_work_timer:['p_action','p_session_id','p_expected_version','p_project_id','p_description'],org_admin_work:['p_id','p_member_id','p_date','p_hours','p_description','p_project_id','p_reason','p_expected_updated_at','p_deleted'],org_leaderboard_source:['as_of']};
-const tables=new Set(['members','org_projects','org_tasks','org_work_entries','org_weekly_hours','org_meetings','org_attendance','org_task_history','org_project_members','org_meeting_members','org_settings','org_audit','org_leaderboard_weeks','org_project_join_requests','org_project_membership_history']);
+const rpcArgs={wemry_workspaces:[],wemry_presence:["p_connection","p_active","p_disconnect"],org_project_membership:["p_project","p_action","p_member"],org_claim_task:["p_task"],org_context:[],org_task_directory:[],org_work_state:[],org_work_timer:['p_action','p_session_id','p_expected_version','p_project_id','p_description'],org_admin_work:['p_id','p_member_id','p_date','p_hours','p_description','p_project_id','p_reason','p_expected_updated_at','p_deleted'],org_leaderboard_source:['as_of']};
+const tables=new Set(['organization_settings','organization_groups','members','org_projects','org_tasks','org_work_entries','org_weekly_hours','org_meetings','org_attendance','org_task_history','org_project_members','org_meeting_members','org_settings','org_audit','org_leaderboard_weeks','org_project_join_requests','org_project_membership_history']);
 let queue=Promise.resolve();
 const adapter=createServer(async(req,res)=>{
   res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Headers','authorization,apikey,content-type,x-client-info,x-supabase-api-version');res.setHeader('Access-Control-Allow-Methods','GET,POST,PATCH,OPTIONS');
@@ -35,7 +35,7 @@ const adapter=createServer(async(req,res)=>{
         return as(n,sql,args);
       };
       if(path==='/rest/v1/shapers_workspaces'&&req.method==='GET') {send([]);return;}
-      if(path.startsWith('/rest/v1/rpc/') && ['org_project_directory','org_project_progress'].includes(resource)) {
+      if(path.startsWith('/rest/v1/rpc/') && ['org_project_directory','org_project_progress','wemry_member_directory'].includes(resource)) {
         send((await query(`select * from public.${resource}()`)).rows); return;
       }
       if(path.startsWith('/rest/v1/rpc/') && rpcArgs[resource]) {
@@ -48,7 +48,7 @@ const adapter=createServer(async(req,res)=>{
         if(req.method==='GET') {
           let sql=`select * from public.${resource}`;
           if(resource==='org_audit')sql+=" where entity='org_work_entries' order by occurred_at desc limit 100";
-          send((await query(sql)).rows);return;
+          const rows=(await query(sql)).rows;send(req.headers.accept?.includes("vnd.pgrst.object")?rows[0]:rows);return;
         }
         if(resource==='org_tasks' && req.method==='PATCH') {
           const keys=Object.keys(body);assert.ok(keys.every(k=>['status','description','priority','due_date','assignee_id','archived','claimable','title','project_id'].includes(k)));

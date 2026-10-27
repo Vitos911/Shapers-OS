@@ -28,6 +28,9 @@ export function fields(
 ): Record<string, unknown> {
   const schemas: Record<string, Record<string, (v: unknown) => unknown>> = {
     projects: {
+      color: (v) => { if(typeof v!=="string"||!/^#[0-9a-f]{6}$/i.test(v))throw new InputError("Neveljavna barva.");return v; },
+      icon: (v) => choice(v,["folder","heart","globe","rocket"]),
+      due_date: (v) => { if(v===null||v==="")return null;if(typeof v!=="string"||!isDate(v))throw new InputError("Neveljaven datum.");return v; },
       name: (v) => text(v, 160, true),
       description: (v) => text(v, 5000),
       status: (v) => choice(v, ["planning", "active", "done", "archived"]),

@@ -1,6 +1,5 @@
 import { addDays, ljubljanaDate, weekStart, type Snapshot } from "./organization.ts";
 
-export const WEEKLY_TARGETS: Readonly<Record<string, number>> = { "GO!": 4, Impact: 10, Core: 70 };
 export const STREAK_MILESTONES = [2, 4, 8, 12] as const;
 type StreakSnapshot = Pick<Snapshot, "identity" | "members" | "work" | "weeklyHours">;
 
@@ -8,7 +7,7 @@ type StreakSnapshot = Pick<Snapshot, "identity" | "members" | "work" | "weeklyHo
 export function weeklyStreak(snapshot: StreakSnapshot, now = new Date()) {
   const member = snapshot.members.find((m) => m.id === snapshot.identity.member_id);
   const target = Number(member?.weekly_hours);
-  if (!member || !Object.hasOwn(WEEKLY_TARGETS, member.tier) || !Number.isFinite(target) || target <= 0) return null;
+  if (!member || !Number.isFinite(target) || target <= 0) return null;
 
   const today = ljubljanaDate(now);
   const currentWeek = weekStart(today);

@@ -3,7 +3,7 @@ import { readFile, readdir } from 'node:fs/promises';
 export const uid = n => `31000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 export const mid = n => `32000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 export const sid = n => `33000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
-export async function timerDatabase() {
+export async function timerDatabase({ beforeWorkspaces } = {}) {
   const db = new PGlite();
   await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
     create schema auth;
@@ -13,7 +13,10 @@ export async function timerDatabase() {
     grant usage on schema public,auth to authenticated,service_role,anon;
     create function public.rls_auto_enable() returns event_trigger language plpgsql as $$ begin return; end $$;`);
   const directory = new URL('../../supabase/migrations/', import.meta.url);
-  for (const file of (await readdir(directory)).filter(n => n.endsWith('.sql')).sort()) await db.exec(await readFile(new URL(file,directory),'utf8'));
+  for (const file of (await readdir(directory)).filter(n => n.endsWith('.sql')).sort()) {
+    if(file.endsWith('_wemryos_workspaces.sql') && beforeWorkspaces)await beforeWorkspaces(db);
+    await db.exec(await readFile(new URL(file,directory),'utf8'));
+  }
   for (let n=1;n<=6;n++) {
     await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())',[uid(n),`timer${n}@fixture.invalid`]);
     await db.query("insert into public.members(id,name,email,tier,weekly_hours,auth_user_id) values($1,$2,$3,'GO!',4,$4)",[mid(n),`Timer ${n}`,`timer${n}@fixture.invalid`,uid(n)]);

@@ -142,7 +142,7 @@ export function sameOrigin(request: Request, origin: string) {
     request.headers.get("origin") !== origin ||
     request.headers.get("sec-fetch-site") === "cross-site"
   )
-    throw new HttpError(403, "Prijavo začni neposredno v ShapersOS.");
+    throw new HttpError(403, "Prijavo začni neposredno v WemryOS for Business.");
 }
 function safeNext(value: unknown) {
   if (value !== "/" && value !== "/legacy")

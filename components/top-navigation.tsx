@@ -13,9 +13,12 @@ import {
   RefreshCw,
   Settings2,
   Trophy,
+  Users,
   X,
 } from "lucide-react";
 import BrandLogo from "./brand-logo";
+import WorkspaceSwitcher from "./workspaces/workspace-switcher";
+import TeamPresence from "./workspaces/team-presence";
 import { isAdmin, ljubljanaDate, type Snapshot } from "@/lib/organization";
 import styles from "./dashboard/organization-shell.module.css";
 
@@ -26,6 +29,7 @@ const primary = [
   ["hours", "Ure", Clock3],
   ["meetings", "Sestanki", CalendarDays],
   ["leaderboard", "Lestvica", Trophy],
+  ["members", "Skupnost", Users],
 ] as const;
 export default function TopNavigation({
   snapshot: s,
@@ -94,11 +98,11 @@ export default function TopNavigation({
       <a
         href="#overview"
         className={styles.brand}
-        aria-label="Shapers OS — Pregled"
+        aria-label="WemryOS for Business — Pregled"
       >
         <BrandLogo />
         <span>
-          Shapers <b>OS</b>
+          Wemry<b>OS</b>
         </span>
       </a>
       <button
@@ -117,7 +121,7 @@ export default function TopNavigation({
         data-open={open}
         aria-label="Glavna navigacija"
       >
-        {primary.map(([id, label, Icon]) => (
+        {primary.filter(([id])=>!(id==="hours"&&s.features?.weekly_hours_enabled===false)&&!(id==="leaderboard"&&s.features?.leaderboard_enabled===false)).map(([id, label, Icon]) => (
           <a
             key={id}
             href={`#${id}`}
@@ -159,6 +163,8 @@ export default function TopNavigation({
         </details>
       </nav>
       <div className={styles.utilities}>
+        <TeamPresence userId={s.identity.user_id}/>
+        <WorkspaceSwitcher/>
         <button
           aria-label="Osveži podatke iz baze"
           disabled={busy}

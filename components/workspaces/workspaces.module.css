@@ -1,0 +1,26 @@
+.welcome { min-height:100dvh; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:20px; padding:28px; text-align:center; background:var(--bg,#f5f6fb); }
+.welcome :global(.brand-logo) { width:180px; height:180px; object-fit:contain; }
+.switcher { position:relative; }
+.switcher summary { display:flex; align-items:center; gap:8px; cursor:pointer; list-style:none; max-width:200px; padding:7px 10px; border:1px solid #d9deeb; border-radius:16px; background:rgba(255,255,255,.88); color:#242b40; font-size:12px; }
+.switcher summary>span:nth-child(2) { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.workspaceMark { display:grid; place-items:center; width:27px; height:27px; flex-shrink:0; border-radius:9px; background:#5267df; color:white; font-weight:750; }
+.popover { position:absolute; right:0; top:calc(100% + 12px); z-index:90; width:min(320px,calc(100vw - 40px)); padding:12px; background:rgba(255,255,255,.97); border:1px solid #dce1ec; border-radius:20px; box-shadow:0 18px 55px #18233c22; backdrop-filter:blur(20px); }
+.popover button { width:100%; display:flex; align-items:center; justify-content:space-between; text-align:left; gap:10px; border:0; border-radius:11px; padding:12px; background:transparent; color:#252b41; cursor:pointer; }
+.popover button:hover,.popover button[aria-current=true] { background:#edf0ff; }
+.popover small { display:block; color:#576079; margin-top:3px; }
+.dialog { max-width:560px; }
+.heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.dialog form { display:grid; gap:14px; margin:20px 0; }
+.dialog label { display:grid; gap:7px; }
+.presence { display:flex; align-items:center; gap:8px; }
+.presence summary { cursor:pointer; font-size:12px; font-weight:650; }
+.avatarStack { display:flex; padding-left:6px; }
+.presenceAvatar { position:relative; width:25px; height:25px; margin-left:-6px; border:2px solid white; border-radius:50%; background:#e8ecff; color:#33469e; font-size:8px; display:grid; place-items:center; }
+.presenceAvatar .dot { position:absolute; bottom:-1px; right:-3px; border:1px solid white; margin:0; }
+.dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#7b8493; margin-right:6px; }
+.dot[data-status=online] { background:#16834d; }.dot[data-status=idle] { background:#b76a00; }.dot[data-status=unknown] { background:transparent; border:1px solid #7b8493; }
+.presence ul { list-style:none; padding:0; max-height:300px; overflow:auto; }.presence li { padding:9px 0; border-bottom:1px solid #e5e8ef; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.settings { display:grid; gap:14px; }.settings form { display:flex; flex-wrap:wrap; align-items:end; gap:12px; }.settings label { display:grid; gap:5px; }
+@media(max-width:760px) { .switcher summary { max-width:170px; }.presence summary { font-size:11px; }.popover { position:fixed; right:16px; top:125px; }.welcome h1 { font-size:30px; } }
+@supports not (backdrop-filter:blur(1px)) { .popover,.switcher summary { background:#fff; } }
+@media(prefers-reduced-transparency:reduce),(prefers-contrast:more) { .popover,.switcher summary { background:#fff; backdrop-filter:none; } }

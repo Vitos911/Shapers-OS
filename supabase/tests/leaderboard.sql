@@ -56,7 +56,7 @@ set local role service_role;
 select pg_temp.lb_assert(jsonb_array_length(public.org_leaderboard_source()->'members')>0,'service can load scoring evidence');
 select pg_temp.lb_assert(not has_table_privilege('service_role','org_private.leaderboard_events','UPDATE'),'even service cannot rewrite evidence');
 select pg_temp.lb_assert(not has_table_privilege('service_role','public.org_leaderboard_weeks','UPDATE') and not has_table_privilege('service_role','public.org_leaderboard_weeks','DELETE') and not has_table_privilege('service_role','public.org_leaderboard_weeks','TRUNCATE'),'cache grants are genuinely append-only');
-insert into public.org_leaderboard_weeks(week_start,version,rows) values('2026-09-14',1,'[{"attempt":"ignored"}]') on conflict(week_start,version) do nothing;
+insert into public.org_leaderboard_weeks(week_start,version,rows) values('2026-09-14',1,'[{"attempt":"ignored"}]') on conflict(organization_id,week_start,version) do nothing;
 select pg_temp.lb_assert((select rows='[]' from public.org_leaderboard_weeks where week_start='2026-09-14'),'concurrent insert-if-absent needs no update grant and preserves the canonical row');
 reset role;
 set local role authenticated;

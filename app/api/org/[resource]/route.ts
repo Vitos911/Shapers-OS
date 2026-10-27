@@ -28,6 +28,11 @@ export async function GET(request: Request, context: Context) {
   try {
     const { resource } = await context.params;
     const { client, identity } = await requireAuth(request);
+    if (resource === "workspace-settings") {
+      const [groups,settings]=await Promise.all([client.from("organization_groups").select("id,name,weekly_hours"),client.from("organization_settings").select("*").single()]);
+      if(groups.error||settings.error)throw new HttpError(503,"Nastavitve prostora niso dostopne.");
+      return response({groups:groups.data,settings:settings.data});
+    }
     if (resource === "work-timer") {
       const result = await client.rpc("org_work_state");
       if (result.error) throw workRpcError(result.error.code);
@@ -90,13 +95,17 @@ export async function GET(request: Request, context: Context) {
       allRows(client, "org_project_join_requests"), allRows(client, "org_project_membership_history"),
     ]);
     const setting = settings[0] || {
-      name: "Shapers OS",
+      name: "WemryOS for Business",
       calendar_id: "",
       timezone: "Europe/Ljubljana",
     };
     const taskDirectory = await client.rpc("org_task_directory");
     if (taskDirectory.error) throw new HttpError(503, "Imenik projekta ni pripravljen. Preveri organizacijsko migracijo.");
+    const [workspaceDirectory,features]=identity.organization_id ? await Promise.all([client.rpc("wemry_member_directory"),client.from("organization_settings").select("weekly_hours_enabled,attendance_enabled,leaderboard_enabled,gamification_enabled").single()]) : [{data:[],error:null},{data:undefined,error:null}];
+    if(workspaceDirectory.error||features.error)throw new HttpError(503,"Nastavitve prostora niso pripravljene.");
     return response({
+      workspaceDirectory:workspaceDirectory.data,
+      features:features.data,
       identity,
       members,
       projects,
@@ -117,7 +126,7 @@ export async function GET(request: Request, context: Context) {
       settings: setting,
       calendar: {
         configured: calendarConfigured(
-          process.env.GOOGLE_CALENDAR_ID || String(setting.calendar_id),
+          (identity.organization_id && identity.organization_id!=="00000000-0000-4000-8000-000000000001"?"":process.env.GOOGLE_CALENDAR_ID) || String(setting.calendar_id),
         ),
         syncReady: !!process.env.SUPABASE_SECRET_KEY,
       },
@@ -243,11 +252,15 @@ async function mutate(request: Request, context: Context, partial: boolean) {
         ("remove" in body && typeof body.remove !== "boolean")
       )
         throw new HttpError(400, "Neveljavno članstvo.");
-      requireRole(identity);
+      if (!isAdmin(identity.role)) {
+        const owner=await client.from("org_projects").select("created_by").eq("id",uuid(body.project_id)).maybeSingle();
+        if(owner.error || owner.data?.created_by!==identity.user_id)throw new HttpError(403,"Potreben je lastnik projekta.");
+      }
       const changed = await client.rpc("org_project_membership", {
         p_project: uuid(body.project_id), p_member: uuid(body.member_id), p_action: body.remove === true ? "remove" : "add",
       });
       if (changed.error?.code === "PGRST202") {
+        requireRole(identity);
         // Preserve the existing administrator API while the additive migration is pending.
         const project_id = uuid(body.project_id), member_id = uuid(body.member_id);
         const legacy = body.remove === true
@@ -261,8 +274,11 @@ async function mutate(request: Request, context: Context, partial: boolean) {
     }
     if (resource === "membership") {
       if (partial || Object.keys(body).some(k => !["project_id", "member_id", "action"].includes(k)) || !["join","leave","approve","reject"].includes(String(body.action))) throw new HttpError(400, "Neveljavna sprememba članstva.");
-      if (["approve", "reject"].includes(String(body.action))) requireRole(identity);
-      if (!isAdmin(identity.role) && "member_id" in body) throw new HttpError(403, "Član spreminja le svoje članstvo.");
+      if (["join","leave"].includes(String(body.action)) && "member_id" in body && !isAdmin(identity.role)) throw new HttpError(403,"Član spreminja le svoje članstvo.");
+      if (["approve","reject"].includes(String(body.action)) && !isAdmin(identity.role)) {
+        const owner=await client.from("org_projects").select("created_by").eq("id",uuid(body.project_id)).maybeSingle();
+        if(owner.error || owner.data?.created_by!==identity.user_id)throw new HttpError(403,"Potreben je lastnik projekta.");
+      }
       const changed = await client.rpc("org_project_membership", { p_project: uuid(body.project_id), p_action: body.action, p_member: "member_id" in body ? uuid(body.member_id) : null });
       if (changed.error) throw new HttpError(changed.error.code === "42501" ? 403 : 409, changed.error.message.includes("Pred izstopom") ? "Pred izstopom predaj ali zaključi odprte naloge." : "Članstva ni mogoče spremeniti. Preveri dostop, način pridružitve in status projekta.");
       return response({ status: changed.data });
@@ -276,17 +292,11 @@ async function mutate(request: Request, context: Context, partial: boolean) {
     }
     const table = tables[resource];
     if (!table) throw new HttpError(404, "Neznan vir.");
-    if (resource === "projects" || resource === "settings")
-      requireRole(
-        identity,
-        resource === "settings" ? ["SUPERADMIN"] : ["ADMIN", "SUPERADMIN"],
-      );
-    if (resource === "tasks" && !partial) requireRole(identity);
+    if (resource === "settings") requireRole(identity);
     const { id, expected_updated_at, ...input } = body;
     if (expected_updated_at !== undefined && (resource !== "tasks" || !partial)) throw new HttpError(400, "Neveljaven pogoj posodobitve.");
     if (resource === "tasks" && partial && (typeof expected_updated_at !== "string" || !Number.isFinite(Date.parse(expected_updated_at)))) throw new HttpError(400, "Osveži nalogo pred urejanjem.");
     const data = fields(resource, input, partial);
-    if (resource === "tasks" && "claimable" in data) requireRole(identity);
     if (resource === "tasks" && !partial && "archived" in data)
       throw new HttpError(400, "Arhiviranje zahteva obstoječo nalogo.");
     if (resource === "profile") {

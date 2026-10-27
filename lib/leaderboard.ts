@@ -1,5 +1,5 @@
 import { addDays, isAdmin, ljubljanaDate, midnightInLjubljana, weekStart, type Identity, type Snapshot } from "./organization.ts";
-import { weeklyStreak, WEEKLY_TARGETS } from "./weekly-streak.ts";
+import { weeklyStreak } from "./weekly-streak.ts";
 
 export const SCORE_VERSION = 2;
 export type LeaderboardSource = Pick<Snapshot, "members" | "tasks" | "history" | "work" | "weeklyHours" | "meetings" | "attendance" | "meetingMembers"> & {
@@ -52,12 +52,12 @@ export function scoreWeek(source: LeaderboardSource, week: string, asOf: Date): 
   const cutoff = Math.min(asOf.getTime(), end);
   const today = ljubljanaDate(new Date(cutoff < end ? cutoff : cutoff - 1));
   const completed = firstCompletions(source, cutoff);
-  return source.members.filter((member) => Object.hasOwn(WEEKLY_TARGETS, member.tier)).map((member) => {
+  return source.members.map((member) => {
     // Reuse the exact Weekly Streak coverage rules, including partial weekly imports.
     const work = [...new Map(source.work.map((entry) => [entry.id, entry])).values()];
     const target = Number(member.weekly_hours);
-    if (!Number.isFinite(target) || target <= 0) throw new Error("Članu manjka veljaven tedenski cilj ur.");
-    const hours = weeklyStreak({ ...source, work, identity: { member_id: member.id } as Identity }, new Date(cutoff < end ? cutoff : cutoff - 1))!.hours;
+    if (member.weekly_hours===null || !Number.isFinite(target) || target < 0) throw new Error("Članu manjka veljaven tedenski cilj ur.");
+    const hours = weeklyStreak({ ...source, members:[{...member,weekly_hours:target||1}], work, identity: { member_id: member.id } as Identity }, new Date(cutoff < end ? cutoff : cutoff - 1))!.hours;
     const tasks = [...new Map(source.tasks.map((task) => [task.id, task])).values()].filter((task) => task.assignee_id === member.id && !task.archived);
     const completedTasks = tasks.filter((task) => {
       const event = completed.get(task.id);
@@ -71,10 +71,10 @@ export function scoreWeek(source: LeaderboardSource, week: string, asOf: Date): 
     const excused = meetings.filter((m) => records.get(m.id) === "excused").length;
     const attended = meetings.filter((m) => ["present", "remote"].includes(records.get(m.id) || "")).length;
     const eligible = meetings.length - excused;
-    const hoursPoints = 30 * Math.min(Math.max(0, hours / target), 1);
+    const hoursPoints = target>0 ? 30 * Math.min(Math.max(0, hours / target), 1) : 0;
     const taskPoints = Math.min(50, completedTasks * 10);
     const attendancePoints = eligible ? 20 * attended / eligible : null;
-    const applicablePoints = attendancePoints === null ? 80 : 100;
+    const applicablePoints = (attendancePoints === null ? 80 : 100) - (target>0?0:30);
     return { memberId: member.id, name: member.name, tier: member.tier,
       score: (hoursPoints + (taskPoints || 0) + (attendancePoints || 0)) / applicablePoints * 100,
       metrics: { hours, target, hoursPoints, tasks: tasks.length, completedTasks, taskPoints, meetings: eligible, attended, excused, attendancePoints, applicablePoints } };
@@ -98,9 +98,9 @@ export function activityStreak(completed: Map<string, ScoreRow[]>, memberId: str
 
 export function achievementsFor(source: LeaderboardSource, memberId: string | null, completedWeeks: ScoreRow[][], now: Date, streak?: Streak): { achievements: Achievement[]; hoursStreak: number | null } {
   const member = source.members.find((m) => m.id === memberId);
-  if (!memberId || !member || !Object.hasOwn(WEEKLY_TARGETS, member.tier)) return { achievements: [], hoursStreak: null };
+  if (!memberId || !member) return { achievements: [], hoursStreak: null };
   const bestStreak = streak?.best || 0;
-  const completed = [...firstCompletions(source, now.getTime()).values()].filter((e) => e.member_id === memberId && (e.changes.after as { archived?: boolean } | undefined)?.archived === false).length;
+  const completed = [...firstCompletions(source, now.getTime()).values()].filter((e) => e.member_id === memberId && (e.changes.after as { points_eligible?: boolean } | undefined)?.points_eligible!==false && (e.changes.after as { archived?: boolean } | undefined)?.archived === false).length;
   const eligibleIds = new Set(source.eligibility.filter((e) => e.member_id === memberId && e.observed).map((e) => e.meeting_id));
   const attendance = new Map(source.attendance.filter((a) => a.member_id === memberId).map((a) => [a.meeting_id, a.status]));
   let run = 0, best = 0;
@@ -111,7 +111,7 @@ export function achievementsFor(source: LeaderboardSource, memberId: string | nu
     best = Math.max(best, run);
   }
   const perfect = completedWeeks.some((rows) => rows.some((r) => r.memberId === memberId && r.score === 100 && r.metrics.applicablePoints === 100));
-  const goal = [...completedWeeks, scoreWeek(source, weekStart(ljubljanaDate(now)), now)].some((rows) => rows.some((r) => r.memberId === memberId && r.metrics.hours >= r.metrics.target));
+  const goal = [...completedWeeks, scoreWeek(source, weekStart(ljubljanaDate(now)), now)].some((rows) => rows.some((r) => r.memberId === memberId && r.metrics.target>0 && r.metrics.hours >= r.metrics.target));
   const badges: [string, string, string, number, number][] = [
     ["first-steps", "First Steps", "Prva evidentirana zaključitev naloge.", completed, 1],
     ["on-fire", "On Fire", "3 zaporedni uspešni zaključeni tedni.", bestStreak, 3],
