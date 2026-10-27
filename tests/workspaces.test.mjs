@@ -76,6 +76,12 @@ test('workspace lifecycle, tenant isolation, member ownership and private multi-
   await command(5,a,'leave');
   assert.equal((await as(5,a,'select org_context() data')).rows[0].data,null);
   assert.equal((await db.query('select count(*)::int n from members where organization_id=$1',[a])).rows[0].n,2,'leaving preserves records');
+  const blockedProject=(await as(6,null,"insert into org_projects(name) values('Blocked legacy creator') returning id")).rows[0].id;
+  await db.query("update org_private.access set disabled=true where auth_user_id=$1",[uid(6)]);
+  const blockedInvite=await command(1,null,'invite',{email:'timer6@fixture.invalid'});
+  await assert.rejects(()=>command(6,null,'accept',{token:blockedInvite.token}),/disabled/);
+  await db.query("update organization_members set membership_status='active' where organization_id='00000000-0000-4000-8000-000000000001' and user_id=$1",[uid(6)]);
+  assert.equal((await as(6,null,'select * from org_projects where id=$1',[blockedProject])).rows.length,0,'stale active membership cannot bypass disabled legacy access through direct RLS');
  }finally{await db.close();}
 });
 

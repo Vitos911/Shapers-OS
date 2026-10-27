@@ -81,7 +81,7 @@ revoke all on function org_private.identity() from public,anon;
 grant execute on function org_private.identity() to authenticated;
 
 create function org_private.workspace_member(w uuid) returns boolean language sql stable security definer set search_path='' as $$
- select auth.uid() is not null and (exists(select 1 from public.organization_members m join auth.users u on u.id=m.user_id where m.organization_id=w and m.user_id=auth.uid() and m.membership_status='active' and u.email_confirmed_at is not null and not coalesce(u.is_anonymous,false) and (u.banned_until is null or u.banned_until<now())) or (w='00000000-0000-4000-8000-000000000001' and org_private.legacy_identity() is not null))
+ select auth.uid() is not null and (exists(select 1 from public.organization_members m join auth.users u on u.id=m.user_id where m.organization_id=w and m.user_id=auth.uid() and m.membership_status='active' and u.email_confirmed_at is not null and not coalesce(u.is_anonymous,false) and (u.banned_until is null or u.banned_until<now()) and (w<>'00000000-0000-4000-8000-000000000001' or not exists(select 1 from org_private.access a where a.email=lower(btrim(u.email))))) or (w='00000000-0000-4000-8000-000000000001' and org_private.legacy_identity() is not null))
 $$;
 revoke all on function org_private.workspace_member(uuid) from public,anon;
 grant execute on function org_private.workspace_member(uuid) to authenticated;
@@ -292,10 +292,12 @@ begin
   select email into address from auth.users where id=actor;
   if invite.token is null or invite.expires_at<now() or invite.accepted_at is not null or lower(address)<>invite.email then raise exception 'Invitation unavailable' using errcode='42501'; end if;
   w=invite.organization_id; perform 1 from public.organizations where id=w for update;
+  if w='00000000-0000-4000-8000-000000000001' and exists(select 1 from org_private.access where email=lower(btrim(address)) and disabled) then raise exception 'Legacy access remains disabled' using errcode='42501'; end if;
   perform set_config('request.headers',jsonb_build_object('x-workspace-id',w)::text,true);
-  select id into m from public.members where organization_id=w and auth_user_id=actor;
+  select member_id into m from public.organization_members where organization_id=w and user_id=actor;
+  if m is null then select id into m from public.members where organization_id=w and auth_user_id=actor; end if;
   if m is null then insert into public.members(name,email,tier,weekly_hours,auth_user_id,organization_id) values(split_part(address,'@',1),address,'Member',4,actor,w) returning id into m; end if;
-  insert into public.organization_members(organization_id,user_id,member_id,role) values(w,actor,m,'MEMBER') on conflict(organization_id,user_id) do update set membership_status='active';
+  insert into public.organization_members(organization_id,user_id,member_id,role) values(w,actor,m,'MEMBER') on conflict(organization_id,user_id) do update set membership_status='active',role=case when organization_members.membership_status='inactive' then 'MEMBER' else organization_members.role end;
   update org_private.workspace_invitations set accepted_at=now() where workspace_invitations.token=invite.token;
   return jsonb_build_object('organization_id',w);
  end if;
