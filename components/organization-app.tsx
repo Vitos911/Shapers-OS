@@ -7,11 +7,14 @@ import {
   useState,
   type FormEvent,
   type ReactNode,
+  type CSSProperties,
 } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import ProjectDiscovery, { ClaimableTasks, MyProjects } from "./project-discovery";
 import { GlassCard, GlassInput, GlassModal } from "./ui/glass";
 import TopNavigation from "./top-navigation";
+import WorkspaceSettings from "./workspaces/workspace-settings";
+import { useWorkspace } from "./workspaces/workspace-context";
 import PersonalCalendar from "./personal-calendar";
 import UserProfile from "./user-profile";
 import Leaderboard from "./leaderboard";
@@ -177,11 +180,14 @@ export default function OrganizationApp({
   client,
   user,
   onSignOut,
+  workspaceId,
 }: {
   client: SupabaseClient;
   user: User;
   onSignOut: () => Promise<void>;
+  workspaceId?: string;
 }) {
+  const activeWorkspace=useWorkspace()?.active;
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null),
     [view, setView] = useState<View>("overview"),
     [error, setError] = useState(""),
@@ -215,6 +221,15 @@ export default function OrganizationApp({
     const timer = setInterval(() => setNow(Date.now()), 60000);
     return () => clearInterval(timer);
   }, []);
+  useEffect(()=>{
+    const shortcut=(event:KeyboardEvent)=>{
+      if((event.ctrlKey||event.metaKey)&&event.altKey&&event.key.toLowerCase()==="n"&&!busy&&snapshot?.identity.member_id&&!document.querySelector("dialog[open]")&&!(event.target as HTMLElement)?.closest("input,textarea,select,[contenteditable=true]")){
+        event.preventDefault();setEdit({kind:"tasks"});
+      }
+    };
+    window.addEventListener("keydown",shortcut);
+    return()=>window.removeEventListener("keydown",shortcut);
+  },[busy,snapshot?.identity.member_id]);
   const request = useCallback(
     async (resource: string, method = "GET", body?: unknown, signal?: AbortSignal) => {
       const session = await client.auth.getSession();
@@ -224,6 +239,7 @@ export default function OrganizationApp({
         method,
         headers: {
           Authorization: "Bearer " + token,
+          ...(workspaceId ? { "x-workspace-id": workspaceId } : {}),
           ...(body ? { "Content-Type": "application/json" } : {}),
         },
         body: body ? JSON.stringify(body) : undefined,
@@ -238,7 +254,7 @@ export default function OrganizationApp({
       }
       return data;
     },
-    [client],
+    [client, workspaceId],
   );
   const workStateChanged = useCallback((state: WorkState) => {
     setSnapshot(previous => previous ? { ...previous, work: state.work } : previous);
@@ -285,10 +301,14 @@ export default function OrganizationApp({
     setBusy(true);
     setError("");
     setNotice("");
+    const before=snapshot;
+    let optimistic=false;
     try {
       if (resource === "tasks" && method === "PATCH" && body && typeof body === "object") {
         const data = body as Record<string, unknown>;
         body = { expected_updated_at: snapshot?.tasks.find(t => t.id === data.id)?.updated_at, ...data };
+        optimistic=true;
+        setSnapshot(previous=>previous?{...previous,tasks:previous.tasks.map(t=>t.id===data.id?{...t,...data} as OrgTask:t)}:previous);
       }
       const result = await request(resource, method, body);
       await refresh();
@@ -300,6 +320,7 @@ export default function OrganizationApp({
       );
       return true;
     } catch (e) {
+      if(optimistic){setSnapshot(before);try{await refresh();}catch{/* Keep the error visible until a canonical reload succeeds. */}}
       setError(e instanceof Error ? e.message : "Shranjevanje ni uspelo.");
       return false;
     } finally {
@@ -318,7 +339,7 @@ export default function OrganizationApp({
       <div className={`cloud-entry ${polish.shell} ${polish.pending} ${auroraStyles.workspace}`}>
         <WorkspaceAurora />
         <section className="cloud-entry-card">
-          <h1>Shapers OS</h1>
+          <h1>WemryOS for Business</h1>
           {error ? (
             <>
               <p role="alert">{error}</p>
@@ -551,7 +572,7 @@ export default function OrganizationApp({
       </article>
     ));
   return (
-    <div data-liquid-workspace="" className={`app-shell liquid-glass ${shellStyles.shell} ${polish.shell} ${auroraStyles.workspace}`} aria-busy={busy}>
+    <div data-liquid-workspace="" style={{"--brand":activeWorkspace?.accent_color||"#5267df"} as CSSProperties} className={`app-shell liquid-glass ${shellStyles.shell} ${polish.shell} ${auroraStyles.workspace}`} aria-busy={busy}>
       <WorkspaceAurora />
       <a className="skip-link" href="#org-main">
         Preskoči na vsebino
@@ -561,7 +582,7 @@ export default function OrganizationApp({
         void refresh().then(() => { setError(""); setNotice("Podatki so osveženi iz Supabase."); }).catch(e => setError(e.message)).finally(() => setBusy(false));
       }} />
       <div className="main-shell">
-        <AskShaper key={user.id} client={client} admin={admin} />
+        <AskShaper key={user.id+":"+workspaceId} client={client} admin={admin} />
         <main id="org-main" className="org-main" tabIndex={-1}>
           {view !== "overview" && <div className="page-heading">
             <span className="eyebrow">{String(nav.findIndex((v) => v[0] === view) + 1).padStart(2, "0")} — DELOVNI PROSTOR</span>
@@ -582,21 +603,23 @@ export default function OrganizationApp({
           )}
           {view === "meetings" && <PersonalCalendar key={user.id} client={client} />}
           {view === "profile" && <><UserProfile snapshot={s} user={user} busy={busy} onSaveName={(name) => action("profile", "PATCH", { name })} /><Leaderboard snapshot={s} now={now} request={request} mode="achievements" /></>}
-          {view === "leaderboard" && <Leaderboard snapshot={s} now={now} request={request} />}
-          {(view === "analytics" || view === "members") && !admin ? (
+          {view === "leaderboard" && (s.features?.leaderboard_enabled===false?<Empty>Lestvica je v tem prostoru izključena.</Empty>:<Leaderboard snapshot={s} now={now} request={request} />)}
+          {view === "members" && !admin && <Card title="Skupnost"><ul>{s.workspaceDirectory?.map(m=><li key={m.user_id}>{m.name} · {m.role}</li>)}</ul></Card>}
+          {view === "analytics" && !admin ? (
             <Card title="Dostop je omejen">
               <p>Ta pogled zahteva administratorsko vlogo.</p>
             </Card>
           ) : null}
-          {(view === "overview" || view === "hours") && <LiveWorkTimer key={actor.user_id} identity={actor} projects={s.projects} request={request} onState={workStateChanged} onSaved={refresh} />}
+          {(view === "overview" || view === "hours") && s.features?.weekly_hours_enabled!==false && <LiveWorkTimer key={actor.user_id} identity={actor} projects={s.projects} request={request} onState={workStateChanged} onSaved={refresh} />}
           {view === "overview" && (
             <>
               <MemberDashboard snapshot={s} now={now} busy={busy}
-                leaderboard={<Leaderboard snapshot={s} now={now} request={request} mode="widget" />}
+                leaderboard={s.features?.leaderboard_enabled!==false&&<Leaderboard snapshot={s} now={now} request={request} mode="widget" />}
                 onLogHours={() => { location.hash = "hours"; }}
                 onComplete={(task) => { void action("tasks", "PATCH", { id: task.id, status: "done" }); }}
               />
               <MyProjects snapshot={s} />
+              {!s.projects.length && <Card title="Tvoj prostor je pripravljen."><p>Povabi ekipo in ustvari prvi projekt. Nato dodaj naloge.</p><div className="org-actions"><button className="button primary" onClick={()=>setEdit({kind:"projects"})}>Ustvari prvi projekt</button><a className="button secondary" href="#settings">Nastavi prostor</a></div></Card>}
               <ClaimableTasks snapshot={s} busy={busy} action={action} />
 
               {admin && metrics && <>
@@ -631,7 +654,7 @@ export default function OrganizationApp({
               <ClaimableTasks snapshot={s} busy={busy} action={action} />
               <div className="org-actions">
                 <label>Iskanje nalog<input type="search" value={taskSearch} onChange={e => setTaskSearch(e.target.value)} /></label>
-                {admin && (
+                {actor.member_id && (
                   <button
                     className="button primary"
                     onClick={() => setEdit({ kind: "tasks" })}
@@ -641,6 +664,7 @@ export default function OrganizationApp({
                     Nova naloga
                   </button>
                 )}
+                <small>Nova naloga: Ctrl/⌘ + Alt + N</small>
                 <label>
                   Projekt
                   <select
@@ -678,13 +702,13 @@ export default function OrganizationApp({
                 {TASK_STATUSES.map(status => <section key={status} className="org-kanban-lane" onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }} onDrop={e => {
                   e.preventDefault();
                   const task = shownTasks.find(t => t.id === e.dataTransfer.getData("text/plain"));
-                  if (task && !busy && canManageTask(actor, task) && task.status !== status) void action("tasks", "PATCH", {id: task.id, status, expected_updated_at: task.updated_at});
+                  if (task && !busy && canManageTask(actor, task, s.projects) && task.status !== status) void action("tasks", "PATCH", {id: task.id, status, expected_updated_at: task.updated_at});
                 }}>
                   <h2>{labels[status]} <small>{shownTasks.filter(t => t.status === status).length}</small></h2>
-                  {shownTasks.filter(t => t.status === status).map(t => <article key={t.id} className="org-kanban-task" draggable={!busy && canManageTask(actor, t)} onDragStart={e => e.dataTransfer.setData("text/plain", t.id)}>
+                  {shownTasks.filter(t => t.status === status).map(t => <article key={t.id} className="org-kanban-task" draggable={!busy && canManageTask(actor, t, s.projects)} onDragStart={e => e.dataTransfer.setData("text/plain", t.id)}>
                     <strong>{t.title}</strong><p>{projectName(t.project_id)} · {memberName(t.assignee_id)}</p>
                     <small>{labels[t.priority]}{t.due_date ? " · " + date(t.due_date) : ""}</small>
-                    <button className="cloud-text-button" disabled={busy || !canManageTask(actor, t)} onClick={() => setEdit({kind: "tasks", data: t})}>Uredi nalogo</button>
+                    <button className="cloud-text-button" disabled={busy || !canManageTask(actor, t, s.projects)} onClick={() => setEdit({kind: "tasks", data: t})}>Uredi nalogo</button>
                   </article>)}
                 </section>)}
               </div>
@@ -718,7 +742,7 @@ export default function OrganizationApp({
                           </label>
                           <select
                             id={"status-" + t.id}
-                            disabled={busy || !canManageTask(actor, t)}
+                            disabled={busy || !canManageTask(actor, t, s.projects)}
                             value={t.status}
                             data-status={t.status}
                             onChange={(e) =>
@@ -734,7 +758,7 @@ export default function OrganizationApp({
                         <td>
                           <button
                             className="button secondary"
-                            disabled={busy || !canManageTask(actor, t)}
+                            disabled={busy || !canManageTask(actor, t, s.projects)}
                             onClick={() => setEdit({ kind: "tasks", data: t })}
                           >
                             Uredi
@@ -1070,7 +1094,7 @@ export default function OrganizationApp({
                 Članski razred
                 <select value={tier} onChange={(e) => setTier(e.target.value)}>
                   <option value="">Vsi razredi</option>
-                  {choices(["GO!", "Impact", "Core"])}
+                  {choices([...new Set(s.members.map(m=>m.tier))])}
                 </select>
               </label>
               {metrics && (
@@ -1181,7 +1205,7 @@ export default function OrganizationApp({
                           </tr>
                         </thead>
                         <tbody>
-                          {["GO!", "Impact", "Core"].map((t) => {
+                          {[...new Set(s.members.map(m=>m.tier))].map((t) => {
                             const rows = metrics.rows.filter(
                               (r) => r.tier === t,
                             );
@@ -1222,6 +1246,7 @@ export default function OrganizationApp({
           )}
           {view === "settings" && (
             <>
+              <WorkspaceSettings snapshot={s} refresh={refresh}/>
               <Card title="Moj profil">
                 <p>Oglej si podatke svojega računa, članstvo in prikazno ime.</p>
                 <a className="button secondary" href="#profile">Odpri moj profil</a>
@@ -1237,7 +1262,7 @@ export default function OrganizationApp({
                   Odpri prejšnje prostore
                 </a>
               </Card>
-              {superadmin && (
+              {admin && (
                 <>
                   <Card title="Organizacija in povezave">
                     <form
@@ -1251,10 +1276,10 @@ export default function OrganizationApp({
                       }}
                     >
                       <label>
-                        Ime organizacije
+                        Ime delovnega prostora
                         <input
                           name="name"
-                          defaultValue={s.settings.name}
+                          defaultValue={activeWorkspace?.name || s.settings.name}
                           required
                           maxLength={80}
                         />
@@ -1269,14 +1294,18 @@ export default function OrganizationApp({
                       </label>
                       <p>
                         Zasebne ključe nastavi samo v strežniškem okolju, nikoli
-                        v tem obrazcu. GOOGLE_CALENDAR_ID iz okolja ima
-                        prednost.
+                        v tem obrazcu. Za izbrani koledar potrebuje storitev
+                        dovoljenje za branje.
                       </p>
                       <button className="button primary" disabled={busy}>
                         Shrani nastavitve
                       </button>
                     </form>
                   </Card>
+                </>
+              )}
+              {superadmin && (
+                <>
                   <Card title="Vloge in dostop">
                     <button
                       className="button secondary"
@@ -1366,7 +1395,7 @@ export default function OrganizationApp({
             </>
           )}
           <footer className="page-footer">
-            shapers OS · Skupen učinek · Supabase je vir podatkov
+            WemryOS for Business · Your team. One workspace.
           </footer>
         </main>
       </div>
@@ -1484,9 +1513,11 @@ function Editor({
   const d = (edit.data || {}) as unknown as Record<string, unknown>,
     kind = edit.kind;
   const val = (key: string, fallback = "") => String(d[key] ?? fallback);
-  const assignees = admin ? s.members : [...new Map([
+  const [selectedProject,setSelectedProject]=useState(val("project_id",s.projects.length===1?s.projects[0].id:""));
+  const [selectedAssignee,setSelectedAssignee]=useState(val("assignee_id",s.identity.member_id||""));
+  const assignees = [...new Map([
     ...s.members.filter(m => m.id === d.assignee_id),
-    ...(s.taskDirectory || []).filter(m => m.project_id === val("project_id")),
+    ...(s.taskDirectory || []).filter(m => m.project_id === selectedProject),
   ].map(m => [m.id,m])).values()];
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -1494,7 +1525,7 @@ function Editor({
       data: Record<string, unknown> = {};
     for (const [k, v] of f.entries()) data[k] = String(v);
     if ("hours" in data) data.hours = Number(data.hours);
-    if (kind === "tasks" && admin && "claimable" in data) data.claimable = data.claimable === "true";
+    if (kind === "tasks" && "claimable" in data) data.claimable = data.claimable === "true";
     if (data.project_id === "") data.project_id = null;
     if (data.assignee_id === "") data.assignee_id = null;
     if (data.due_date === "") data.due_date = null;
@@ -1567,6 +1598,9 @@ function Editor({
                     defaultValue={val("description")}
                   />
                 </label>
+                <label>Barva<input type="color" name="color" defaultValue={val("color","#5267df")}/></label>
+                <label>Ikona<select name="icon" defaultValue={val("icon","folder")}><option value="folder">Mapa</option><option value="heart">Srce</option><option value="globe">Svet</option><option value="rocket">Raketa</option></select></label>
+                <label>Rok projekta (neobvezno)<input type="date" name="due_date" defaultValue={val("due_date")}/></label>
                 {s.collaboration?.ready !== false && <>
                 <label>Cilj projekta<textarea name="goal" maxLength={2000} defaultValue={val("goal")} /></label>
                 <label>Vidnost<select name="visibility" defaultValue={val("visibility", "private")}><option value="private">Zasebni — samo pooblaščeni</option><option value="organization">Viden članom organizacije</option></select></label>
@@ -1591,7 +1625,7 @@ function Editor({
                       Naslov naloge
                       <GlassInput
                         name="title"
-                        disabled={!admin}
+                        disabled={!!edit.data && !admin && d.created_by!==s.identity.user_id && s.projects.find(p=>p.id===d.project_id)?.created_by!==s.identity.user_id}
                         required
                         maxLength={200}
                         defaultValue={val("title")}
@@ -1601,9 +1635,11 @@ function Editor({
                       Projekt
                       <select
                         name="project_id"
-                        disabled={!admin}
+                        aria-label="Projekt"
+                        disabled={!!edit.data}
+                        onChange={e=>setSelectedProject(e.target.value)}
                         required
-                        defaultValue={val("project_id")}
+                        value={selectedProject}
                       >
                         <option value="">Izberi projekt</option>
                         {s.projects.map((p) => (
@@ -1617,9 +1653,11 @@ function Editor({
                       Dodeljeno
                       <select
                         name="assignee_id"
-                        defaultValue={val("assignee_id")}
+                        aria-label="Dodeljeno"
+                        value={selectedAssignee}
+                        onChange={e=>setSelectedAssignee(e.target.value)}
                       >
-                        <option value="" disabled={!admin}>Nedodeljeno</option>
+                        <option value="">Nedodeljeno</option>
                         {assignees.map((m) => (
                           <option key={m.id} value={m.id}>
                             {m.name}

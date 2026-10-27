@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import Workspace from "./workspace";
 import { GlassCard } from "./ui/glass";
-import OrganizationApp from "./organization-app";
+import WorkspaceGateway from "./workspaces/workspace-gateway";
 import BrandLogo from "./brand-logo";
 import Link from "next/link";
 import { cloudStore, localStore } from "@/lib/storage";
@@ -46,7 +46,7 @@ function CloudFrame({
       <GlassCard className={`cloud-entry-card${aurora ? ` ${styles.card}` : ""}`}>
         {children}
       </GlassCard>
-      <p className="cloud-entry-footer">Prostor za skupen učinek.</p>
+      <p className="cloud-entry-footer">Your team. One workspace.</p>
     </div>
   );
 }
@@ -301,7 +301,7 @@ export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
     );
   if (user && client && !legacy)
     return (
-      <OrganizationApp
+      <WorkspaceGateway
         key={user.id}
         client={client}
         user={user}
@@ -368,7 +368,7 @@ export default function CloudApp({ legacy = false }: { legacy?: boolean }) {
         <Cloud size={28} />
       </div>
       <span className="eyebrow">
-        {legacy ? "SHAPERS OS + SUPABASE" : "SHAPERS OS"}
+        {legacy ? "WEMRYOS FOR BUSINESS + SUPABASE" : "WEMRYOS FOR BUSINESS"}
       </span>
       <h1>{user ? "Izberi svoj prostor." : "Skupaj, tudi na spletu."}</h1>
       <p>

@@ -14,14 +14,13 @@
   --glass-panel: var(--glass-bg);
   --glass-overlay: var(--glass-bg-strong);
   --glass-nav: var(--glass-bg-strong);
-  --brand-red: #c7354d;
   --navy: #192c50;
   --accent-blue: #466bff;
   --accent-green: #16b968;
   --accent-orange: #f59e0b;
   --accent-purple: #9955ff;
-  --brand: var(--brand-red);
-  --brand-soft: rgb(199 53 77 / 9%);
+  --brand: var(--accent-blue);
+  --brand-soft: rgb(70 107 255 / 9%);
   --tasks: var(--accent-blue);
   --hours: var(--accent-green);
   --gamification: var(--accent-purple);
@@ -106,14 +105,14 @@
 .liquid-glass.app-shell :is(.button.secondary, .glass-button:not(.primary)) { background: rgb(255 255 255 / 65%); color: var(--navy); }
 .liquid-glass.app-shell .button.primary, .liquid-glass .glass-button.primary {
   color: #fff;
-  border-color: #b83249;
-  background: linear-gradient(165deg, #d03e56, #b82c44);
-  box-shadow: inset 0 1px 0 #ffffff40, 0 5px 14px #a2223a24;
+  border-color: var(--brand);
+  background: var(--brand);
+  box-shadow: inset 0 1px 0 #ffffff40, 0 5px 14px #344db824;
 }
-.liquid-glass.app-shell .button.primary:hover:enabled { background: linear-gradient(165deg, #c5354e, #a8223a); }
+.liquid-glass.app-shell .button.primary:hover:enabled { background: color-mix(in srgb, var(--brand) 85%, #151d42); }
 .liquid-glass :is(.glass-badge, .status-badge) { border: 1px solid rgb(255 255 255 / 65%); border-radius: 999px; padding: 4px 9px; }
 .liquid-glass.app-shell .org-filters { padding: 18px; background: rgb(255 255 255 / 38%); border-color: var(--glass-border); border-radius: 18px; }
-.liquid-glass.app-shell .org-table-wrap table { background: transparent; font-variant-numeric: tabular-nums; }
+.liquid-glass.app-shell .org-table-wrap table { background: var(--glass-bg-strong); font-variant-numeric: tabular-nums; }
 .liquid-glass.app-shell .org-table-wrap :is(th, td) { border-bottom: 1px solid rgb(109 136 175 / 17%); }
 .liquid-glass.app-shell .org-table-wrap th { background: rgb(235 241 253 / 87%); color: #344c72; }
 .liquid-glass.app-shell .org-table-wrap tbody tr:nth-child(even) { background: rgb(255 255 255 / 28%); }

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { FolderKanban, Plus, Users } from "lucide-react";
+import { FolderKanban, Heart, Globe, Rocket, Plus, Users } from "lucide-react";
 import { isAdmin, type OrgProject, type Snapshot } from "@/lib/organization";
 import styles from "./project-discovery.module.css";
 
@@ -151,6 +151,7 @@ export default function ProjectDiscovery({
 }) {
   const [scope, setScope] = useState("all"),
     [search, setSearch] = useState("");
+  const roster=s.workspaceDirectory || s.members;
   const admin = isAdmin(s.identity.role),
     me = s.identity.member_id;
   const joined = (id: string) =>
@@ -194,7 +195,7 @@ export default function ProjectDiscovery({
             <option value="open">Odprti za pridružitev</option>
           </select>
         </label>
-        {admin && (
+        {s.identity.member_id && (
           <button
             className="button primary"
             disabled={busy}
@@ -207,6 +208,7 @@ export default function ProjectDiscovery({
       </div>
       <div className={styles.grid}>
         {projects.map((p) => {
+          const ProjectIcon={folder:FolderKanban,heart:Heart,globe:Globe,rocket:Rocket}[p.icon||"folder"];
           const members =
             s.projectDirectory?.filter((m) => m.project_id === p.id) ||
             s.projectMembers
@@ -214,7 +216,7 @@ export default function ProjectDiscovery({
               .map((m) => ({
                 ...m,
                 name:
-                  s.members.find((x) => x.id === m.member_id)?.name || "Član",
+                  roster.find((x) => x.id === m.member_id)?.name || "Član",
               }));
           const progress = s.projectProgress?.find(
             (x) => x.project_id === p.id,
@@ -244,13 +246,14 @@ export default function ProjectDiscovery({
               aria-labelledby={`project-${p.id}`}
             >
               <div className={styles.heading}>
-                <FolderKanban size={22} aria-hidden="true" />
+                <ProjectIcon size={22} style={{color:p.color}} aria-hidden="true" />
                 <span className="status-badge" data-status={p.status}>
                   {statuses[p.status]}
                 </span>
               </div>
               <h2 id={`project-${p.id}`}>{p.name}</h2>
               <p>{p.description || "Opis še ni dodan."}</p>
+              {p.due_date&&<p>Rok: <time dateTime={p.due_date}>{new Intl.DateTimeFormat("sl-SI").format(new Date(p.due_date+"T12:00:00Z"))}</time></p>}
               <div className={styles.goal}>
                 <strong>Cilj projekta</strong>
                 <p>{p.goal || "Cilj še ni določen."}</p>
@@ -296,7 +299,7 @@ export default function ProjectDiscovery({
                           {m.name}
                           {m.member_id === me ? " (ti)" : ""}
                         </span>
-                        {admin && (
+                        {(admin || p.created_by===s.identity.user_id) && (
                           <button
                             disabled={busy}
                             className="cloud-text-button"
@@ -372,7 +375,7 @@ export default function ProjectDiscovery({
                       Pridružitev trenutno ni odprta.
                     </span>
                   ))}
-                {admin && (
+                {(admin || p.created_by===s.identity.user_id) && (
                   <button
                     disabled={busy}
                     className="button secondary"
@@ -387,7 +390,7 @@ export default function ProjectDiscovery({
                   Pred izstopom predaj ali zaključi svoje odprte naloge.
                 </p>
               )}
-              {admin && (
+              {(admin || p.created_by===s.identity.user_id) && (
                 <details>
                   <summary>
                     Upravljanje članstva
@@ -413,7 +416,7 @@ export default function ProjectDiscovery({
                         <option value="" disabled>
                           Izberi člana
                         </option>
-                        {s.members
+                        {roster
                           .filter(
                             (m) => !members.some((x) => x.member_id === m.id),
                           )
@@ -431,7 +434,7 @@ export default function ProjectDiscovery({
                   {requests.map((r) => (
                     <div key={r.id} className={styles.request}>
                       <strong>
-                        {s.members.find((m) => m.id === r.member_id)?.name ||
+                        {roster.find((m) => m.id === r.member_id)?.name ||
                           "Član"}
                       </strong>
                       {["approve", "reject"].map((actionName) => (

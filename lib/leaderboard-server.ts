@@ -58,7 +58,7 @@ export async function assembleLeaderboard(identity: Identity, week: string, now:
 }
 
 export async function loadLeaderboard(identity: Identity, week: string, now = new Date(), period: LeaderboardData["period"] = "week"): Promise<LeaderboardData> {
-  const db = serviceClient();
+  const db = serviceClient(identity.organization_id);
   return assembleLeaderboard(identity, week, now, {
     sourceAt: async (at) => {
       const { data, error } = await db.rpc("org_leaderboard_source", { as_of: at.toISOString() });
@@ -66,14 +66,17 @@ export async function loadLeaderboard(identity: Identity, week: string, now = ne
       return data as LeaderboardSource;
     },
     readFinalized: async () => {
-      const rows = await allRows(db, "org_leaderboard_weeks");
+      const rows = await allRows(db, "org_leaderboard_weeks", identity.organization_id);
       return new Map(rows.filter((row) => row.version === SCORE_VERSION).map((row) => [String(row.week_start), row.rows as ScoreRow[]]));
     },
     finalize: async (start, rows) => {
-      const stored = await db.from("org_leaderboard_weeks").upsert({ week_start: start, version: SCORE_VERSION, rows }, { onConflict: "week_start,version", ignoreDuplicates: true });
+      const scope=identity.organization_id?{organization_id:identity.organization_id}:{};
+      const stored = await db.from("org_leaderboard_weeks").upsert({ ...scope, week_start: start, version: SCORE_VERSION, rows }, { onConflict: identity.organization_id?"organization_id,week_start,version":"week_start,version", ignoreDuplicates: true });
       if (stored.error) throw new HttpError(503, "Zaključenega tedna ni mogoče potrditi. Poskusi znova.");
       // A concurrent request may have inserted first. Always return the canonical row.
-      const canonical = await db.from("org_leaderboard_weeks").select("rows").eq("week_start", start).eq("version", SCORE_VERSION).single();
+      let query=db.from("org_leaderboard_weeks").select("rows").eq("week_start",start).eq("version",SCORE_VERSION);
+      if(identity.organization_id)query=query.eq("organization_id",identity.organization_id);
+      const canonical = await query.single();
       if (canonical.error) throw new HttpError(503, "Zaključenega rezultata ni mogoče prebrati.");
       return canonical.data.rows as ScoreRow[];
     },

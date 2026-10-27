@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { CalendarDays, ExternalLink, RefreshCw } from "lucide-react";
+import { useWorkspace } from "./workspaces/workspace-context";
 
 type Event = {
   id: string;
@@ -57,6 +58,7 @@ export default function PersonalCalendar({
 }: {
   client: SupabaseClient;
 }) {
+  const workspace=useWorkspace()?.active?.id;
   const [calendar, setCalendar] = useState<Calendar | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(true),
@@ -79,7 +81,7 @@ export default function PersonalCalendar({
           throw new Error("Prijava je potekla. Prijavi se znova.");
         const response = await fetch("/api/personal-calendar", {
           method,
-          headers: { Authorization: "Bearer " + data.session.access_token },
+          headers: { Authorization: "Bearer " + data.session.access_token, ...(workspace?{"x-workspace-id":workspace}:{}) },
           credentials: "same-origin",
           cache: "no-store",
           signal: abort.signal,
@@ -101,7 +103,7 @@ export default function PersonalCalendar({
           setBusy(false);
       }
     },
-    [client],
+    [client, workspace],
   );
   useEffect(() => {
     let active = true;

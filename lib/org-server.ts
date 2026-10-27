@@ -14,23 +14,36 @@ export function publicConfig() {
     throw new HttpError(503, "Supabase ni nastavljen.");
   return { url, key };
 }
-export function serviceClient() {
+export function serviceClient(workspaceId?: string) {
   const { url } = publicConfig();
   const key = process.env.SUPABASE_SECRET_KEY;
   if (!key) throw new HttpError(503, "Manjka strežniški SUPABASE_SECRET_KEY.");
   return createClient(url, key, {
+    ...(workspaceId ? { global: { headers: { "x-workspace-id": workspaceId } } } : {}),
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
 export async function getCurrentUser(
   request: Request,
 ): Promise<{ client: SupabaseClient; identity: Identity }> {
+  const { client } = await verifiedClient(request);
+  const context = await client.rpc("org_context");
+  if (context.error)
+    throw new HttpError(503, "Organizacijske migracije niso pripravljene.");
+  if (!context.data)
+    throw new HttpError(403, "Račun nima aktivnega dostopa do tega delovnega prostora.");
+  return { client, identity: context.data as Identity };
+}
+export async function verifiedClient(request: Request) {
   const authorization = request.headers.get("authorization");
   if (!authorization?.match(/^Bearer [^\s]+$/))
-    throw new HttpError(401, "Prijavi se v Shapers OS.");
+    throw new HttpError(401, "Prijavi se v WemryOS for Business.");
+  const workspace = request.headers.get("x-workspace-id");
+  if (workspace && !/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(workspace))
+    throw new HttpError(400, "Neveljaven delovni prostor.");
   const { url, key } = publicConfig();
   const client = createClient(url, key, {
-    global: { headers: { Authorization: authorization } },
+    global: { headers: { Authorization: authorization, ...(workspace ? { "x-workspace-id": workspace } : {}) } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const { data, error } = await client.auth.getUser(authorization.slice(7));
@@ -41,20 +54,12 @@ export async function getCurrentUser(
     data.user.is_anonymous
   )
     throw new HttpError(401, "Prijava ni veljavna ali e-pošta ni potrjena.");
-  const context = await client.rpc("org_context");
-  if (context.error)
-    throw new HttpError(503, "Organizacijske migracije niso pripravljene.");
-  if (!context.data)
-    throw new HttpError(
-      403,
-      "Račun nima aktivnega dostopa do organizacije. Obrni se na superadministracijo.",
-    );
-  return { client, identity: context.data as Identity };
+  return { client, user: data.user };
 }
 export const requireAuth = getCurrentUser;
 export function requireRole(
   actor: Identity,
-  roles: Role[] = ["ADMIN", "SUPERADMIN"],
+  roles: Role[] = ["OWNER", "ADMIN", "SUPERADMIN"],
 ) {
   if (!roles.includes(actor.role))
     throw new HttpError(403, "Za dejanje nimaš dovoljenja.");
@@ -63,7 +68,7 @@ export function requireAdmin(actor: Identity) {
   if (!isAdmin(actor.role))
     throw new HttpError(403, "Potrebna je administratorska vloga.");
 }
-export async function allRows(client: SupabaseClient, table: string) {
+export async function allRows(client: SupabaseClient, table: string, workspaceId?: string) {
   const rows: Record<string, unknown>[] = [];
   const order =
     table === "org_leaderboard_weeks"
@@ -75,6 +80,7 @@ export async function allRows(client: SupabaseClient, table: string) {
         : "id";
   for (let start = 0; start < 50000; start += 500) {
     let query = client.from(table).select("*").order(order);
+    if(workspaceId)query=query.eq("organization_id",workspaceId);
     if (table === "org_leaderboard_weeks") query = query.order("version");
     if (table.endsWith("_members")) query = query.order("member_id");
     const { data, error } = await query.range(start, start + 499);

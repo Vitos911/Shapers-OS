@@ -3,8 +3,8 @@ import "./globals.css";
 import "./liquid-glass.css";
 
 export const metadata: Metadata = {
-  title: "Shapers OS · Skupaj ustvarjamo spremembe",
-  description: "Delovni prostor za projekte, dogodke in prostovoljske ure skupnosti Shapers.",
+  title: "WemryOS for Business · Your team. One workspace.",
+  description: "WemryOS for Business — Your team. One workspace. Projekti, naloge in sodelovanje za tvojo ekipo.",
   robots: { index: false, follow: false },
 };
 

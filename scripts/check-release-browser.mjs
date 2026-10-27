@@ -49,6 +49,9 @@ try {
       if (url.hostname === "fixture.supabase.co") return route.fulfill({ json: url.pathname.startsWith("/rest/v1/") ? [] : url.pathname.endsWith("/user") ? user : session });
       if (url.origin !== origin) return route.abort();
       if (url.pathname === "/api/supabase-config") return route.fulfill({ json: { configured: true, url: "https://fixture.supabase.co", publishableKey: "sb_publishable_fixture" } });
+      if (url.pathname === "/api/workspaces") return route.fulfill({json:[{id:"00000000-0000-4000-8000-000000000001",name:"Global Shapers",role,member_count:1,accent_color:"#5267df",logo_url:""}]});
+      if (url.pathname === "/api/workspaces/presence") return route.fulfill({json:[]});
+      if (url.pathname === "/api/org/workspace-settings") return route.fulfill({json:{groups:[],settings:{}}});
       if (url.pathname === "/api/personal-calendar") return route.fulfill({ status: 503, json: { error: "Browser fixture: Calendar is not configured" } });
       if (url.pathname === "/api/ask-shaper") return route.fulfill({ status: 503, json: { error: "Browser fixture: AI is not configured" } });
       if (url.pathname === "/api/org/leaderboard") return route.fulfill({ json: await assembleLeaderboard(identity, week, now, repository) });
@@ -78,7 +81,7 @@ try {
     assert.equal(await page.getByRole("button", { name: "Zaključi nalogo: Release browser task", exact: true }).count(),0);
     await page.getByRole("button", { name: "Beleži ure", exact: true }).click();
     await page.getByRole("heading", { name: "Časovnik dela", exact: true }).waitFor();
-    await page.waitForURL("**/#hours");
+    await page.waitForURL(url=>url.hash==="#hours");
     if (role !== "MEMBER") await page.getByRole("button", { name: "Administrativni vnos za nazaj", exact: true }).waitFor();
     assert.equal(await page.getByRole("button", { name: "Administrativni vnos za nazaj", exact: true }).count(), role === "MEMBER" ? 0 : 1);
     if (role !== "MEMBER") {
@@ -111,13 +114,13 @@ try {
       }
     }
     await page.goto(origin);
-    await page.getByRole("button", { name:"Ask Shaper", exact:true }).click();
-    const ai = page.getByRole("dialog", { name:"Ask Shaper", exact:true });
+    await page.getByRole("button", { name:"Ask Wemry", exact:true }).click();
+    const ai = page.getByRole("dialog", { name:"Ask Wemry", exact:true });
     await ai.getByLabel("Tvoje vprašanje", { exact:true }).fill("Koliko ur sem opravil?");
     await ai.getByRole("button", { name:"Vprašaj", exact:true }).click();
     await ai.getByRole("alert").filter({hasText:"AI is not configured"}).waitFor();
     await page.keyboard.press("Escape"); await ai.waitFor({state:"hidden"});
-    assert.equal(await page.getByRole("button", { name:"Ask Shaper", exact:true }).evaluate(el=>el===document.activeElement),true);
+    assert.equal(await page.getByRole("button", { name:"Ask Wemry", exact:true }).evaluate(el=>el===document.activeElement),true);
     await page.setViewportSize({width:390,height:900});
     await page.getByRole("button", { name:"Odpri navigacijo", exact:true }).click();
     await page.getByRole("navigation", {name:"Glavna navigacija"}).waitFor();

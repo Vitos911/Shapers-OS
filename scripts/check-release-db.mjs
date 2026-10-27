@@ -5,7 +5,7 @@ import { PGlite } from "@electric-sql/pglite";
 
 const directory = new URL("../supabase/migrations/", import.meta.url);
 const files = (await readdir(directory)).filter(name => name.endsWith(".sql")).sort();
-const pending = new Set(["20261024144936", "20261025085526", "20261025102503", "20261025102948", "20261025120000", "20261025195203", "20261025195204"]);
+const pending = new Set(["20261024144936", "20261025085526", "20261025102503", "20261025102948", "20261025120000", "20261025195203", "20261025195204", "20261026200312"]);
 const signatures = [];
 for (const path of ["fresh", "existing-production-order"]) {
   const db = new PGlite();

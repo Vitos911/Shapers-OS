@@ -1,5 +1,7 @@
 # Infrastructure and reproducible setup
 
+The WemryOS multi-workspace source upgrade has its own [staging, migration and recovery instructions](wemryos-upgrade.md). It introduces no new environment variables or deployment pipeline. Coordinate its reviewed database migration with the application cutover; do not run the old single-organization application against multiple tenants.
+
 For the integrated release, follow [release-integration.md](release-integration.md) as the current migration/cutover checklist. Historical evidence in this document does not prove the current integrated production flow.
 
 Next.js App Router runs UI and Node route handlers. Supabase provides Auth and Postgres. Browser requests carry the current Auth access token; each organization request calls Auth `getUser()` and trusted `org_context()`. Regular operations use the user's token and RLS, not the service key. Service access is limited to explicit provisioning/imports, approved invitations and validated Google synchronization.

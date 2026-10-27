@@ -6,7 +6,7 @@ import type { Snapshot } from "@/lib/organization";
 import { ownProfile } from "@/lib/user-profile";
 import styles from "./user-profile.module.css";
 
-const roleNames = { MEMBER: "Član", ADMIN: "Administrator", SUPERADMIN: "Superadministrator" };
+const roleNames = { MEMBER: "Član", ADMIN: "Administrator", SUPERADMIN: "Superadministrator", OWNER: "Lastnik prostora" };
 function date(value?: string) {
   if (!value || !Number.isFinite(Date.parse(value))) return "Ni podatka";
   return new Intl.DateTimeFormat("sl-SI", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Ljubljana" }).format(new Date(value));

@@ -1,10 +1,11 @@
-export const ROLES = ["MEMBER", "ADMIN", "SUPERADMIN"] as const;
+export const ROLES = ["MEMBER", "ADMIN", "SUPERADMIN", "OWNER"] as const;
 export type Role = (typeof ROLES)[number];
 export type Identity = {
   user_id: string;
   email: string;
   role: Role;
   member_id: string | null;
+  organization_id?: string;
 };
 export type OrgMember = {
   id: string;
@@ -16,6 +17,10 @@ export type OrgMember = {
   auth_user_id: string | null;
 };
 export type OrgProject = {
+  color?: string;
+  icon?: "folder"|"heart"|"globe"|"rocket";
+  due_date?: string|null;
+  created_by?: string;
   id: string;
   name: string;
   description: string;
@@ -27,6 +32,7 @@ export type OrgProject = {
   goal?: string;
 };
 export type OrgTask = {
+  created_by?: string;
   id: string;
   project_id: string;
   title: string;
@@ -109,6 +115,8 @@ export type TaskHistory = {
   changes: { before?: Partial<OrgTask> | null; after?: Partial<OrgTask> };
 };
 export type Snapshot = {
+  workspaceDirectory?: {id:string;name:string;user_id:string;role:string}[];
+  features?: {weekly_hours_enabled:boolean;attendance_enabled:boolean;leaderboard_enabled:boolean;gamification_enabled:boolean};
   collaboration?: { ready: boolean };
   identity: Identity;
   members: OrgMember[];
@@ -141,12 +149,15 @@ export const SERIES = [
 ];
 export const TZ = "Europe/Ljubljana";
 export const isAdmin = (role: Role) =>
-  role === "ADMIN" || role === "SUPERADMIN";
+  role === "OWNER" || role === "ADMIN" || role === "SUPERADMIN";
 export const canManageTask = (
   actor: Identity,
-  task: Pick<OrgTask, "assignee_id">,
+  task: Pick<OrgTask, "assignee_id" | "created_by">,
+  projects: Pick<OrgProject,"id"|"created_by">[] = [],
 ) =>
   isAdmin(actor.role) ||
+  task.created_by === actor.user_id ||
+  ("project_id" in task && projects.some(p=>p.id===task.project_id && p.created_by===actor.user_id)) ||
   (!!actor.member_id && actor.member_id === task.assignee_id);
 export const canViewMemberAnalytics = (actor: Identity, id: string) =>
   isAdmin(actor.role) || actor.member_id === id;

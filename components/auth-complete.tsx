@@ -65,7 +65,7 @@ export default function AuthComplete() {
     <main className="cloud-entry">
       <Link className="brand brand-logo-link" href="/" prefetch={false}><BrandLogo /></Link>
       <section className="cloud-entry-card">
-        <span className="eyebrow">SHAPERS OS</span>
+        <span className="eyebrow">WEMRYOS FOR BUSINESS</span>
         <h1>
           {error ? "Prijava ni zaključena" : "Zaključujem Google prijavo …"}
         </h1>

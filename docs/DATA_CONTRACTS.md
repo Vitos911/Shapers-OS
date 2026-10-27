@@ -1,3 +1,20 @@
+# Workspace API contracts (WemryOS upgrade)
+
+The dated contracts below describe the original single-organization release. The upgrade extends them without renaming endpoints or existing table identifiers. See [the migration and verification guide](wemryos-upgrade.md).
+
+- Every organization API, AI request and personal-calendar authorization receives the selected `x-workspace-id` UUID. This is a selector, never authorization. The server verifies Auth `getUser()` and database `org_context()`; database membership and restrictive RLS independently constrain access.
+- An absent scope retains compatibility with Global Shapers (`00000000-0000-4000-8000-000000000001`). New interfaces always provide scope. Workspace content is remounted when selection changes.
+- `GET /api/workspaces` lists verified memberships. `POST` creates workspaces or executes allowlisted invitation, membership, group, privacy and ownership commands. Invitations are email-bound links, not automatically sent messages.
+- Roles are OWNER / ADMIN / MEMBER per workspace. Existing SUPERADMIN is preserved for the Global Shapers platform administration surface; it grants no access to another workspace.
+- Members can create projects; `created_by` is server-owned. A project creator automatically joins it and can edit it and manage its roster and join requests. Open/approval/closed reuse the existing membership workflow.
+- Members can create tasks in accessible projects and edit tasks they created or are assigned; project owners and workspace administrators have broader rights. New workspace assignments require project membership. Legacy administrator assignment behavior is preserved for Global Shapers.
+- Task statuses and priorities are unchanged. Compare-and-swap, authoritative completion timestamps, immutable task/audit history and conditional task claims remain enforced. Member-created tasks do not create leaderboard credit.
+- Membership groups are configurable labels and targets, separate from permission roles. `members.weekly_hours` remains authoritative; 0 disables the hour requirement. Historical aggregates and finalized scores are not rewritten.
+- `POST /api/workspaces/presence` manages a per-tab, server-timed connection lease and returns only the active workspace's minimal roster. Polls every 30 seconds; five minutes without interaction is idle; leases expire after 90 seconds. A failed read is unknown. Privacy suppression removes every lease for the member and returns unknown across all readers. Presence is not work activity.
+- `GET /api/org/workspace-settings` returns membership groups and feature settings. `workspaceDirectory` exposes only names, identifiers and workspace roles; it does not broaden personal hours/email access.
+
+---
+
 # Skupne podatkovne pogodbe
 
 Vir tipov je obstoječi `lib/organization.ts`: `Identity`, `Snapshot`, `WorkSession`, `WorkState`, `OrgMember`, `OrgProject`, `OrgTask`, `WorkEntry`, `WeeklyHours`, `Meeting`, `Attendance`, `TaskHistory`. Ne ustvarjaj konkurenčnega modela v UI. Validacijo določa `lib/org-validation.ts`, končne pravice in omejitve pa aktualna Supabase shema/RLS/triggerji. Tipizacija sama ni varnostna meja.
